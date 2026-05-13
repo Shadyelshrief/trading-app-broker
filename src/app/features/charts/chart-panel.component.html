@@ -1,0 +1,11 @@
+<section class="panel">
+  <header class="panel__header">
+    <div>
+      <p class="panel__eyebrow">Primary view</p>
+      <h4>{{ state()?.title ?? 'Chart' }}</h4>
+    </div>
+    <span class="panel__meta">1D / 5m</span>
+  </header>
+
+  <ag-charts class="panel__chart" [options]="options" />
+</section>

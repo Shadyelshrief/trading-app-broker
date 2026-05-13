@@ -1,0 +1,28 @@
+@if (isSubWindow) {
+  <app-workspace [subWindow]="true" />
+} @else {
+  <div class="app-shell">
+    <app-trading-header />
+
+    <div
+      class="app-shell__body"
+      [class.app-shell__body--sidebar-collapsed]="layout.sidebarCollapsed()"
+      [class.app-shell__body--mobile-drawer-open]="layout.mobileNavOpen()"
+    >
+      @if (layout.mobileNavOpen()) {
+        <button
+          type="button"
+          class="app-shell__scrim"
+          aria-label="Close navigation"
+          (click)="layout.closeMobileNav()"
+        ></button>
+      }
+
+      <app-trading-sidebar />
+
+      <main class="app-shell__workspace" role="main">
+        <router-outlet />
+      </main>
+    </div>
+  </div>
+}

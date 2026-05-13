@@ -1,0 +1,74 @@
+<app-auth-chrome>
+  <section class="auth-card" aria-labelledby="login-title">
+    <p class="auth-eyebrow">Trading App Broker</p>
+    <h1 class="auth-title" id="login-title">Sign in</h1>
+    <p class="auth-subtitle">
+      Enter your broker credentials. Mock sign-in uses
+      <strong>demo&#64;broker.local</strong>
+      /
+      <strong>Password1!</strong>
+    </p>
+
+    @if (feedback(); as alert) {
+      <p
+        class="auth-alert"
+        [class.auth-alert--error]="alert.type === 'error'"
+        [class.auth-alert--success]="alert.type === 'success'"
+        role="alert"
+      >
+        {{ alert.text }}
+      </p>
+    }
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="auth-field">
+        <label class="auth-label" for="login-email">Email</label>
+        <input
+          id="login-email"
+          class="auth-input"
+          [class.auth-input--invalid]="form.controls.email.invalid && form.controls.email.touched"
+          type="email"
+          autocomplete="username"
+          formControlName="email"
+        />
+        @if (form.controls.email.invalid && form.controls.email.touched) {
+          <p class="auth-error">Enter a valid email address.</p>
+        }
+      </div>
+
+      <div class="auth-field">
+        <label class="auth-label" for="login-password">Password</label>
+        <input
+          id="login-password"
+          class="auth-input"
+          [class.auth-input--invalid]="form.controls.password.invalid && form.controls.password.touched"
+          type="password"
+          autocomplete="current-password"
+          formControlName="password"
+        />
+        @if (form.controls.password.invalid && form.controls.password.touched) {
+          <p class="auth-error">Use at least 8 characters with upper, lower, and numeric characters.</p>
+        }
+      </div>
+
+      <div class="auth-actions">
+        <button
+          class="auth-button"
+          [class.auth-button--busy]="loading()"
+          type="submit"
+          [disabled]="loading()"
+        >
+          @if (loading()) {
+            <span>Signing in…</span>
+          } @else {
+            <span>Sign in</span>
+          }
+        </button>
+      </div>
+    </form>
+
+    <div class="auth-links">
+      <a routerLink="/forgot-password">Forgot password?</a>
+    </div>
+  </section>
+</app-auth-chrome>

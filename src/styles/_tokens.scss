@@ -1,0 +1,31 @@
+:root {
+  color-scheme: dark;
+  --app-bg: #050d14;
+  --surface-1: rgba(7, 17, 26, 0.82);
+  --surface-2: rgba(12, 24, 36, 0.9);
+  --surface-3: rgba(15, 30, 45, 0.92);
+  --border-subtle: rgba(153, 181, 214, 0.16);
+  --text-primary: #edf6ff;
+  --text-secondary: #9ab0c7;
+  --text-muted: #6d8095;
+  --accent: #20c4a0;
+  --accent-alt: #6087ff;
+  --warning: #f8b14c;
+  --danger: #ff6b6b;
+  --shadow-xl: 0 24px 80px rgba(0, 0, 0, 0.38);
+  --font-sans: "Bahnschrift", "Segoe UI", sans-serif;
+  --font-mono: "Cascadia Code", "Consolas", monospace;
+
+  --ag-font-family: var(--font-sans);
+  --ag-background-color: #0c1622;
+  --ag-foreground-color: #edf6ff;
+  --ag-header-background-color: #112131;
+  --ag-header-foreground-color: #edf6ff;
+  --ag-odd-row-background-color: rgba(255, 255, 255, 0.02);
+  --ag-row-hover-color: rgba(96, 135, 255, 0.12);
+  --ag-selected-row-background-color: rgba(32, 196, 160, 0.16);
+  --ag-border-color: rgba(153, 181, 214, 0.12);
+  --ag-secondary-border-color: rgba(153, 181, 214, 0.08);
+  --ag-input-focus-border-color: var(--accent);
+  --ag-accent-color: var(--accent);
+}

@@ -1,0 +1,16 @@
+:root[data-theme='light'] {
+  color-scheme: light;
+  --app-bg: #e6edf7;
+  --surface-1: rgba(255, 255, 255, 0.9);
+  --surface-2: rgba(248, 250, 255, 0.95);
+  --surface-3: rgba(236, 242, 252, 0.98);
+  --border-subtle: rgba(12, 36, 64, 0.12);
+  --text-primary: #0a1422;
+  --text-secondary: #3d4f66;
+  --text-muted: #5c6b80;
+  --accent: #0d9f84;
+  --accent-alt: #3d5ee6;
+  --warning: #c77d12;
+  --danger: #c93636;
+  --shadow-xl: 0 18px 60px rgba(15, 35, 70, 0.12);
+}

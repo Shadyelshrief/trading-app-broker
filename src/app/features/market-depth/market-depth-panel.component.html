@@ -1,0 +1,21 @@
+<section class="panel">
+  <header class="panel__header">
+    <div>
+      <p class="panel__eyebrow">Order book</p>
+      <h4>{{ state()?.title ?? 'Market Depth' }}</h4>
+    </div>
+    <span class="panel__spread">Spread {{ spread() }}</span>
+  </header>
+
+  <ag-grid-angular
+    class="panel__grid ag-theme-quartz"
+    [modules]="modules"
+    [columnDefs]="columnDefs"
+    [defaultColDef]="defaultColDef"
+    [rowData]="rowData()"
+    [animateRows]="true"
+    [rowHeight]="38"
+    [headerHeight]="36"
+    [suppressCellFocus]="true"
+  />
+</section>

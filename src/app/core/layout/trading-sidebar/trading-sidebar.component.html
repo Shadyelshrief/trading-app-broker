@@ -1,0 +1,56 @@
+<aside
+  class="trading-sidebar"
+  [class.trading-sidebar--collapsed]="layout.sidebarCollapsed()"
+  [class.trading-sidebar--drawer-open]="layout.mobileNavOpen()"
+  aria-label="Primary navigation"
+>
+  <div class="trading-sidebar__toolbar">
+    <button
+      type="button"
+      class="trading-sidebar__collapse"
+      [attr.aria-label]="layout.sidebarCollapsed() ? 'Expand navigation' : 'Collapse navigation'"
+      [attr.title]="layout.sidebarCollapsed() ? 'Expand' : 'Collapse'"
+      (click)="layout.toggleSidebarCollapsed()"
+    >
+      <span class="trading-sidebar__collapse-icon" aria-hidden="true">⟨</span>
+    </button>
+  </div>
+
+  <nav class="trading-sidebar__nav">
+    @for (group of groups; track trackByGroupId($index, group)) {
+      <section class="trading-sidebar__group">
+        <button
+          type="button"
+          class="trading-sidebar__group-header"
+          [attr.aria-expanded]="groupAriaExpanded(group.id)"
+          (click)="toggleGroup(group.id)"
+        >
+          <span class="trading-sidebar__group-label">{{ group.label }}</span>
+          <span class="trading-sidebar__group-chevron" aria-hidden="true">▾</span>
+        </button>
+
+        @if (isExpanded(group.id) || layout.sidebarCollapsed()) {
+          <ul class="trading-sidebar__list">
+            @for (item of group.items; track trackByItemId($index, item)) {
+              <li>
+                <a
+                  class="trading-sidebar__link"
+                  [routerLink]="item.routerLink ?? ['/']"
+                  routerLinkActive="trading-sidebar__link--active"
+                  [routerLinkActiveOptions]="linkMatch"
+                  [title]="layout.sidebarCollapsed() ? item.label : ''"
+                  (click)="collapseAndNavigate()"
+                >
+                  <span class="trading-sidebar__icon" aria-hidden="true">
+                    <app-trading-icon [name]="item.icon" />
+                  </span>
+                  <span class="trading-sidebar__text">{{ item.label }}</span>
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+  </nav>
+</aside>

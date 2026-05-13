@@ -1,0 +1,75 @@
+<div class="auth-chrome">
+  <div class="auth-chrome__scene" aria-hidden="true">
+    <div class="auth-chrome__aurora"></div>
+    <div class="auth-chrome__grid"></div>
+
+    <div class="auth-chrome__chart">
+      <svg
+        class="auth-chrome__svg"
+        viewBox="0 0 400 120"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <defs>
+          <linearGradient id="auth-spark-fill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="rgba(32, 196, 160, 0.35)" />
+            <stop offset="100%" stop-color="rgba(32, 196, 160, 0)" />
+          </linearGradient>
+          <linearGradient id="auth-spark-stroke" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stop-color="rgba(96, 135, 255, 0.15)" />
+            <stop offset="50%" stop-color="rgba(32, 196, 160, 0.85)" />
+            <stop offset="100%" stop-color="rgba(96, 135, 255, 0.35)" />
+          </linearGradient>
+        </defs>
+        <path
+          class="auth-chrome__area"
+          d="M0,95 L40,52 L80,68 L120,38 L160,58 L200,28 L240,48 L280,32 L320,56 L360,22 L400,44 L400,120 L0,120 Z"
+        />
+        <polyline
+          class="auth-chrome__line"
+          points="0,95 40,52 80,68 120,38 160,58 200,28 240,48 280,32 320,56 360,22 400,44"
+        />
+      </svg>
+    </div>
+
+    <div class="auth-chrome__bars">
+      @for (height of barHeights; track $index) {
+        <span class="auth-chrome__bar" [style.height.%]="height" [style.animation-delay.ms]="$index * 45"></span>
+      }
+    </div>
+
+    <div class="auth-chrome__orb"></div>
+  </div>
+
+  <div class="auth-chrome__ticker" aria-hidden="true">
+    <div class="auth-chrome__ticker-track">
+      <div class="auth-chrome__ticker-row">
+        @for (item of tickerItems; track item.symbol) {
+          <span class="auth-chrome__tick">
+            <span class="auth-chrome__tick-symbol">{{ item.symbol }}</span>
+            <span class="auth-chrome__tick-price">{{ item.price }}</span>
+            <span class="auth-chrome__tick-change" [class.auth-chrome__tick-change--down]="!item.up">
+              {{ item.change }}
+            </span>
+          </span>
+        }
+      </div>
+      <div class="auth-chrome__ticker-row" aria-hidden="true">
+        @for (item of tickerItems; track item.symbol + '-dup') {
+          <span class="auth-chrome__tick">
+            <span class="auth-chrome__tick-symbol">{{ item.symbol }}</span>
+            <span class="auth-chrome__tick-price">{{ item.price }}</span>
+            <span class="auth-chrome__tick-change" [class.auth-chrome__tick-change--down]="!item.up">
+              {{ item.change }}
+            </span>
+          </span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <main class="auth-chrome__body">
+    <ng-content />
+  </main>
+</div>
