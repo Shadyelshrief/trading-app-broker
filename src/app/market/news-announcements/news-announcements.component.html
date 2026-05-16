@@ -1,0 +1,92 @@
+@if (vm$ | async; as vm) {
+  <section class="news-announcements">
+    <header class="news-announcements__toolbar">
+      <div class="news-announcements__heading">
+        <div>
+          <p class="news-announcements__eyebrow">Pricing</p>
+          <h2>News & Announcements</h2>
+        </div>
+      </div>
+
+      <div class="news-announcements__controls">
+        <mat-checkbox [formControl]="showProductNewsControl">Show Product News</mat-checkbox>
+
+        <mat-form-field appearance="outline" class="news-announcements__symbol-field">
+          <mat-label>Product Symbol</mat-label>
+          <input
+            matInput
+            type="text"
+            [formControl]="symbolControl"
+            [matAutocomplete]="symbolAuto"
+            placeholder="Search symbol ID or symbol name"
+          />
+          <mat-autocomplete #symbolAuto="matAutocomplete" [displayWith]="displaySymbol">
+            @for (option of vm.filteredSymbolOptions; track option.marketShortName + '-' + option.symbolId) {
+              <mat-option [value]="option">
+                <span class="news-announcements__option-symbol">{{ option.symbolId }}</span>
+                <span class="news-announcements__option-name">{{ option.symbolName }}</span>
+                <span class="news-announcements__option-market">{{ option.marketShortName }}</span>
+              </mat-option>
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+
+        <mat-checkbox [formControl]="showBrokerNewsControl">Show Broker News</mat-checkbox>
+        <mat-checkbox [formControl]="showMarketNewsControl">Show Market News</mat-checkbox>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Market</mat-label>
+          <mat-select [formControl]="marketControl">
+            @for (option of vm.marketOptions; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>From Date</mat-label>
+          <input matInput [matDatepicker]="fromPicker" [formControl]="fromDateControl" />
+          <mat-datepicker-toggle matIconSuffix [for]="fromPicker" />
+          <mat-datepicker #fromPicker />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>To Date</mat-label>
+          <input matInput [matDatepicker]="toPicker" [formControl]="toDateControl" />
+          <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
+          <mat-datepicker #toPicker />
+        </mat-form-field>
+      </div>
+    </header>
+
+    @if (vm.validationError) {
+      <section class="news-announcements__banner news-announcements__banner--warning">
+        <span>{{ vm.validationError }}</span>
+      </section>
+    }
+
+    @if (vm.error) {
+      <section class="news-announcements__banner news-announcements__banner--error">
+        <span>{{ vm.error }}</span>
+      </section>
+    }
+
+    <section class="news-announcements__meta">
+      <p>Historical news feed for product, broker, and market announcements.</p>
+      <p>Last loaded: {{ vm.lastLoadedAt ? (vm.lastLoadedAt | date: 'dd/MM/yyyy HH:mm:ss') : '--' }}</p>
+    </section>
+
+    <app-market-grid
+      class="news-announcements__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns"
+      [gridOptions]="gridOptions"
+      [contextMenuActions]="menuActions"
+      [loading]="vm.loading"
+      [marketType]="'news-announcements'"
+      [stateKey]="'news-announcements-grid-v1'"
+      [settings]="vm.settings"
+      (rowDoubleClicked)="openNewsDetail($event)"
+    />
+  </section>
+}

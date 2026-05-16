@@ -1,0 +1,108 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+.news-announcements {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: 1rem;
+  height: 100%;
+  min-height: 0;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.news-announcements__toolbar,
+.news-announcements__banner {
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(8, 18, 29, 0.76);
+}
+
+.news-announcements__toolbar {
+  display: grid;
+  gap: 1rem;
+}
+
+.news-announcements__heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.news-announcements__controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(12rem, 1fr));
+  gap: 0.85rem 1rem;
+  align-items: center;
+}
+
+.news-announcements__eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.news-announcements h2,
+.news-announcements p {
+  margin: 0;
+}
+
+.news-announcements__toolbar .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+.news-announcements__option-symbol {
+  font-weight: 700;
+}
+
+.news-announcements__option-name {
+  margin-inline-start: 0.55rem;
+  color: var(--text-secondary);
+}
+
+.news-announcements__option-market {
+  margin-inline-start: auto;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.news-announcements__banner--warning {
+  color: #f6c55b;
+  border-color: rgba(246, 197, 91, 0.28);
+  background: rgba(246, 197, 91, 0.08);
+}
+
+.news-announcements__banner--error {
+  color: #ff9b9b;
+  border-color: rgba(255, 107, 107, 0.28);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.news-announcements__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.news-announcements__grid {
+  min-height: 0;
+}
+
+@media (max-width: 1080px) {
+  .news-announcements__controls {
+    grid-template-columns: 1fr;
+  }
+
+  .news-announcements__meta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
