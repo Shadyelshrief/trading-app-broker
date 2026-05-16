@@ -1,0 +1,73 @@
+@if (vm$ | async; as vm) {
+  <section class="header-market-status" aria-label="Market status">
+    <div class="header-market-status__field-group header-market-status__field-group--market">
+      <span class="header-market-status__field-label">Market</span>
+      <mat-form-field appearance="outline" class="header-market-status__field">
+        <mat-select [value]="vm.selectedMarket" (valueChange)="selectMarket($event)" aria-label="Market">
+          @for (market of vm.markets; track market.id) {
+            <mat-option [value]="market.id">{{ market.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="header-market-status__field-group header-market-status__field-group--index">
+      <span class="header-market-status__field-label">Index</span>
+      <mat-form-field appearance="outline" class="header-market-status__field">
+        <mat-select [value]="vm.selectedIndex" (valueChange)="selectIndex($event)" aria-label="Index">
+          @for (index of vm.indexes; track index.id) {
+            <mat-option [value]="index.id">{{ index.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="header-market-status__badge" [ngClass]="'header-market-status__badge--' + vm.statusTone">
+      {{ vm.marketStatus }}
+    </div>
+
+    <div class="header-market-status__metric header-market-status__metric--primary">
+      <span class="header-market-status__label">Index</span>
+      <span class="header-market-status__value">{{ vm.indexValue === null ? '--' : (vm.indexValue | number: '1.2-2') }}</span>
+    </div>
+
+    <div class="header-market-status__metric" [ngClass]="'header-market-status__metric--' + vm.changeTone">
+      <span class="header-market-status__label">Change</span>
+      <span class="header-market-status__value">
+        {{ vm.change === null ? '--' : ((vm.change > 0 ? '+' : '') + (vm.change | number: '1.2-2')) }}
+      </span>
+    </div>
+
+    <div class="header-market-status__metric header-market-status__metric--hide-md" [ngClass]="'header-market-status__metric--' + vm.changeTone">
+      <span class="header-market-status__label">Change %</span>
+      <span class="header-market-status__value">
+        {{ vm.changePercent === null ? '--' : ((vm.changePercent > 0 ? '+' : '') + (vm.changePercent | number: '1.2-2') + '%') }}
+      </span>
+    </div>
+
+    <div class="header-market-status__metric header-market-status__metric--hide-lg">
+      <span class="header-market-status__label">Trades</span>
+      <span class="header-market-status__value">{{ vm.numberOfTrades === null ? '--' : (vm.numberOfTrades | number: '1.0-0') }}</span>
+    </div>
+
+    <div class="header-market-status__metric header-market-status__metric--hide-xl">
+      <span class="header-market-status__label">Volume</span>
+      <span class="header-market-status__value">{{ vm.totalVolume === null ? '--' : (vm.totalVolume | number: '1.0-0') }}</span>
+    </div>
+
+    <div class="header-market-status__metric header-market-status__metric--hide-xl">
+      <span class="header-market-status__label">Turnover</span>
+      <span class="header-market-status__value">{{ vm.turnover === null ? '--' : (vm.turnover | number: '1.0-0') }}</span>
+    </div>
+
+    <div class="header-market-status__clock" aria-live="polite">
+      <span class="header-market-status__time">{{ vm.marketTime }}</span>
+      <span class="header-market-status__date">{{ vm.marketDate }}</span>
+    </div>
+
+    <div class="header-market-status__connection" [ngClass]="'header-market-status__connection--' + vm.connectionTone">
+      <span class="header-market-status__connection-dot" aria-hidden="true"></span>
+      <span>{{ vm.connectionLabel }}</span>
+    </div>
+  </section>
+}

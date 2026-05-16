@@ -1,0 +1,12 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+.market-charts-page {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  padding: 1rem;
+}

@@ -1,17 +1,4 @@
 <header class="trading-header" role="banner">
-  <div class="trading-header__ribbon" aria-hidden="true">
-    <div class="trading-header__ribbon-track">
-      <span>SPX <strong>5,284</strong> +0.42%</span>
-      <span>NDX <strong>18,412</strong> +0.61%</span>
-      <span>US10Y <strong>4.12%</strong> −0.02</span>
-      <span>VIX <strong>14.6</strong> −1.2%</span>
-      <span>SPX <strong>5,284</strong> +0.42%</span>
-      <span>NDX <strong>18,412</strong> +0.61%</span>
-      <span>US10Y <strong>4.12%</strong> −0.02</span>
-      <span>VIX <strong>14.6</strong> −1.2%</span>
-    </div>
-  </div>
-
   <div class="trading-header__bar">
     <div class="trading-header__left">
       <button
@@ -30,38 +17,32 @@
           <span class="trading-header__route">{{ routePath() }}</span>
         </div>
       </div>
-
-      <div class="trading-header__market" role="status">
-        <span class="trading-header__market-dot" aria-hidden="true"></span>
-        <span class="trading-header__market-text">US equities · Regular session</span>
-      </div>
     </div>
 
     <div class="trading-header__center">
-      <label class="trading-header__search">
-        <span class="trading-header__sr">Command search</span>
-        <app-trading-icon name="search" />
-        <input type="search" placeholder="Search symbols, clients, commands…" autocomplete="off" />
-      </label>
+      <mat-form-field appearance="outline" class="trading-header__search-field">
+        <mat-label>Command search</mat-label>
+        <app-trading-icon matPrefix name="search" />
+        <input
+          matInput
+          type="search"
+          autocomplete="off"
+          placeholder="Search symbols, clients, commands..."
+          [ngModel]="commandSearch()"
+          (ngModelChange)="commandSearch.set($event)"
+        />
+      </mat-form-field>
     </div>
 
     <div class="trading-header__right">
-      <div class="trading-header__clock" aria-live="polite">
-        <app-trading-icon name="clock" />
-        <div>
-          <div class="trading-header__time">{{ formatClock(now()) }}</div>
-          <div class="trading-header__date">{{ formatSession(now()) }}</div>
-        </div>
-      </div>
-
-      <label class="trading-header__workspace">
-        <span class="trading-header__sr">Workspace</span>
-        <select [value]="layout.activeWorkspaceId()" (change)="onWorkspaceSelect($event)">
+      <mat-form-field appearance="outline" class="trading-header__workspace-field">
+        <mat-label>Workspace</mat-label>
+        <mat-select [value]="layout.activeWorkspaceId()" (valueChange)="onWorkspaceSelect($event)">
           @for (ws of workspaces; track ws.id) {
-            <option [value]="ws.id">{{ ws.label }}</option>
+            <mat-option [value]="ws.id">{{ ws.label }}</mat-option>
           }
-        </select>
-      </label>
+        </mat-select>
+      </mat-form-field>
 
       <button
         type="button"
@@ -70,7 +51,7 @@
         [attr.title]="layout.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
         (click)="toggleTheme()"
       >
-        <span class="trading-header__theme-glyph" aria-hidden="true">{{ layout.theme() === 'dark' ? '◐' : '◑' }}</span>
+        <span class="trading-header__theme-glyph" aria-hidden="true">{{ layout.theme() === 'dark' ? 'D' : 'L' }}</span>
       </button>
 
       <button type="button" class="trading-header__icon-btn" aria-label="Notifications" title="Notifications">
@@ -87,7 +68,7 @@
           (click)="toggleProfile()"
         >
           <app-trading-icon name="user" />
-          <span class="trading-header__chevron" aria-hidden="true">▾</span>
+          <span class="trading-header__chevron" aria-hidden="true">v</span>
         </button>
 
         @if (profileOpen()) {
@@ -97,5 +78,9 @@
         }
       </div>
     </div>
+  </div>
+
+  <div class="trading-header__status-row">
+    <app-header-market-status class="trading-header__status-widget" />
   </div>
 </header>

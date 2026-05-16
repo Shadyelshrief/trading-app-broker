@@ -19,7 +19,14 @@ interface ResetTokenRecord {
   expiresAtMs: number;
 }
 
+interface MarketFeederSession {
+  accessToken: string;
+  refreshToken: string;
+  expiresAtMs: number;
+}
+
 const resetTokenStore = new Map<string, ResetTokenRecord>();
+const marketFeederSessionStore = new Map<string, MarketFeederSession>();
 
 const DEMO_EMAIL = 'demo@broker.local';
 const DEMO_PASSWORD = 'Password1!';
@@ -63,6 +70,29 @@ function readUrlToken(req: HttpRequest<unknown>): string | null {
   }
 }
 
+function issueMarketFeederTokens(username: string): {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+} {
+  const entropy = crypto.randomUUID().replace(/-/g, '');
+  const accessToken = `mock-feeder-access-${username}-${entropy}`;
+  const refreshToken = `mock-feeder-refresh-${username}-${entropy}`;
+  const expiresIn = 900;
+
+  marketFeederSessionStore.set(refreshToken, {
+    accessToken,
+    refreshToken,
+    expiresAtMs: Date.now() + expiresIn * 1_000
+  });
+
+  return {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    expires_in: expiresIn
+  };
+}
+
 export const mockAuthInterceptor: HttpInterceptorFn = (req, next) => {
   if (!environment.useMockAuth) {
     return next(req);
@@ -71,6 +101,56 @@ export const mockAuthInterceptor: HttpInterceptorFn = (req, next) => {
   const path = pathname(req.url);
 
   if (!path.startsWith(`${environment.apiUrl}/auth`)) {
+    const marketAuthPath = (() => {
+      try {
+        return new URL(environment.marketData.authHttpUrl, 'https://local.invalid').pathname;
+      } catch {
+        return environment.marketData.authHttpUrl;
+      }
+    })();
+
+    if (!environment.marketData.useMockAuth || !path.startsWith(marketAuthPath)) {
+      return next(req);
+    }
+
+    if (req.method === 'POST' && path.endsWith('/login')) {
+      const body = req.body as { username?: string; password?: string };
+
+      if (!body?.username || !body?.password) {
+        return throwError(
+          () =>
+            new HttpErrorResponse({
+              status: 400,
+              statusText: 'Bad Request',
+              error: { message: 'Username and password are required.' }
+            })
+        );
+      }
+
+      return jsonResponse(issueMarketFeederTokens(body.username));
+    }
+
+    if (req.method === 'POST' && path.endsWith('/refresh')) {
+      const body = req.body as { refresh_token?: string };
+      const refreshToken = typeof body?.refresh_token === 'string' ? body.refresh_token : '';
+      const existingSession = marketFeederSessionStore.get(refreshToken);
+
+      if (!existingSession) {
+        return throwError(
+          () =>
+            new HttpErrorResponse({
+              status: 401,
+              statusText: 'Unauthorized',
+              error: { message: 'Refresh token is invalid or expired.' }
+            })
+        );
+      }
+
+      marketFeederSessionStore.delete(refreshToken);
+
+      return jsonResponse(issueMarketFeederTokens('awad'));
+    }
+
     return next(req);
   }
 

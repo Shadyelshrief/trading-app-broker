@@ -18,9 +18,18 @@
   display: grid;
   grid-template-columns: 17.5rem minmax(0, 1fr);
   gap: 0.65rem;
+  height: 100%;
   min-height: 0;
+  align-items: stretch;
+  overflow: hidden;
   padding: 0 0.75rem 0.75rem;
   transition: grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-shell__body > app-trading-sidebar,
+.app-shell__body > .app-shell__workspace {
+  height: 100%;
+  min-height: 0;
 }
 
 .app-shell__body--sidebar-collapsed {
@@ -39,11 +48,11 @@
   flex-direction: column;
 }
 
-.app-shell__workspace app-workspace-page {
+.app-shell__workspace > router-outlet + * {
+  display: flex;
   flex: 1;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
 }
 
 .app-shell__scrim {

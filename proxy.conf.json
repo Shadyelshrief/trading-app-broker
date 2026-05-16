@@ -1,0 +1,21 @@
+{
+  "/feeder-api": {
+    "target": "http://localhost:7070",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/feeder-api": "/api"
+    }
+  },
+  "/feeder-ws": {
+    "target": "ws://localhost:7070",
+    "ws": true,
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/feeder-ws": "/ws"
+    }
+  }
+}

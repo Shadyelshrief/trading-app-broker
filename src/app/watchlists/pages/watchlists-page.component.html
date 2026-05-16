@@ -1,0 +1,21 @@
+@if (vm$ | async; as vm) {
+  <section class="watchlists-page">
+    <header class="watchlists-page__header">
+      <div>
+        <p class="watchlists-page__eyebrow">Pricing</p>
+        <h2>Watch Lists</h2>
+      </div>
+      <span>{{ vm.rows.length }} symbols</span>
+    </header>
+
+    <app-market-grid
+      class="watchlists-page__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns"
+      [loading]="vm.loading"
+      [marketType]="'watchlists'"
+      [stateKey]="'watchlists-grid-v1'"
+      [settings]="vm.settings"
+    />
+  </section>
+}

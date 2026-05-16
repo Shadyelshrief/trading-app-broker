@@ -1,0 +1,78 @@
+@if (vm$ | async; as vm) {
+  <section class="full-market-page">
+    <header class="full-market-page__toolbar">
+      <div class="full-market-page__toolbar-main">
+        <div>
+          <p class="full-market-page__eyebrow">Pricing</p>
+          <h2>Full Market</h2>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Market</mat-label>
+          <mat-select (valueChange)="selectExchange($event)" [value]="vm.selectedExchange">
+            <mat-option value="adx">ADX</mat-option>
+            <mat-option value="dfm">DFM</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sector</mat-label>
+          <mat-select (valueChange)="selectSector($event)" [value]="'ALL'">
+            <mat-option value="ALL">All sectors</mat-option>
+            @for (sector of vm.sectors; track sector) {
+              <mat-option [value]="sector">{{ sector }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-market-page__search">
+          <mat-label>Symbol Search</mat-label>
+          <input matInput [formControl]="searchControl" placeholder="Search symbol, company, sector" />
+        </mat-form-field>
+      </div>
+
+      <div class="full-market-page__toolbar-side">
+        <button mat-stroked-button [matMenuTriggerFor]="directionMenu">Direction Filter</button>
+        <mat-menu #directionMenu="matMenu">
+          <button mat-menu-item (click)="selectDirection('ALL')">All</button>
+          <button mat-menu-item (click)="selectDirection('UP')">Rising</button>
+          <button mat-menu-item (click)="selectDirection('DOWN')">Falling</button>
+          <button mat-menu-item (click)="selectDirection('UNCHANGED')">Unchanged</button>
+        </mat-menu>
+
+        <button mat-stroked-button>Export</button>
+        <button mat-stroked-button>Layout</button>
+
+        <mat-slide-toggle (change)="toggleAutoScroll($event.checked)">Auto Scroll</mat-slide-toggle>
+
+        <div class="full-market-page__status" [class.full-market-page__status--reconnecting]="vm.connectionTone === 'reconnecting'" [class.full-market-page__status--disconnected]="vm.connectionTone === 'disconnected'">
+          <span class="full-market-page__status-dot"></span>
+          <span>{{ vm.connectionLabel }}</span>
+        </div>
+
+        <div class="full-market-page__counter">{{ vm.totalSymbols }} symbols</div>
+      </div>
+    </header>
+
+    <section class="full-market-page__meta">
+      <p>Primary market monitoring workspace for realtime pricing, depth launch, quote launch, and order flow actions.</p>
+      <p>Last update: {{ vm.lastUpdatedAt ? (vm.lastUpdatedAt | date: 'HH:mm:ss') : '--' }}</p>
+    </section>
+
+    <app-market-grid
+      class="full-market-page__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns"
+      [contextMenuActions]="menuActions"
+      [loading]="vm.loading"
+      [marketType]="'full-market'"
+      [stateKey]="'full-market-grid-v2-community'"
+      [settings]="vm.settings"
+      (buyOrder)="openOrderTicket('buy', $event)"
+      (sellOrder)="openOrderTicket('sell', $event)"
+      (priceQuote)="openPriceQuote($event)"
+      (depthRequest)="0"
+      (chartRequest)="0"
+    />
+  </section>
+}

@@ -1,0 +1,105 @@
+@if (vm$ | async; as vm) {
+  <section class="price-quote">
+    <header class="price-quote__toolbar">
+      <div>
+        <p class="price-quote__eyebrow">Pricing</p>
+        <h2>Price Quote</h2>
+      </div>
+
+      <mat-form-field appearance="outline" class="price-quote__selector">
+        <mat-label>Selected Symbol</mat-label>
+        <mat-select [value]="vm.symbolId" (valueChange)="selectSymbol($event)">
+          @for (symbol of vm.availableSymbols; track symbol.market + ':' + symbol.symbolId) {
+            <mat-option [value]="symbol.symbolId">{{ symbol.symbolId }} - {{ symbol.symbolName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </header>
+
+    <section class="price-quote__summary">
+      <div>
+        <p class="price-quote__eyebrow">Symbol</p>
+        <h3 [ngClass]="directionClass(vm)">{{ vm.symbolId }}</h3>
+        <p class="price-quote__symbol-name" [ngClass]="directionClass(vm)">{{ vm.symbolName }}</p>
+        <p class="price-quote__meta-line">{{ vm.market }} · {{ vm.currency }} · {{ vm.lastTradeTime }}</p>
+      </div>
+
+      <div class="price-quote__headline" [ngClass]="directionClass(vm)">
+        <strong>{{ vm.lastPrice | number: '1.2-2' }}</strong>
+        <span>{{ (vm.change > 0 ? '+' : '') + (vm.change | number: '1.2-2') }}</span>
+        <span>{{ (vm.changePercent > 0 ? '+' : '') + (vm.changePercent | number: '1.2-2') }}%</span>
+      </div>
+    </section>
+
+    <section class="price-quote__chart-card">
+      <div class="price-quote__chart-header">
+        <div>
+          <p class="price-quote__eyebrow">Price Direction</p>
+          <h4>{{ vm.symbolId }} Realtime Trend</h4>
+        </div>
+        @if (vm.suspended) {
+          <span class="price-quote__status price-quote__status--suspended">{{ vm.status }}</span>
+        } @else {
+          <span class="price-quote__status">{{ vm.status }}</span>
+        }
+      </div>
+
+      <app-market-chart
+        class="price-quote__chart"
+        [series]="chartSeries(vm)"
+        [chartType]="'line'"
+        [timeframe]="'1D'"
+        [symbol]="vm.symbolId"
+        [realtime]="true"
+      />
+    </section>
+
+    <section class="price-quote__range-card">
+      <div class="price-quote__chart-header">
+        <div>
+          <p class="price-quote__eyebrow">52 Week Range</p>
+          <h4>Last Price Position</h4>
+        </div>
+        <strong class="price-quote__range-value">{{ vm.lastPrice | number: '1.2-2' }}</strong>
+      </div>
+
+      <div class="price-quote__range">
+        <div class="price-quote__range-bar">
+          <span class="price-quote__range-mid"></span>
+          <span class="price-quote__range-marker" [style.left.%]="vm.rangePositionPercent"></span>
+        </div>
+        <div class="price-quote__range-labels">
+          <span>Low {{ rangeLabel(vm.week52Low || vm.lowPrice || vm.toleranceLow) }}</span>
+          <span>Mid {{ rangeLabel(((vm.week52Low || vm.lowPrice || vm.toleranceLow) + (vm.week52High || vm.highPrice || vm.toleranceHigh)) / 2) }}</span>
+          <span>High {{ rangeLabel(vm.week52High || vm.highPrice || vm.toleranceHigh) }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="price-quote__metrics">
+      <article class="price-quote__metric"><span>Bid Price</span><strong [ngClass]="directionClass(vm)">{{ vm.bidPrice | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>Bid Quantity</span><strong>{{ vm.bidQty | number: '1.0-0' }}</strong></article>
+      <article class="price-quote__metric"><span>Offer Price</span><strong [ngClass]="directionClass(vm)">{{ vm.offerPrice | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>Offer Quantity</span><strong>{{ vm.offerQty | number: '1.0-0' }}</strong></article>
+      <article class="price-quote__metric"><span>Trade Price</span><strong>{{ vm.tradePrice | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>Trade Quantity</span><strong>{{ vm.tradeQty | number: '1.0-0' }}</strong></article>
+      <article class="price-quote__metric"><span>Total Bid Quantity</span><strong>{{ vm.totalBidQty | number: '1.0-0' }}</strong></article>
+      <article class="price-quote__metric"><span>Total Offer Quantity</span><strong>{{ vm.totalOfferQty | number: '1.0-0' }}</strong></article>
+      <article class="price-quote__metric"><span>Ratio Offer/Bid</span><strong>{{ vm.ratioOfferBid | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>Previous Close</span><strong>{{ vm.previousClose | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>Open Price</span><strong>{{ vm.openPrice | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>High Price</span><strong>{{ vm.highPrice | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>Low Price</span><strong>{{ vm.lowPrice | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>Average Price</span><strong>{{ vm.averagePrice | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>Number of Trades</span><strong>{{ vm.numberOfTrades | number: '1.0-0' }}</strong></article>
+      <article class="price-quote__metric"><span>Total Volume</span><strong>{{ vm.totalVolume | number: '1.0-0' }}</strong></article>
+      <article class="price-quote__metric"><span>Turnover</span><strong>{{ vm.turnover | number: '1.0-0' }}</strong></article>
+      <article class="price-quote__metric"><span>Market Cap</span><strong>{{ vm.marketCap | number: '1.0-0' }}</strong></article>
+      <article class="price-quote__metric"><span>Yield</span><strong>{{ vm.yield | number: '1.2-2' }}%</strong></article>
+      <article class="price-quote__metric"><span>PER</span><strong>{{ vm.per | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>PBR</span><strong>{{ vm.pbr | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>Tolerance High</span><strong>{{ vm.toleranceHigh | number: '1.2-2' }}</strong></article>
+      <article class="price-quote__metric"><span>Tolerance Low</span><strong>{{ vm.toleranceLow | number: '1.2-2' }}</strong></article>
+    </section>
+  </section>
+}

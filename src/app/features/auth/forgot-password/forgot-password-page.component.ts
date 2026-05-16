@@ -2,6 +2,9 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
@@ -13,7 +16,15 @@ import { emailFieldValidators } from '../../../shared/validation/auth-validators
 @Component({
   selector: 'app-forgot-password-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, AuthChromeComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    AuthChromeComponent
+  ],
   templateUrl: './forgot-password-page.component.html',
   styleUrl: './forgot-password-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

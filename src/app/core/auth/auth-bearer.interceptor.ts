@@ -6,6 +6,8 @@ import { AuthService } from './auth.service';
 
 const skipBearerPathSuffixes = [
   '/auth/login',
+  '/v1/auth/login',
+  '/v1/auth/refresh',
   '/auth/forgot-password',
   '/auth/reset-password',
   '/auth/reset-password/validate'

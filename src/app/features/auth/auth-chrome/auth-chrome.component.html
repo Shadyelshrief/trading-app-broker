@@ -1,46 +1,111 @@
 <div class="auth-chrome">
   <div class="auth-chrome__scene" aria-hidden="true">
-    <div class="auth-chrome__aurora"></div>
+    <div class="auth-chrome__gradient"></div>
+    <div class="auth-chrome__mesh"></div>
     <div class="auth-chrome__grid"></div>
+    <div class="auth-chrome__glow auth-chrome__glow--one"></div>
+    <div class="auth-chrome__glow auth-chrome__glow--two"></div>
 
-    <div class="auth-chrome__chart">
+    <div class="auth-chrome__chart auth-chrome__chart--primary">
       <svg
         class="auth-chrome__svg"
-        viewBox="0 0 400 120"
+        viewBox="0 0 480 160"
         preserveAspectRatio="none"
-        aria-hidden="true"
         focusable="false"
       >
         <defs>
-          <linearGradient id="auth-spark-fill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stop-color="rgba(32, 196, 160, 0.35)" />
-            <stop offset="100%" stop-color="rgba(32, 196, 160, 0)" />
+          <linearGradient id="auth-chart-fill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="rgba(59, 130, 246, 0.20)" />
+            <stop offset="100%" stop-color="rgba(59, 130, 246, 0)" />
           </linearGradient>
-          <linearGradient id="auth-spark-stroke" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stop-color="rgba(96, 135, 255, 0.15)" />
-            <stop offset="50%" stop-color="rgba(32, 196, 160, 0.85)" />
-            <stop offset="100%" stop-color="rgba(96, 135, 255, 0.35)" />
+          <linearGradient id="auth-chart-line" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stop-color="rgba(59, 130, 246, 0.10)" />
+            <stop offset="40%" stop-color="rgba(0, 194, 168, 0.90)" />
+            <stop offset="100%" stop-color="rgba(59, 130, 246, 0.75)" />
           </linearGradient>
         </defs>
         <path
           class="auth-chrome__area"
-          d="M0,95 L40,52 L80,68 L120,38 L160,58 L200,28 L240,48 L280,32 L320,56 L360,22 L400,44 L400,120 L0,120 Z"
+          d="M0,122 L42,116 L84,102 L126,108 L168,78 L210,88 L252,56 L294,62 L336,34 L378,44 L420,18 L480,24 L480,160 L0,160 Z"
         />
         <polyline
-          class="auth-chrome__line"
-          points="0,95 40,52 80,68 120,38 160,58 200,28 240,48 280,32 320,56 360,22 400,44"
+          class="auth-chrome__line auth-chrome__line--primary"
+          points="0,122 42,116 84,102 126,108 168,78 210,88 252,56 294,62 336,34 378,44 420,18 480,24"
         />
       </svg>
     </div>
 
-    <div class="auth-chrome__bars">
+    <div class="auth-chrome__chart auth-chrome__chart--secondary">
+      <svg
+        class="auth-chrome__svg"
+        viewBox="0 0 480 140"
+        preserveAspectRatio="none"
+        focusable="false"
+      >
+        <polyline
+          class="auth-chrome__line auth-chrome__line--secondary"
+          points="0,84 40,96 80,82 120,90 160,74 200,86 240,70 280,78 320,60 360,66 400,48 440,56 480,42"
+        />
+      </svg>
+    </div>
+
+    <div class="auth-chrome__candles">
       @for (height of barHeights; track $index) {
-        <span class="auth-chrome__bar" [style.height.%]="height" [style.animation-delay.ms]="$index * 45"></span>
+        <span class="auth-chrome__candle" [style.height.%]="height" [style.animation-delay.ms]="$index * 80">
+          <span class="auth-chrome__candle-wick"></span>
+          <span class="auth-chrome__candle-body" [class.auth-chrome__candle-body--down]="$index % 4 === 1"></span>
+        </span>
       }
     </div>
 
-    <div class="auth-chrome__orb"></div>
+    @for (point of dataPoints; track $index) {
+      <span
+        class="auth-chrome__blip"
+        [style.left.%]="point.left"
+        [style.top.%]="point.top"
+        [style.animation-delay.s]="point.delay"
+      ></span>
+    }
   </div>
+
+  <main class="auth-chrome__body">
+    <div class="auth-chrome__shell">
+      <section class="auth-chrome__brand-panel" aria-labelledby="auth-brand-title">
+        <p class="auth-chrome__brand-badge">Broker Trading Platform</p>
+        <h2 id="auth-brand-title">Trade smarter. Monitor faster.</h2>
+        <p class="auth-chrome__brand-copy">
+          Secure access to live markets, order workflows, client activity, and portfolio intelligence from a single enterprise trading workspace.
+        </p>
+
+        <div class="auth-chrome__feature-grid">
+          @for (feature of features; track feature.title) {
+            <article class="auth-chrome__feature">
+              <span class="auth-chrome__feature-icon">
+                <app-trading-icon [name]="feature.icon" />
+              </span>
+              <div>
+                <h3>{{ feature.title }}</h3>
+                <p>{{ feature.body }}</p>
+              </div>
+            </article>
+          }
+        </div>
+
+        <div class="auth-chrome__highlight-row">
+          @for (item of marketHighlights; track item.label) {
+            <div class="auth-chrome__highlight">
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+            </div>
+          }
+        </div>
+      </section>
+
+      <div class="auth-chrome__slot">
+        <ng-content />
+      </div>
+    </div>
+  </main>
 
   <div class="auth-chrome__ticker" aria-hidden="true">
     <div class="auth-chrome__ticker-track">
@@ -68,8 +133,4 @@
       </div>
     </div>
   </div>
-
-  <main class="auth-chrome__body">
-    <ng-content />
-  </main>
 </div>

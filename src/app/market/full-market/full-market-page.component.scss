@@ -1,0 +1,118 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+.full-market-page {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 1rem;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.full-market-page__toolbar {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(8, 18, 29, 0.76);
+}
+
+.full-market-page__toolbar-main,
+.full-market-page__toolbar-side {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.full-market-page__toolbar-main {
+  align-items: flex-end;
+}
+
+.full-market-page__toolbar .mat-mdc-form-field {
+  min-width: 11rem;
+  margin-bottom: -1.25em;
+}
+
+.full-market-page__toolbar .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+.full-market-page__eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.full-market-page h2,
+.full-market-page p {
+  margin: 0;
+}
+
+.full-market-page__search {
+  min-width: min(28rem, 100%);
+}
+
+.full-market-page__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.full-market-page__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(73, 209, 125, 0.25);
+  color: #49d17d;
+}
+
+.full-market-page__status-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.full-market-page__status--reconnecting {
+  color: #f6c55b;
+  border-color: rgba(246, 197, 91, 0.25);
+}
+
+.full-market-page__status--disconnected {
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.25);
+}
+
+.full-market-page__counter {
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+}
+
+.full-market-page__grid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 1100px) {
+  .full-market-page__meta {
+    flex-direction: column;
+  }
+}

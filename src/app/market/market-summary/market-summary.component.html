@@ -1,0 +1,220 @@
+@if (vm$ | async; as vm) {
+  <section class="market-summary">
+    <header class="market-summary__toolbar">
+      <div>
+        <p class="market-summary__eyebrow">Pricing</p>
+        <h2>Market Summary</h2>
+      </div>
+
+      <button
+        type="button"
+        mat-icon-button
+        class="market-summary__filter-button"
+        (click)="toggleFilters()"
+        [attr.aria-expanded]="filtersExpanded()"
+        aria-label="Toggle screen filters"
+      >
+        <span class="market-summary__filter-glyph" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+      </button>
+    </header>
+
+    @if (filtersExpanded()) {
+      <section class="market-summary__filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Market</mat-label>
+          <mat-select [value]="vm.selectedMarket" (valueChange)="selectMarket($event)">
+            @for (market of vm.markets; track market.id) {
+              <mat-option [value]="market.id">{{ market.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </section>
+    }
+
+    @if (vm.error) {
+      <section class="market-summary__banner market-summary__banner--error">
+        <span class="market-summary__inline-icon market-summary__inline-icon--error" aria-hidden="true">!</span>
+        <span>{{ vm.error }}</span>
+      </section>
+    }
+
+    <section class="market-summary__hero">
+      <div class="market-summary__hero-main">
+        <p class="market-summary__index-label">Main market index</p>
+        <div class="market-summary__headline">
+          <h3>{{ vm.indexName }}</h3>
+          <span
+            class="market-summary__status"
+            [ngClass]="{
+              'market-summary__status--opened': vm.marketStatus === 'OPENED',
+              'market-summary__status--closed': vm.marketStatus === 'CLOSED',
+              'market-summary__status--pre': vm.marketStatus === 'PRE_OPEN' || vm.marketStatus === 'PRE_CLOSE'
+            }"
+          >
+            {{ vm.statusLabel }}
+          </span>
+        </div>
+      </div>
+
+      <div
+        class="market-summary__price-block"
+        [ngClass]="{
+          'market-summary__price-block--up': vm.changeDirection === 'UP',
+          'market-summary__price-block--down': vm.changeDirection === 'DOWN',
+          'market-summary__price-block--flat': vm.changeDirection === 'UNCHANGED'
+        }"
+      >
+        <div class="market-summary__price-main">
+          <span class="market-summary__price-label">Index current value</span>
+          <strong class="market-summary__price-value">
+            {{ vm.hasLiveSummary ? (vm.indexCurrentValue | number: '1.2-2') : '--' }}
+          </strong>
+        </div>
+
+        <div class="market-summary__change">
+          <span class="market-summary__direction-icon" aria-hidden="true">{{ directionGlyph(vm.changeDirection) }}</span>
+          <div>
+            <div class="market-summary__change-value">
+              {{ vm.hasLiveSummary ? ((vm.change > 0 ? '+' : '') + (vm.change | number: '1.2-2')) : '--' }}
+            </div>
+            <div class="market-summary__change-percent">
+              {{
+                vm.hasLiveSummary
+                  ? ((vm.changePercent > 0 ? '+' : '') + (vm.changePercent | number: '1.2-2') + '%')
+                  : '--'
+              }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="market-summary__stats">
+      <article class="market-summary__stat-card">
+        <span>Total Trades</span>
+        <strong>{{ vm.hasLiveSummary ? (vm.totalTrades | number: '1.0-0') : '--' }}</strong>
+      </article>
+
+      <article class="market-summary__stat-card">
+        <span>Total Volume</span>
+        <strong>{{ vm.hasLiveSummary ? (vm.totalVolume | number: '1.0-0') : '--' }}</strong>
+      </article>
+
+      <article class="market-summary__stat-card">
+        <span>Turnover</span>
+        <strong>{{ vm.hasLiveSummary ? (vm.turnover | number: '1.0-0') : '--' }}</strong>
+      </article>
+
+      <article
+        class="market-summary__stat-card market-summary__stat-card--connection"
+        [ngClass]="{
+          'market-summary__stat-card--connected': vm.connectionState === 'CONNECTED',
+          'market-summary__stat-card--connecting': vm.connectionState === 'CONNECTING' || vm.connectionState === 'RECONNECTING',
+          'market-summary__stat-card--disconnected': vm.connectionState === 'DISCONNECTED'
+        }"
+      >
+        <span>Connection</span>
+        <strong>{{ vm.connectionLabel }}</strong>
+      </article>
+    </section>
+
+    <section class="market-summary__meta">
+      <p>Realtime market snapshot for the selected exchange main index.</p>
+      <p>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</p>
+    </section>
+
+    <mat-tab-group
+      class="market-summary__tabs"
+      [selectedIndex]="selectedTabIndex()"
+      (selectedIndexChange)="setTab($event)"
+    >
+      <mat-tab label="Summary">
+        <div class="market-summary__tab-content market-summary__tab-content--statistics">
+          <section class="market-summary__chart-card market-summary__chart-card--table">
+            <div class="market-summary__card-heading">
+              <div>
+                <p>Market participant statistics</p>
+                <h4>Type / Buy / Sell / Net</h4>
+              </div>
+            </div>
+
+            <app-market-grid
+              class="market-summary__statistics-grid"
+              [rowData]="vm.statistics"
+              [columnDefs]="statisticsColumns"
+              [gridOptions]="statisticsGridOptions"
+              [loading]="vm.loading"
+              [marketType]="'market-summary-statistics'"
+              [stateKey]="'market-summary-statistics-grid-v1'"
+              [settings]="gridSettings"
+            />
+          </section>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Statistics">
+        <div class="market-summary__tab-content">
+          <section class="market-summary__chart-card">
+            <div class="market-summary__card-heading">
+              <div>
+                <p>Intraday index chart</p>
+                <h4>{{ vm.indexName }}</h4>
+              </div>
+            </div>
+
+            @if (vm.chartData.length > 0) {
+              <app-market-chart
+                class="market-summary__chart"
+                [series]="chartSeries(vm)"
+                [chartType]="'line'"
+                [timeframe]="'1D'"
+                [symbol]="vm.indexName"
+                [realtime]="true"
+              />
+            } @else {
+              <div class="market-summary__empty">
+                <span class="market-summary__empty-icon" aria-hidden="true">↗</span>
+                <p>{{ vm.loading ? 'Waiting for intraday market index updates.' : 'No intraday chart data available.' }}</p>
+              </div>
+            }
+          </section>
+
+          <section class="market-summary__symbols-shell">
+            <div class="market-summary__card-heading">
+              <div>
+                <p>No. of Symbols</p>
+                <h4>Realtime market breadth</h4>
+              </div>
+            </div>
+
+            <section class="market-summary__symbols">
+              <article class="market-summary__symbol-card">
+                <span>Traded</span>
+                <strong>{{ vm.symbolsSummary.traded }}</strong>
+              </article>
+
+              <article class="market-summary__symbol-card market-summary__symbol-card--up">
+                <span>Up</span>
+                <strong>{{ vm.symbolsSummary.up }}</strong>
+              </article>
+
+              <article class="market-summary__symbol-card market-summary__symbol-card--down">
+                <span>Down</span>
+                <strong>{{ vm.symbolsSummary.down }}</strong>
+              </article>
+
+              <article class="market-summary__symbol-card market-summary__symbol-card--flat">
+                <span>Unchanged</span>
+                <strong>{{ vm.symbolsSummary.unchanged }}</strong>
+              </article>
+            </section>
+          </section>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </section>
+}

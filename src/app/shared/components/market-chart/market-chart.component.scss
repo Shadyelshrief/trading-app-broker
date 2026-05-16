@@ -1,0 +1,33 @@
+:host {
+  display: block;
+  min-height: 0;
+}
+
+.market-chart {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  min-height: 0;
+  height: 100%;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(6, 14, 22, 0.92);
+}
+
+.market-chart__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.market-chart__toolbar h3 {
+  margin: 0;
+}
+
+.market-chart__canvas {
+  display: block;
+  min-height: 0;
+  height: 100%;
+}

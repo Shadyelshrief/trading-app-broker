@@ -1,0 +1,68 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.market-grid-shell {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgba(6, 14, 22, 0.92);
+}
+
+.market-grid-shell__viewport {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  min-width: 0;
+}
+
+.market-grid-shell__grid {
+  display: block;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  font-size: var(--market-grid-font-size);
+  font-family: var(--market-grid-font-family);
+}
+
+:host ::ng-deep .market-grid-shell__viewport.ag-theme-quartz {
+  width: 100%;
+  height: 100%;
+  --ag-background-color: transparent;
+  --ag-foreground-color: var(--text-primary);
+  --ag-data-color: var(--text-primary);
+  --ag-header-background-color: rgba(255, 255, 255, 0.04);
+  --ag-header-foreground-color: var(--text-secondary);
+  --ag-row-hover-color: rgba(96, 135, 255, 0.08);
+  --ag-border-color: rgba(153, 181, 214, 0.12);
+}
+
+:host ::ng-deep .market-cell--bid {
+  color: var(--market-grid-bid-color);
+}
+
+:host ::ng-deep .market-cell--offer {
+  color: var(--market-grid-offer-color);
+}
+
+:host ::ng-deep .market-cell--up {
+  color: var(--market-up, #49d17d);
+}
+
+:host ::ng-deep .market-cell--down {
+  color: var(--market-down, #ff6b6b);
+}
+
+:host ::ng-deep .market-cell--flat {
+  color: var(--market-flat, #69a8ff);
+}

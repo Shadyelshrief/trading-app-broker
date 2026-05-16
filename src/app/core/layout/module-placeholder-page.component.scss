@@ -1,0 +1,39 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.module-placeholder-page {
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.module-placeholder-page__card {
+  max-width: 48rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(8, 18, 29, 0.76);
+}
+
+.module-placeholder-page__eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.module-placeholder-page h2,
+.module-placeholder-page p {
+  margin: 0;
+}
+
+.module-placeholder-page p:last-child {
+  margin-top: 0.75rem;
+  color: var(--text-secondary);
+}

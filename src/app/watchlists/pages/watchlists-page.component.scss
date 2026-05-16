@@ -1,0 +1,40 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+.watchlists-page {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 1rem;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.watchlists-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.watchlists-page__eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.watchlists-page h2,
+.watchlists-page span {
+  margin: 0;
+}
+
+.watchlists-page__grid {
+  min-height: 0;
+  overflow: hidden;
+}

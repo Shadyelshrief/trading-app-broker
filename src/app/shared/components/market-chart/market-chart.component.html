@@ -1,0 +1,13 @@
+<section class="market-chart">
+  <header class="market-chart__toolbar">
+    <h3>{{ symbol() }}</h3>
+
+    <mat-button-toggle-group [value]="timeframe()" (change)="onTimeframeChange($event.value)">
+      @for (option of timeframeOptions; track option) {
+        <mat-button-toggle [value]="option">{{ option }}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  </header>
+
+  <ag-charts class="market-chart__canvas" [options]="chartOptions()" />
+</section>

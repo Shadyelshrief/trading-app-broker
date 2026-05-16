@@ -8,17 +8,29 @@ import {
   signal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 
 import { AuthService } from '../../auth/auth.service';
+import { HeaderMarketStatusComponent } from './header-market-status.component';
 import { ShellLayoutService } from '../shell-layout.service';
 import { TradingIconComponent } from '../trading-icon/trading-icon.component';
 
 @Component({
   selector: 'app-trading-header',
   standalone: true,
-  imports: [TradingIconComponent],
+  imports: [
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    TradingIconComponent,
+    HeaderMarketStatusComponent
+  ],
   templateUrl: './trading-header.component.html',
   styleUrl: './trading-header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -30,11 +42,9 @@ export class TradingHeaderComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly document = inject(DOCUMENT);
 
-  protected readonly now = signal(new Date());
   protected readonly routePath = signal(this.router.url);
   protected readonly profileOpen = signal(false);
-
-  private clockIntervalId?: number;
+  protected readonly commandSearch = signal('');
 
   protected readonly workspaces = [
     { id: 'default', label: 'Default workspace' },
@@ -49,22 +59,6 @@ export class TradingHeaderComponent {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(() => this.routePath.set(this.router.url));
-
-    const win = this.document.defaultView;
-
-    if (!win) {
-      return;
-    }
-
-    this.clockIntervalId = win.setInterval(() => {
-      this.now.set(new Date());
-    }, 1000);
-
-    this.destroyRef.onDestroy(() => {
-      if (this.clockIntervalId !== undefined) {
-        win.clearInterval(this.clockIntervalId);
-      }
-    });
   }
 
   protected toggleProfile(): void {
@@ -88,18 +82,8 @@ export class TradingHeaderComponent {
     this.layout.toggleMobileNav();
   }
 
-  protected onWorkspaceSelect(event: Event): void {
-    const select = event.target as HTMLSelectElement;
-
-    this.layout.setWorkspaceId(select.value);
-  }
-
-  protected formatClock(d: Date): string {
-    return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  }
-
-  protected formatSession(d: Date): string {
-    return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  protected onWorkspaceSelect(workspaceId: string): void {
+    this.layout.setWorkspaceId(workspaceId);
   }
 
   @HostListener('document:click', ['$event'])

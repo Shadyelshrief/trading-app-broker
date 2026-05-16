@@ -1,0 +1,25 @@
+<section class="market-grid-shell" [ngClass]="gridClass()" [ngStyle]="cssVariables()">
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  <div class="market-grid-shell__viewport ag-theme-quartz">
+    <ag-grid-angular
+      class="market-grid-shell__grid"
+      [columnDefs]="columnDefs()"
+      [gridOptions]="mergedGridOptions()"
+      [rowData]="renderedRows()"
+      [suppressContextMenu]="false"
+      [rowModelType]="'clientSide'"
+      (gridReady)="onGridReady($event)"
+      (rowClicked)="onRowClicked($event)"
+      (cellDoubleClicked)="onCellDoubleClicked($event)"
+      (columnMoved)="onColumnStateChange($event)"
+      (columnPinned)="onColumnStateChange($event)"
+      (columnResized)="onColumnStateChange($event)"
+      (columnVisible)="onColumnStateChange($event)"
+      (sortChanged)="onColumnStateChange($event)"
+      (filterChanged)="onColumnStateChange($event)"
+    />
+  </div>
+</section>

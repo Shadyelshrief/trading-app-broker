@@ -1,0 +1,93 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+$broker-primary: mat.define-palette(mat.$blue-palette, 300, 200, 500);
+$broker-accent: mat.define-palette(mat.$cyan-palette, 300, 200, 500);
+$broker-warn: mat.define-palette(mat.$red-palette);
+
+$broker-dark-theme: mat.define-dark-theme((
+  color: (
+    primary: $broker-primary,
+    accent: $broker-accent,
+    warn: $broker-warn
+  ),
+  density: -2
+));
+
+$broker-light-theme: mat.define-light-theme((
+  color: (
+    primary: $broker-primary,
+    accent: $broker-accent,
+    warn: $broker-warn
+  ),
+  density: -2
+));
+
+:root {
+  @include mat.all-component-themes($broker-dark-theme);
+}
+
+:root[data-theme='light'] {
+  @include mat.all-component-colors($broker-light-theme);
+}
+
+:root {
+  .mat-mdc-form-field {
+    min-width: 10rem;
+  }
+
+  .mat-mdc-text-field-wrapper,
+  .mat-mdc-select-trigger {
+    font-size: 0.86rem;
+  }
+
+  .mdc-text-field--outlined {
+    --mdc-outlined-text-field-container-shape: 0.85rem;
+    --mdc-outlined-text-field-container-color: rgba(13, 24, 36, 0.82);
+    --mdc-outlined-text-field-hover-outline-color: rgba(126, 158, 197, 0.38);
+    --mdc-outlined-text-field-outline-color: rgba(126, 158, 197, 0.2);
+    --mdc-outlined-text-field-focus-outline-color: rgba(32, 196, 160, 0.72);
+    --mdc-outlined-text-field-label-text-color: var(--text-muted);
+    --mdc-outlined-text-field-input-text-color: var(--text-primary);
+    --mat-select-enabled-trigger-text-color: var(--text-primary);
+    --mat-select-enabled-arrow-color: var(--text-muted);
+  }
+
+  .mat-mdc-select-panel,
+  .mat-mdc-menu-panel {
+    border-radius: 0.9rem;
+    border: 1px solid rgba(126, 158, 197, 0.16);
+    background: rgba(9, 20, 31, 0.98);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
+    backdrop-filter: blur(20px);
+  }
+
+  .mat-mdc-option.mdc-list-item,
+  .mat-mdc-menu-item {
+    min-height: 2.5rem;
+    font-size: 0.86rem;
+  }
+
+  .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled),
+  .mat-mdc-option.mdc-list-item:focus.mdc-list-item,
+  .mat-mdc-option.mdc-list-item:hover:not(.mdc-list-item--disabled),
+  .mat-mdc-menu-item:hover:not([disabled]) {
+    background: rgba(96, 135, 255, 0.12);
+  }
+}
+
+:root[data-theme='light'] {
+  .mdc-text-field--outlined {
+    --mdc-outlined-text-field-container-color: rgba(245, 248, 252, 0.96);
+    --mdc-outlined-text-field-hover-outline-color: rgba(84, 112, 168, 0.35);
+    --mdc-outlined-text-field-outline-color: rgba(84, 112, 168, 0.2);
+    --mdc-outlined-text-field-focus-outline-color: rgba(24, 144, 193, 0.7);
+  }
+
+  .mat-mdc-select-panel,
+  .mat-mdc-menu-panel {
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 18px 42px rgba(27, 45, 82, 0.16);
+  }
+}
