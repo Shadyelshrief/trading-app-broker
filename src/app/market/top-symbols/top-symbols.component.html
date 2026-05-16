@@ -1,0 +1,80 @@
+@if (vm$ | async; as vm) {
+  <section class="top-symbols">
+    <header class="top-symbols__toolbar">
+      <div class="top-symbols__heading">
+        <div>
+          <p class="top-symbols__eyebrow">Pricing</p>
+          <h2>Top Symbols</h2>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Market</mat-label>
+          <mat-select [formControl]="marketControl">
+            @for (market of vm.marketOptions; track market.value) {
+              <mat-option [value]="market.value">{{ market.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="top-symbols__view-field">
+          <mat-label>Select View</mat-label>
+          <mat-select [formControl]="viewControl">
+            @for (view of vm.viewOptions; track view.value) {
+              <mat-option [value]="view.value">{{ view.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <div class="top-symbols__slider-shell">
+          <span class="top-symbols__slider-label">No. of Symbols</span>
+          <mat-slider min="10" max="50" step="10" discrete>
+            <input matSliderThumb [formControl]="numberOfSymbolsControl" />
+          </mat-slider>
+          <strong>{{ vm.filters.numberOfSymbols }}</strong>
+        </div>
+      </div>
+
+      <div class="top-symbols__toolbar-side">
+        <button mat-stroked-button>Export</button>
+        <button mat-stroked-button>Layout</button>
+
+        <div
+          class="top-symbols__status"
+          [class.top-symbols__status--reconnecting]="vm.connectionState === 'RECONNECTING' || vm.connectionState === 'CONNECTING'"
+          [class.top-symbols__status--disconnected]="vm.connectionState === 'DISCONNECTED'"
+        >
+          <span class="top-symbols__status-dot"></span>
+          <span>{{ vm.connectionLabel }}</span>
+        </div>
+      </div>
+    </header>
+
+    @if (vm.error) {
+      <section class="top-symbols__banner">
+        <span>{{ vm.error }}</span>
+      </section>
+    }
+
+    <section class="top-symbols__meta">
+      <p>Realtime ranking of today&apos;s leading symbols in the selected market universe.</p>
+      <p>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</p>
+    </section>
+
+    <app-market-grid
+      class="top-symbols__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns(vm.filters.selectedView)"
+      [contextMenuActions]="menuActions"
+      [loading]="vm.loading"
+      [marketType]="'top-symbols'"
+      [stateKey]="'top-symbols-grid-v1'"
+      [settings]="vm.settings"
+      (priceQuote)="openPriceQuote($event)"
+      (rowDoubleClicked)="openPriceQuote($event)"
+      (depthRequest)="0"
+      (chartRequest)="0"
+      (buyOrder)="0"
+      (sellOrder)="0"
+    />
+  </section>
+}

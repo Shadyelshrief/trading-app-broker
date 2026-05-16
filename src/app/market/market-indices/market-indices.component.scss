@@ -1,0 +1,120 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+.market-indices {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: 1rem;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.market-indices__toolbar,
+.market-indices__filters,
+.market-indices__error {
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(8, 18, 29, 0.76);
+}
+
+.market-indices__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.market-indices__eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.market-indices h2,
+.market-indices p {
+  margin: 0;
+}
+
+.market-indices__filters {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.market-indices__filters .mat-mdc-form-field {
+  min-width: 18rem;
+  margin-bottom: -1.25em;
+}
+
+.market-indices__filters .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+.market-indices__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(73, 209, 125, 0.25);
+  color: #49d17d;
+}
+
+.market-indices__status-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.market-indices__status--reconnecting {
+  color: #f6c55b;
+  border-color: rgba(246, 197, 91, 0.25);
+}
+
+.market-indices__status--disconnected {
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.25);
+}
+
+.market-indices__error {
+  color: #ff9b9b;
+  background: rgba(255, 107, 107, 0.08);
+  border-color: rgba(255, 107, 107, 0.28);
+}
+
+.market-indices__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.market-indices__grid {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+@media (max-width: 920px) {
+  .market-indices__toolbar,
+  .market-indices__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .market-indices__filters .mat-mdc-form-field {
+    min-width: 100%;
+  }
+}

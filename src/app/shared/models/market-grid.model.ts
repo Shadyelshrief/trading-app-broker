@@ -37,6 +37,7 @@ export interface MarketGridSettings {
   autoScroll: boolean;
   bidColor: string;
   offerColor: string;
+  highlightColor?: string;
   fontSize: number;
   fontFamily: string;
   theme: 'dark' | 'light';

@@ -1,0 +1,127 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+.market-depth-page {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 1rem;
+  height: 100%;
+  min-height: 0;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.market-depth-page__toolbar,
+.market-depth-page__banner {
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(8, 18, 29, 0.76);
+}
+
+.market-depth-page__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.market-depth-page__eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.market-depth-page h2,
+.market-depth-page p {
+  margin: 0;
+}
+
+.market-depth-page__symbol-field {
+  min-width: 20rem;
+  margin-bottom: -1.25em;
+}
+
+.market-depth-page__symbol-field .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+.market-depth-page__option-symbol {
+  font-weight: 700;
+}
+
+.market-depth-page__option-name {
+  margin-inline-start: 0.55rem;
+  color: var(--text-secondary);
+}
+
+.market-depth-page__option-market {
+  margin-inline-start: auto;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.market-depth-page__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(73, 209, 125, 0.18);
+  background: rgba(73, 209, 125, 0.08);
+  color: #49d17d;
+}
+
+.market-depth-page__status--reconnecting {
+  color: #f6c55b;
+  border-color: rgba(246, 197, 91, 0.24);
+  background: rgba(246, 197, 91, 0.08);
+}
+
+.market-depth-page__status--disconnected {
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.24);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.market-depth-page__status-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.market-depth-page__banner {
+  color: #ff9b9b;
+  border-color: rgba(255, 107, 107, 0.28);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.market-depth-page__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.market-depth-page__book {
+  min-height: 0;
+}
+
+@media (max-width: 960px) {
+  .market-depth-page__toolbar,
+  .market-depth-page__meta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .market-depth-page__symbol-field {
+    min-width: 100%;
+  }
+}

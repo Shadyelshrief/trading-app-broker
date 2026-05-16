@@ -1,0 +1,90 @@
+@if (vm$ | async; as vm) {
+  <section class="time-sales">
+    <header class="time-sales__toolbar">
+      <div class="time-sales__heading">
+        <div>
+          <p class="time-sales__eyebrow">Pricing</p>
+          <h2>Time &amp; Sales</h2>
+        </div>
+
+        <mat-checkbox [formControl]="allSymbolsControl">All Symbols</mat-checkbox>
+
+        <mat-form-field appearance="outline" class="time-sales__symbol-field">
+          <mat-label>Symbol search</mat-label>
+          <input
+            matInput
+            type="text"
+            [formControl]="symbolControl"
+            [matAutocomplete]="symbolAuto"
+            placeholder="Search symbol ID or symbol name"
+          />
+          <mat-autocomplete #symbolAuto="matAutocomplete" [displayWith]="displaySymbol.bind(this)">
+            @for (option of vm.filteredSymbolOptions; track option.marketShortName + '-' + option.symbolId) {
+              <mat-option [value]="option">
+                <span class="time-sales__option-symbol">{{ option.symbolId }}</span>
+                <span class="time-sales__option-name">{{ option.symbolName }}</span>
+                <span class="time-sales__option-market">{{ option.marketShortName }}</span>
+              </mat-option>
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Market</mat-label>
+          <mat-select [formControl]="marketControl">
+            @for (market of vm.marketOptions; track market.value) {
+              <mat-option [value]="market.value">{{ market.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="time-sales__quantity-field">
+          <mat-label>Quantity &gt;=</mat-label>
+          <input matInput type="number" min="0" step="1" [formControl]="minQuantityControl" />
+        </mat-form-field>
+      </div>
+
+      <div class="time-sales__toolbar-side">
+        <button mat-stroked-button>Export</button>
+        <button mat-stroked-button>Layout</button>
+
+        <div
+          class="time-sales__status"
+          [class.time-sales__status--reconnecting]="vm.connectionState === 'RECONNECTING' || vm.connectionState === 'CONNECTING'"
+          [class.time-sales__status--disconnected]="vm.connectionState === 'DISCONNECTED'"
+        >
+          <span class="time-sales__status-dot"></span>
+          <span>{{ vm.connectionLabel }}</span>
+        </div>
+
+        <div class="time-sales__counter">{{ vm.rowCount }} trades</div>
+      </div>
+    </header>
+
+    @if (vm.error) {
+      <section class="time-sales__banner">
+        <span>{{ vm.error }}</span>
+      </section>
+    }
+
+    <section class="time-sales__meta">
+      <p>Realtime tape of today&apos;s executed trades across the selected market universe.</p>
+      <p>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</p>
+    </section>
+
+    <app-market-grid
+      class="time-sales__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns"
+      [contextMenuActions]="menuActions"
+      [loading]="vm.loading"
+      [marketType]="'time-sales'"
+      [stateKey]="'time-sales-grid-v1'"
+      [settings]="vm.settings"
+      (priceQuote)="openPriceQuote($event)"
+      (rowDoubleClicked)="openPriceQuote($event)"
+      (depthRequest)="0"
+      (chartRequest)="0"
+    />
+  </section>
+}

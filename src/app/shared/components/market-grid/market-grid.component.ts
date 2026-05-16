@@ -99,7 +99,8 @@ export class MarketGridComponent {
     '--market-grid-font-size': `${this.settings().fontSize}px`,
     '--market-grid-font-family': this.settings().fontFamily,
     '--market-grid-bid-color': this.settings().bidColor,
-    '--market-grid-offer-color': this.settings().offerColor
+    '--market-grid-offer-color': this.settings().offerColor,
+    '--market-grid-highlight-color': this.settings().highlightColor ?? '#f6c55b'
   }));
   protected readonly loadingMessage = signal('Loading market data...');
 

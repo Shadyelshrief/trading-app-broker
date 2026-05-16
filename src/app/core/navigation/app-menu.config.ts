@@ -76,6 +76,12 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
         routerLink: appRoute('/pricing/top-symbols')
       },
       {
+        id: 'pricing-historical-top-symbols',
+        label: 'Historical Top Symbols',
+        icon: 'book',
+        routerLink: appRoute('/pricing/historical-top-symbols')
+      },
+      {
         id: 'pricing-news-announcements',
         label: 'News & Announcements',
         icon: 'book',

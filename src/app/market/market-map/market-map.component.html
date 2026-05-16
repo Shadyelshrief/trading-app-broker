@@ -1,0 +1,108 @@
+@if (vm$ | async; as vm) {
+  <section class="market-map-page">
+    <header class="market-map-page__toolbar">
+      <div>
+        <p class="market-map-page__eyebrow">Pricing</p>
+        <h2>Market Map</h2>
+      </div>
+
+      <div class="market-map-page__filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Market</mat-label>
+          <mat-select [value]="vm.filters.market" (selectionChange)="selectMarket($event.value)">
+            @for (option of vm.marketOptions; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sort Order</mat-label>
+          <mat-select [value]="vm.filters.sortOrder" (selectionChange)="selectSortOrder($event.value)">
+            @for (option of vm.sortOrderOptions; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sort Criteria</mat-label>
+          <mat-select [value]="vm.filters.sortCriteria" (selectionChange)="selectSortCriteria($event.value)">
+            @for (option of vm.sortCriteriaOptions; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div
+        class="market-map-page__status"
+        [class.market-map-page__status--reconnecting]="vm.connectionState === 'RECONNECTING' || vm.connectionState === 'CONNECTING'"
+        [class.market-map-page__status--disconnected]="vm.connectionState === 'DISCONNECTED'"
+      >
+        <span class="market-map-page__status-dot"></span>
+        <span>{{ vm.connectionLabel }}</span>
+      </div>
+    </header>
+
+    @if (vm.error) {
+      <section class="market-map-page__banner">
+        <span>{{ vm.error }}</span>
+      </section>
+    }
+
+    <section class="market-map-page__meta">
+      <p>Sorted by {{ criteriaLabel(vm.filters.sortCriteria) }} · {{ vm.filters.sortOrder === 'ASC' ? 'Ascending' : 'Descending' }}</p>
+      <p>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</p>
+    </section>
+
+    @if (vm.symbols.length === 0) {
+      <section class="market-map-page__empty">
+        <h3>No symbols available</h3>
+        <p>The selected market does not currently expose any Market Map symbols.</p>
+      </section>
+    } @else {
+      <section class="market-map-page__board">
+        @if (vm.loading) {
+          <div class="market-map-page__loading">
+            <span class="market-map-page__loading-dot"></span>
+            <span>Waiting for live market tiles...</span>
+          </div>
+        }
+
+        <div class="market-map-page__tiles">
+          @for (symbol of vm.symbols; track trackBySymbol($index, symbol)) {
+            <button
+              type="button"
+              class="market-map-page__tile"
+              [class.market-map-page__tile--invalid]="!symbol.valid"
+              [ngClass]="directionClass(symbol)"
+              [style.background]="symbol.color"
+              [style.font-family]="vm.settings.fontFamily"
+              [style.font-size.px]="vm.settings.fontSize"
+              [matTooltip]="tooltipFor(symbol)"
+              matTooltipClass="market-map__tooltip"
+              (dblclick)="openPriceQuote(symbol)"
+              (contextmenu)="openContextMenu($event, symbol)"
+            >
+              <span class="market-map-page__tile-id">{{ symbol.symbolId }}</span>
+              <span class="market-map-page__tile-value">
+                {{ formatValue(symbol.displayValue, vm.filters.sortCriteria) }}
+              </span>
+            </button>
+          }
+        </div>
+      </section>
+    }
+
+    @if (contextMenu(); as menu) {
+      <div class="market-map-page__context-menu" [style.left.px]="menu.x" [style.top.px]="menu.y">
+        @for (action of contextActions; track action.id) {
+          <button type="button" (click)="handleContextAction(action.id, menu.symbol)">
+            {{ action.label }}
+          </button>
+        }
+      </div>
+    }
+  </section>
+}

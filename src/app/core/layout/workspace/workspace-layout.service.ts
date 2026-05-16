@@ -19,8 +19,16 @@ import {
 import { MarketChartsPageComponent } from '../../../charts/pages/market-charts-page.component';
 import { FullMarketPageComponent } from '../../../market/full-market/full-market-page.component';
 import { buildReferenceFullMarketRows } from '../../../market/full-market/full-market-reference.data';
+import { HistoricalTopSymbolsComponent } from '../../../market/historical-top-symbols/historical-top-symbols.component';
+import { MarketMapComponent } from '../../../market/market-map/market-map.component';
+import { MarketDepthByOrderComponent } from '../../../market/market-depth-by-order/market-depth-by-order.component';
+import { MarketDepthByPriceComponent } from '../../../market/market-depth-by-price/market-depth-by-price.component';
+import { MarketIndicesComponent } from '../../../market/market-indices/market-indices.component';
 import { MarketSummaryComponent } from '../../../market/market-summary/market-summary.component';
+import { PriceSpectrumComponent } from '../../../market/price-spectrum/price-spectrum.component';
 import { PriceQuoteComponent } from '../../../market/price-quote/price-quote.component';
+import { TopSymbolsComponent } from '../../../market/top-symbols/top-symbols.component';
+import { TimeSalesComponent } from '../../../market/time-sales/time-sales.component';
 import { WatchlistsPageComponent } from '../../../watchlists/pages/watchlists-page.component';
 import { DashboardWidgetComponent } from '../widgets/dashboard-widget.component';
 import { PlaceholderWidgetComponent } from '../widgets/placeholder-widget.component';
@@ -28,7 +36,15 @@ import { PlaceholderWidgetComponent } from '../widgets/placeholder-widget.compon
 type WorkspacePanelType =
   | 'dashboard'
   | 'full-market'
+  | 'market-indices'
   | 'market-summary'
+  | 'top-symbols'
+  | 'historical-top-symbols'
+  | 'market-map'
+  | 'market-depth-by-price'
+  | 'market-depth-by-order'
+  | 'price-spectrum'
+  | 'time-sales'
   | 'price-quote'
   | 'watchlists'
   | 'charts'
@@ -59,7 +75,15 @@ export class WorkspaceLayoutService {
   private readonly panelRegistry = {
     dashboard: DashboardWidgetComponent,
     'full-market': FullMarketPageComponent,
+    'market-indices': MarketIndicesComponent,
     'market-summary': MarketSummaryComponent,
+    'top-symbols': TopSymbolsComponent,
+    'historical-top-symbols': HistoricalTopSymbolsComponent,
+    'market-map': MarketMapComponent,
+    'market-depth-by-price': MarketDepthByPriceComponent,
+    'market-depth-by-order': MarketDepthByOrderComponent,
+    'price-spectrum': PriceSpectrumComponent,
+    'time-sales': TimeSalesComponent,
     'price-quote': PriceQuoteComponent,
     watchlists: WatchlistsPageComponent,
     charts: MarketChartsPageComponent,
@@ -250,7 +274,15 @@ export class WorkspaceLayoutService {
     if (
       componentType === 'dashboard' ||
       componentType === 'full-market' ||
+      componentType === 'market-indices' ||
       componentType === 'market-summary' ||
+      componentType === 'top-symbols' ||
+      componentType === 'historical-top-symbols' ||
+      componentType === 'market-map' ||
+      componentType === 'market-depth-by-price' ||
+      componentType === 'market-depth-by-order' ||
+      componentType === 'price-spectrum' ||
+      componentType === 'time-sales' ||
       componentType === 'price-quote' ||
       componentType === 'watchlists' ||
       componentType === 'charts' ||
@@ -315,6 +347,86 @@ export class WorkspaceLayoutService {
         type: 'market-summary',
         state: {
           title: 'Market Summary',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/market-indices') {
+      return {
+        type: 'market-indices',
+        state: {
+          title: 'Market Indices',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/time-and-sales') {
+      return {
+        type: 'time-sales',
+        state: {
+          title: 'Time & Sales',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/top-symbols') {
+      return {
+        type: 'top-symbols',
+        state: {
+          title: 'Top Symbols',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/historical-top-symbols') {
+      return {
+        type: 'historical-top-symbols',
+        state: {
+          title: 'Historical Top Symbols',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/market-map') {
+      return {
+        type: 'market-map',
+        state: {
+          title: 'Market Map',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/market-depth-by-price') {
+      return {
+        type: 'market-depth-by-price',
+        state: {
+          title: 'Market Depth By Price',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/market-depth-by-order') {
+      return {
+        type: 'market-depth-by-order',
+        state: {
+          title: 'Market Depth By Order',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/price-spectrum') {
+      return {
+        type: 'price-spectrum',
+        state: {
+          title: 'Price Spectrum',
           route: normalizedRoute
         }
       };

@@ -1,0 +1,169 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+.price-spectrum-book {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 1rem;
+  height: 100%;
+  min-height: 0;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(8, 18, 29, 0.76);
+  font-family: var(--spectrum-font-family);
+  font-size: calc(var(--spectrum-font-size) * 1px);
+}
+
+.price-spectrum-book__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.price-spectrum-book__eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.price-spectrum-book h3 {
+  margin: 0;
+}
+
+.price-spectrum-book__table {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.price-spectrum-book__table-head,
+.price-spectrum-book__row,
+.price-spectrum-book__footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+}
+
+.price-spectrum-book__table-head {
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.price-spectrum-book__rows {
+  min-height: 0;
+  overflow: auto;
+}
+
+.price-spectrum-book__row {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.price-spectrum-book__side {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 0.8rem;
+  background: transparent;
+  color: var(--text-primary);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.price-spectrum-book__side:disabled {
+  cursor: default;
+  opacity: 0.68;
+}
+
+.price-spectrum-book__side--bid {
+  justify-content: flex-end;
+  background: var(--spectrum-bid-background);
+}
+
+.price-spectrum-book__side--offer {
+  justify-content: flex-start;
+  background: var(--spectrum-offer-background);
+}
+
+.price-spectrum-book__bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: inherit;
+}
+
+.price-spectrum-book__bar--bid {
+  right: 0;
+  background: linear-gradient(90deg, transparent 0%, var(--spectrum-bid-ratio) 100%);
+}
+
+.price-spectrum-book__bar--offer {
+  left: 0;
+  background: linear-gradient(90deg, var(--spectrum-offer-ratio) 0%, transparent 100%);
+}
+
+.price-spectrum-book__side-value,
+.price-spectrum-book__price {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-mono);
+}
+
+.price-spectrum-book__side-value {
+  padding: 0 0.85rem;
+  font-weight: 700;
+}
+
+.price-spectrum-book__price {
+  text-align: center;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.price-spectrum-book__footer {
+  padding: 0.85rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.price-spectrum-book__footer span:last-child {
+  text-align: end;
+}
+
+.price-spectrum-book__state {
+  display: grid;
+  place-items: center;
+  min-height: 10rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .price-spectrum-book__table-head,
+  .price-spectrum-book__row,
+  .price-spectrum-book__footer {
+    grid-template-columns: 1fr;
+  }
+
+  .price-spectrum-book__footer span:last-child {
+    text-align: start;
+  }
+}

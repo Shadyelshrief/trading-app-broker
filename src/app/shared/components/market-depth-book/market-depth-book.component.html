@@ -1,0 +1,88 @@
+<section
+  class="market-depth-book"
+  [ngClass]="{ 'market-depth-book--order': mode() === 'ORDER' }"
+  [style.--depth-bid-color]="bidColor()"
+  [style.--depth-offer-color]="offerColor()"
+>
+  <header class="market-depth-book__header">
+    <div>
+      <p class="market-depth-book__eyebrow">Order Book</p>
+      <h3>{{ selectedSymbol() }}</h3>
+    </div>
+    <span class="market-depth-book__mode">{{ mode() === 'PRICE' ? 'By Price' : 'By Order' }}</span>
+  </header>
+
+  @if (loading()) {
+    <div class="market-depth-book__state market-depth-book__state--loading">
+      Waiting for depth updates...
+    </div>
+  } @else {
+    <div class="market-depth-book__split">
+      <section class="market-depth-book__pane market-depth-book__pane--bid">
+        <div class="market-depth-book__pane-header">
+          @for (header of bidHeaders(); track header) {
+            <span>{{ header }}</span>
+          }
+        </div>
+
+        <div class="market-depth-book__rows">
+          @if (bids().length > 0) {
+            @for (level of bids(); track $index) {
+              <button
+                type="button"
+                class="market-depth-book__row market-depth-book__row--bid"
+                (dblclick)="emitBid(level)"
+              >
+                <span>{{ level.size | number: '1.0-0' }}</span>
+                <span>{{ level.accumulated | number: '1.0-0' }}</span>
+                @if (mode() === 'PRICE') {
+                  <span>{{ level.split ?? 0 }}</span>
+                }
+                <span>{{ level.price | number: '1.2-2' }}</span>
+              </button>
+            }
+          } @else {
+            <div class="market-depth-book__empty">No bids available.</div>
+          }
+        </div>
+
+        <footer class="market-depth-book__footer market-depth-book__footer--bid">
+          T.Bids {{ totalBidQuantity() | number: '1.0-0' }} ({{ totalBidOrders() }})
+        </footer>
+      </section>
+
+      <section class="market-depth-book__pane market-depth-book__pane--offer">
+        <div class="market-depth-book__pane-header">
+          @for (header of offerHeaders(); track header) {
+            <span>{{ header }}</span>
+          }
+        </div>
+
+        <div class="market-depth-book__rows">
+          @if (offers().length > 0) {
+            @for (level of offers(); track $index) {
+              <button
+                type="button"
+                class="market-depth-book__row market-depth-book__row--offer"
+                (dblclick)="emitOffer(level)"
+              >
+                <span>{{ level.price | number: '1.2-2' }}</span>
+                @if (mode() === 'PRICE') {
+                  <span>{{ level.split ?? 0 }}</span>
+                }
+                <span>{{ level.accumulated | number: '1.0-0' }}</span>
+                <span>{{ level.size | number: '1.0-0' }}</span>
+              </button>
+            }
+          } @else {
+            <div class="market-depth-book__empty">No offers available.</div>
+          }
+        </div>
+
+        <footer class="market-depth-book__footer market-depth-book__footer--offer">
+          T.Offers {{ totalOfferQuantity() | number: '1.0-0' }} ({{ totalOfferOrders() }})
+        </footer>
+      </section>
+    </div>
+  }
+</section>

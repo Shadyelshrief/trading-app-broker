@@ -1,0 +1,64 @@
+@if (vm$ | async; as vm) {
+  <section class="price-spectrum-page">
+    <header class="price-spectrum-page__toolbar">
+      <div>
+        <p class="price-spectrum-page__eyebrow">Pricing</p>
+        <h2>Price Spectrum</h2>
+      </div>
+
+      <mat-form-field appearance="outline" class="price-spectrum-page__symbol-field">
+        <mat-label>Symbol</mat-label>
+        <input
+          matInput
+          type="text"
+          [formControl]="symbolControl"
+          [matAutocomplete]="symbolAuto"
+          placeholder="Search symbol ID or symbol name"
+        />
+        <mat-autocomplete #symbolAuto="matAutocomplete" [displayWith]="displaySymbol">
+          @for (option of vm.filteredSymbolOptions; track option.market + '-' + option.symbolId) {
+            <mat-option [value]="option">
+              <span class="price-spectrum-page__option-symbol">{{ option.symbolId }}</span>
+              <span class="price-spectrum-page__option-name">{{ option.symbolName }}</span>
+              <span class="price-spectrum-page__option-market">{{ option.market }}</span>
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <div
+        class="price-spectrum-page__status"
+        [class.price-spectrum-page__status--reconnecting]="vm.connectionState === 'RECONNECTING' || vm.connectionState === 'CONNECTING'"
+        [class.price-spectrum-page__status--disconnected]="vm.connectionState === 'DISCONNECTED'"
+      >
+        <span class="price-spectrum-page__status-dot"></span>
+        <span>{{ vm.connectionLabel }}</span>
+      </div>
+    </header>
+
+    @if (vm.error) {
+      <section class="price-spectrum-page__banner">
+        <span>{{ vm.error }}</span>
+      </section>
+    }
+
+    <section class="price-spectrum-page__meta">
+      <p>{{ vm.symbolId }} · {{ vm.symbolName }} · {{ vm.market }}</p>
+      <p>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</p>
+    </section>
+
+    <app-price-spectrum-book
+      class="price-spectrum-page__book"
+      [rows]="vm.rows"
+      [totalBidQuantity]="vm.totalBidQuantity"
+      [totalBidOrders]="vm.totalBidOrders"
+      [totalOfferQuantity]="vm.totalOfferQuantity"
+      [totalOfferOrders]="vm.totalOfferOrders"
+      [loading]="vm.loading"
+      [selectedSymbol]="vm.symbolId + ' - ' + vm.symbolName"
+      [settings]="vm.settings"
+      (bidDoubleClicked)="openOrder('sell', vm, $event)"
+      (offerDoubleClicked)="openOrder('buy', vm, $event)"
+    />
+  </section>
+}

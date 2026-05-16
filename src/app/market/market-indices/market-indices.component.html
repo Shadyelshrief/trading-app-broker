@@ -1,0 +1,47 @@
+@if (vm$ | async; as vm) {
+  <section class="market-indices">
+    <header class="market-indices__toolbar">
+      <div>
+        <p class="market-indices__eyebrow">Pricing</p>
+        <h2>Market Indices</h2>
+      </div>
+
+      <div class="market-indices__status" [class.market-indices__status--reconnecting]="isReconnecting(vm.connectionState)" [class.market-indices__status--disconnected]="isDisconnected(vm.connectionState)">
+        <span class="market-indices__status-dot"></span>
+        <span>{{ vm.connectionLabel }}</span>
+      </div>
+    </header>
+
+    <section class="market-indices__filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Market</mat-label>
+        <mat-select [value]="vm.selectedMarket" (valueChange)="selectMarket($event)">
+          @for (option of vm.marketOptions; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </section>
+
+    @if (vm.error) {
+      <section class="market-indices__error">
+        <span>Unable to fully load index data: {{ vm.error }}</span>
+      </section>
+    }
+
+    <section class="market-indices__meta">
+      <p>Realtime monitoring workspace for market index movement, turnover, and breadth across supported markets.</p>
+      <p>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</p>
+    </section>
+
+    <app-market-grid
+      class="market-indices__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns"
+      [loading]="vm.loading"
+      [marketType]="'market-indices'"
+      [stateKey]="'market-indices-grid-v1'"
+      [settings]="vm.settings"
+    />
+  </section>
+}

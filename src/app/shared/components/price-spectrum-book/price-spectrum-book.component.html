@@ -1,0 +1,73 @@
+<section
+  class="price-spectrum-book"
+  [style.--spectrum-bid-background]="settings().bidBackgroundColor"
+  [style.--spectrum-bid-ratio]="settings().bidRatioColor"
+  [style.--spectrum-offer-background]="settings().offerBackgroundColor"
+  [style.--spectrum-offer-ratio]="settings().offerRatioColor"
+  [style.--spectrum-font-family]="settings().fontFamily"
+  [style.--spectrum-font-size.px]="settings().fontSize"
+>
+  <header class="price-spectrum-book__header">
+    <div>
+      <p class="price-spectrum-book__eyebrow">Price Spectrum</p>
+      <h3>{{ selectedSymbol() }}</h3>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="price-spectrum-book__state">Waiting for price spectrum updates...</div>
+  } @else {
+    <div class="price-spectrum-book__table">
+      <div class="price-spectrum-book__table-head">
+        <span>Bids</span>
+        <span>Prices</span>
+        <span>Offers</span>
+      </div>
+
+      <div class="price-spectrum-book__rows">
+        @if (rows().length > 0) {
+          @for (row of rows(); track row.price) {
+            <div class="price-spectrum-book__row">
+              <button
+                type="button"
+                class="price-spectrum-book__side price-spectrum-book__side--bid"
+                [disabled]="!row.bidQuantity"
+                (dblclick)="emitBid(row)"
+              >
+                <span
+                  class="price-spectrum-book__bar price-spectrum-book__bar--bid"
+                  [style.width.%]="row.bidRatioPercent"
+                ></span>
+                <span class="price-spectrum-book__side-value">{{ formatSideValue(row.bidQuantity, row.bidOrders) }}</span>
+              </button>
+
+              <div class="price-spectrum-book__price">
+                {{ row.price | number: '1.2-2' }}
+              </div>
+
+              <button
+                type="button"
+                class="price-spectrum-book__side price-spectrum-book__side--offer"
+                [disabled]="!row.offerQuantity"
+                (dblclick)="emitOffer(row)"
+              >
+                <span
+                  class="price-spectrum-book__bar price-spectrum-book__bar--offer"
+                  [style.width.%]="row.offerRatioPercent"
+                ></span>
+                <span class="price-spectrum-book__side-value">{{ formatSideValue(row.offerQuantity, row.offerOrders) }}</span>
+              </button>
+            </div>
+          }
+        } @else {
+          <div class="price-spectrum-book__state">No spectrum levels available.</div>
+        }
+      </div>
+
+      <footer class="price-spectrum-book__footer">
+        <span>T.Bids {{ totalBidQuantity() | number: '1.0-0' }} ({{ totalBidOrders() }})</span>
+        <span>T.Offers {{ totalOfferQuantity() | number: '1.0-0' }} ({{ totalOfferOrders() }})</span>
+      </footer>
+    </div>
+  }
+</section>

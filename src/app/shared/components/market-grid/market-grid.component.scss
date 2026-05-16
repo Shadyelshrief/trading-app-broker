@@ -66,3 +66,8 @@
 :host ::ng-deep .market-cell--flat {
   color: var(--market-flat, #69a8ff);
 }
+
+:host ::ng-deep .market-cell--spotlight {
+  color: var(--market-grid-highlight-color, #f6c55b);
+  font-weight: 700;
+}

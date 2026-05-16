@@ -1,0 +1,91 @@
+@if (vm$ | async; as vm) {
+  <section class="historical-top-symbols">
+    <header class="historical-top-symbols__toolbar">
+      <div class="historical-top-symbols__heading">
+        <div>
+          <p class="historical-top-symbols__eyebrow">Pricing</p>
+          <h2>Historical Top Symbols</h2>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Market</mat-label>
+          <mat-select [formControl]="marketControl">
+            @for (market of vm.marketOptions; track market.value) {
+              <mat-option [value]="market.value">{{ market.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="historical-top-symbols__view-field">
+          <mat-label>Select View</mat-label>
+          <mat-select [formControl]="viewControl">
+            @for (view of vm.viewOptions; track view.value) {
+              <mat-option [value]="view.value">{{ view.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>From Date</mat-label>
+          <input matInput [matDatepicker]="fromPicker" [formControl]="fromDateControl" />
+          <mat-datepicker-toggle matIconSuffix [for]="fromPicker" />
+          <mat-datepicker #fromPicker />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>To Date</mat-label>
+          <input matInput [matDatepicker]="toPicker" [formControl]="toDateControl" />
+          <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
+          <mat-datepicker #toPicker />
+        </mat-form-field>
+
+        <div class="historical-top-symbols__slider-shell">
+          <span class="historical-top-symbols__slider-label">No. of Symbols</span>
+          <mat-slider min="10" max="50" step="5" discrete>
+            <input matSliderThumb [formControl]="numberOfSymbolsControl" />
+          </mat-slider>
+          <strong>{{ vm.filters.numberOfSymbols }}</strong>
+        </div>
+      </div>
+
+      <div class="historical-top-symbols__toolbar-side">
+        <button mat-stroked-button>Export</button>
+        <button mat-stroked-button>Layout</button>
+      </div>
+    </header>
+
+    @if (vm.validationError) {
+      <section class="historical-top-symbols__banner historical-top-symbols__banner--warning">
+        <span>{{ vm.validationError }}</span>
+      </section>
+    }
+
+    @if (vm.error) {
+      <section class="historical-top-symbols__banner historical-top-symbols__banner--error">
+        <span>{{ vm.error }}</span>
+      </section>
+    }
+
+    <section class="historical-top-symbols__meta">
+      <p>Historical ranking of market leaders for the selected date range and criteria.</p>
+      <p>Last loaded: {{ vm.lastLoadedAt ? (vm.lastLoadedAt | date: 'dd MMM yyyy, HH:mm:ss') : '--' }}</p>
+    </section>
+
+    <app-market-grid
+      class="historical-top-symbols__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns(vm.filters.selectedView)"
+      [contextMenuActions]="menuActions"
+      [loading]="vm.loading"
+      [marketType]="'historical-top-symbols'"
+      [stateKey]="'historical-top-symbols-grid-v1'"
+      [settings]="vm.settings"
+      (priceQuote)="openPriceQuote($event)"
+      (rowDoubleClicked)="openPriceQuote($event)"
+      (depthRequest)="0"
+      (chartRequest)="0"
+      (buyOrder)="0"
+      (sellOrder)="0"
+    />
+  </section>
+}
