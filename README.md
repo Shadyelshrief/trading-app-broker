@@ -1,27 +1,74 @@
 # TradingAppBroker
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.17.
+Angular 17 frontend for the broker trading workspace.
 
-## Development server
+## Development
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+Run:
 
-## Code scaffolding
+```bash
+npm install
+npm start
+```
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+The local dev server runs on `http://localhost:4200/`.
 
-## Build
+## Production build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Run:
 
-## Running unit tests
+```bash
+npm run build
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+The production bundle is generated under `dist/trading-app-broker/browser/`.
 
-## Running end-to-end tests
+## Docker
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+This repo includes a production Docker image build for the Angular app using Nginx.
 
-## Further help
+### Build image locally
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+```bash
+docker build -t shadyelshrief/broker-karepo:latest .
+```
+
+### Push to Docker Hub
+
+```bash
+docker push shadyelshrief/broker-karepo:latest
+```
+
+Docker Hub repository:
+
+[shadyelshrief/broker-karepo](https://hub.docker.com/repository/docker/shadyelshrief/broker-karepo/general)
+
+## Run with Docker Compose
+
+Your colleague can run the frontend with:
+
+```bash
+docker compose up -d
+```
+
+The app will be available on:
+
+```text
+http://localhost:8080
+```
+
+The included `docker-compose.yml` pulls the published image directly from Docker Hub:
+
+```yaml
+services:
+  broker-ui:
+    image: shadyelshrief/broker-karepo:latest
+    ports:
+      - "8080:80"
+```
+
+## Notes
+
+- The frontend is a static Angular build served by Nginx.
+- Angular client-side routes are supported through `try_files ... /index.html`.
+- The production environment currently points feeder auth/websocket to `localhost:7070`, so the colleague should also have the feeder/backend exposed on that host port if they want live market data.

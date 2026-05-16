@@ -25,6 +25,7 @@ import { MarketDepthByOrderComponent } from '../../../market/market-depth-by-ord
 import { MarketDepthByPriceComponent } from '../../../market/market-depth-by-price/market-depth-by-price.component';
 import { MarketIndicesComponent } from '../../../market/market-indices/market-indices.component';
 import { MarketSummaryComponent } from '../../../market/market-summary/market-summary.component';
+import { NewsAnnouncementsComponent } from '../../../market/news-announcements/news-announcements.component';
 import { PriceSpectrumComponent } from '../../../market/price-spectrum/price-spectrum.component';
 import { PriceQuoteComponent } from '../../../market/price-quote/price-quote.component';
 import { TopSymbolsComponent } from '../../../market/top-symbols/top-symbols.component';
@@ -40,6 +41,7 @@ type WorkspacePanelType =
   | 'market-summary'
   | 'top-symbols'
   | 'historical-top-symbols'
+  | 'news-announcements'
   | 'market-map'
   | 'market-depth-by-price'
   | 'market-depth-by-order'
@@ -79,6 +81,7 @@ export class WorkspaceLayoutService {
     'market-summary': MarketSummaryComponent,
     'top-symbols': TopSymbolsComponent,
     'historical-top-symbols': HistoricalTopSymbolsComponent,
+    'news-announcements': NewsAnnouncementsComponent,
     'market-map': MarketMapComponent,
     'market-depth-by-price': MarketDepthByPriceComponent,
     'market-depth-by-order': MarketDepthByOrderComponent,
@@ -278,6 +281,7 @@ export class WorkspaceLayoutService {
       componentType === 'market-summary' ||
       componentType === 'top-symbols' ||
       componentType === 'historical-top-symbols' ||
+      componentType === 'news-announcements' ||
       componentType === 'market-map' ||
       componentType === 'market-depth-by-price' ||
       componentType === 'market-depth-by-order' ||
@@ -387,6 +391,16 @@ export class WorkspaceLayoutService {
         type: 'historical-top-symbols',
         state: {
           title: 'Historical Top Symbols',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/news-announcements') {
+      return {
+        type: 'news-announcements',
+        state: {
+          title: 'News & Announcements',
           route: normalizedRoute
         }
       };
