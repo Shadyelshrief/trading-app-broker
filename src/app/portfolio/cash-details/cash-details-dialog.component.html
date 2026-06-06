@@ -1,0 +1,44 @@
+<section class="cash-dialog">
+  <header class="cash-dialog__header">
+    <div>
+      <p>Cash Details</p>
+      <h2>Portfolio Cash Accounts</h2>
+    </div>
+    <button mat-stroked-button type="button" mat-dialog-close>Close</button>
+  </header>
+
+  <section class="cash-dialog__filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Currency</mat-label>
+      <mat-select [formControl]="currencyControl">
+        <mat-option value="">All currencies</mat-option>
+        @for (currency of currencyOptions$ | async; track currency) {
+          <mat-option [value]="currency">{{ currency }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  @if (summary$ | async; as summary) {
+    <section class="cash-dialog__summary">
+      <article><span>Cash Amount</span><strong>{{ summary.cashAmount | number: '1.2-2' }}</strong></article>
+      <article><span>Blocked</span><strong>{{ summary.blocked | number: '1.2-2' }}</strong></article>
+      <article><span>Account Limit</span><strong>{{ summary.accountLimit | number: '1.2-2' }}</strong></article>
+      <article><span>Marginable Value</span><strong>{{ summary.marginableValue | number: '1.2-2' }}</strong></article>
+      <article><span>Outstanding Buy Orders</span><strong>{{ summary.outstandingBuyOrders | number: '1.2-2' }}</strong></article>
+      <article><span>Purchase Power</span><strong>{{ summary.purchasePower | number: '1.2-2' }}</strong></article>
+      <article><span>Coverage Ratio</span><strong>{{ summary.coverageRatio | number: '1.2-2' }}%</strong></article>
+      <article><span>Portfolio Value</span><strong>{{ summary.portfolioValue | number: '1.2-2' }}</strong></article>
+    </section>
+  }
+
+  <div class="cash-dialog__grid">
+    <app-market-grid
+      [rowData]="(rows$ | async) ?? []"
+      [columnDefs]="columns"
+      [marketType]="'cash-details'"
+      [stateKey]="'cash-details-grid-v1'"
+      [settings]="settings"
+    />
+  </div>
+</section>

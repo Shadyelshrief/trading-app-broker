@@ -8,7 +8,9 @@ RUN npm run build -- --configuration production
 
 # ---------- Nginx ----------
 FROM nginx:alpine
-COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
+ENV FEEDER_HOST=feeder
+ENV FEEDER_PORT=7070
+COPY ./nginx/default.conf.template /etc/nginx/templates/default.conf.template
 
 # Copy Angular build output
 COPY --from=build /app/dist/trading-app-broker/browser/ /usr/share/nginx/html/

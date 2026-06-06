@@ -6,8 +6,8 @@ export const environment = {
   marketData: {
     useMockAuth: false,
     enableAutoReconnect: true,
-    authHttpUrl: 'http://localhost:7070/api/v1/auth',
-    webSocketUrl: 'ws://localhost:7070/ws/stream',
+    authHttpUrl: '/feeder-api/v1/auth',
+    webSocketUrl: '/feeder-ws/stream',
     credentials: {
       username: 'awad',
       password: 'password123'

@@ -1,0 +1,113 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.order-monitoring {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: 1rem;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.order-monitoring__header,
+.order-monitoring__filters {
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(8, 18, 29, 0.78);
+}
+
+.order-monitoring__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+}
+
+.order-monitoring__eyebrow,
+.order-monitoring h2,
+.order-monitoring p {
+  margin: 0;
+}
+
+.order-monitoring__eyebrow {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.order-monitoring h2 {
+  margin-top: 0.25rem;
+}
+
+.order-monitoring__actions,
+.order-monitoring__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.order-monitoring__primary {
+  background: linear-gradient(135deg, #00c2a8, #3b82f6);
+  color: #06101c;
+  font-weight: 800;
+}
+
+.order-monitoring__feed-warning {
+  color: #f6c55b;
+}
+
+.order-monitoring__filters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(11rem, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.order-monitoring__filters .mat-mdc-form-field {
+  margin-bottom: -1.25em;
+}
+
+.order-monitoring__meta {
+  justify-content: space-between;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+}
+
+.order-monitoring__grid {
+  display: flex;
+  min-height: 340px;
+  overflow: hidden;
+}
+
+::ng-deep .order-cell--removed {
+  color: #050505 !important;
+  font-weight: 800;
+}
+
+::ng-deep .market-cell--up {
+  color: #3ddc97 !important;
+  font-weight: 800;
+}
+
+::ng-deep .market-cell--down {
+  color: #ff7d7d !important;
+  font-weight: 800;
+}
+
+::ng-deep .market-cell--flat {
+  color: #60a5fa !important;
+  font-weight: 800;
+}
+
+@media (max-width: 1180px) {
+  .order-monitoring__filters {
+    grid-template-columns: repeat(2, minmax(11rem, 1fr));
+  }
+}

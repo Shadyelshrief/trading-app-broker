@@ -1,0 +1,70 @@
+@if (details$ | async; as details) {
+<section class="order-details">
+  <header class="order-details__header">
+    <div>
+      <p class="order-details__eyebrow">Order Transaction Details</p>
+      <h2 mat-dialog-title>Order {{ details.orderNumber }}</h2>
+    </div>
+    <span class="order-details__status">{{ details.status }}</span>
+  </header>
+
+  <mat-dialog-content>
+    <section class="order-details__cards">
+      <article>
+        <h3>Order</h3>
+        <dl>
+          <div><dt>Portfolio</dt><dd>{{ details.order.portfolio || '--' }}</dd></div>
+          <div><dt>Order Type</dt><dd>{{ details.order.orderType || '--' }}</dd></div>
+          <div><dt>Company</dt><dd>{{ details.order.company || '--' }}</dd></div>
+          <div><dt>Fill Term</dt><dd>{{ details.order.fillTerm || '--' }}</dd></div>
+          <div><dt>Order Date</dt><dd>{{ details.order.orderDate || '--' }}</dd></div>
+          <div><dt>Custodian</dt><dd>{{ details.order.custodian || '--' }}</dd></div>
+          <div><dt>Minimum Quantity</dt><dd>{{ details.order.minimumQuantity }}</dd></div>
+          <div><dt>Period</dt><dd>{{ details.order.period || '--' }}</dd></div>
+          <div><dt>Disclosed Volume</dt><dd>{{ details.order.disclosedVolume }}</dd></div>
+          <div><dt>Expiry Date</dt><dd>{{ details.order.expiryDate || '--' }}</dd></div>
+          <div><dt>Same Day</dt><dd>{{ details.order.sameDay ? 'Yes' : 'No' }}</dd></div>
+          <div><dt>Cash Account</dt><dd>{{ details.order.cashAccount || '--' }}</dd></div>
+        </dl>
+      </article>
+
+      <article>
+        <h3>Order Info</h3>
+        <dl>
+          <div><dt>Order Quantity</dt><dd>{{ details.orderInfo.orderQuantity }}</dd></div>
+          <div><dt>Price</dt><dd>{{ details.orderInfo.price }}</dd></div>
+          <div><dt>Currency</dt><dd>{{ details.orderInfo.currency || '--' }}</dd></div>
+          <div><dt>Trade Amount</dt><dd>{{ details.orderInfo.tradeAmount }}</dd></div>
+          <div><dt>Fees Amount</dt><dd>{{ details.orderInfo.feesAmount }}</dd></div>
+          <div><dt>Total Order Amount</dt><dd>{{ details.orderInfo.totalOrderAmount }}</dd></div>
+        </dl>
+      </article>
+
+      <article>
+        <h3>Execution Info</h3>
+        <dl>
+          <div><dt>Remaining Quantity</dt><dd>{{ details.executionInfo.remainingQuantity }}</dd></div>
+          <div><dt>Executed Quantity</dt><dd>{{ details.executionInfo.executedQuantity }}</dd></div>
+          <div><dt>Executed Amount</dt><dd>{{ details.executionInfo.executedAmount }}</dd></div>
+          <div><dt>Order Rejection Reason</dt><dd>{{ details.executionInfo.orderRejectionReason || '--' }}</dd></div>
+        </dl>
+      </article>
+    </section>
+
+    <section class="order-details__history">
+      <h3>Transaction History</h3>
+      <app-market-grid
+        [rowData]="details.transactions"
+        [columnDefs]="historyColumns"
+        [marketType]="'order-transaction-history'"
+        [stateKey]="'order-transaction-history-grid'"
+        [settings]="gridSettings"
+      />
+    </section>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-flat-button type="button" (click)="close()">Close</button>
+  </mat-dialog-actions>
+</section>
+}

@@ -1,0 +1,47 @@
+@if (vm$ | async; as vm) {
+  <section class="ticker-page">
+    <header class="ticker-page__header">
+      <div>
+        <p class="ticker-page__eyebrow">Pricing</p>
+        <h2>Announcements Ticker</h2>
+        <p>Market, broker, and product announcements from the news service.</p>
+      </div>
+    </header>
+
+    <section class="ticker-page__filters ticker-page__filters--compact">
+      <mat-form-field appearance="outline">
+        <mat-label>Market</mat-label>
+        <mat-select [value]="vm.settings.market" (selectionChange)="facade.updateMarket($event.value)">
+          @for (market of marketOptions; track market.value) {
+            <mat-option [value]="market.value">{{ market.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Speed Seconds</mat-label>
+        <input matInput type="number" min="8" max="120" [value]="vm.settings.speed" (change)="facade.updateSpeed(+$any($event.target).value)" />
+      </mat-form-field>
+    </section>
+
+    @if (vm.error) {
+      <section class="ticker-page__error">{{ vm.error }}</section>
+    }
+
+    <section class="ticker-page__ticker">
+      <app-market-ticker
+        [items]="toTickerItems(vm.items)"
+        [tickerType]="'ANNOUNCEMENTS'"
+        [speed]="vm.settings.speed"
+        [loading]="vm.loading"
+        [settings]="{ fontSize: 13, fontFamily: 'IBM Plex Sans, sans-serif' }"
+        (itemDoubleClicked)="openAnnouncement($event)"
+      />
+    </section>
+
+    <footer class="ticker-page__footer">
+      <span>{{ vm.items.length }} announcements</span>
+      <span>Last loaded: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</span>
+    </footer>
+  </section>
+}

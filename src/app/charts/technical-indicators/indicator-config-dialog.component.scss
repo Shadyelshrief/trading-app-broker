@@ -1,0 +1,56 @@
+:host {
+  display: block;
+}
+
+.indicator-dialog {
+  display: grid;
+  gap: 1rem;
+  width: min(440px, 92vw);
+  padding: 1rem;
+  background: #07111f;
+  color: var(--text-primary);
+}
+
+.indicator-dialog header p,
+.indicator-dialog header h2 {
+  margin: 0;
+}
+
+.indicator-dialog header p {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.indicator-dialog header h2 {
+  margin-top: 0.25rem;
+  font-size: 1.2rem;
+}
+
+.indicator-dialog form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.indicator-dialog mat-form-field {
+  margin-bottom: -1.25em;
+}
+
+.indicator-dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.indicator-dialog footer button:last-child {
+  background: linear-gradient(135deg, #00c2a8, #3b82f6);
+  color: #06101c;
+  font-weight: 800;
+}
+
+.indicator-dialog__empty {
+  margin: 0;
+  color: var(--text-secondary);
+}

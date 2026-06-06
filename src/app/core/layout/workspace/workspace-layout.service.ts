@@ -16,6 +16,8 @@ import {
   VirtualLayout
 } from 'golden-layout';
 
+import { ClientInformationComponent } from '../../../clients/client-information/client-information.component';
+import { ClientSearchComponent } from '../../../clients/client-search/client-search.component';
 import { MarketChartsPageComponent } from '../../../charts/pages/market-charts-page.component';
 import { FullMarketPageComponent } from '../../../market/full-market/full-market-page.component';
 import { buildReferenceFullMarketRows } from '../../../market/full-market/full-market-reference.data';
@@ -30,6 +32,17 @@ import { PriceSpectrumComponent } from '../../../market/price-spectrum/price-spe
 import { PriceQuoteComponent } from '../../../market/price-quote/price-quote.component';
 import { TopSymbolsComponent } from '../../../market/top-symbols/top-symbols.component';
 import { TimeSalesComponent } from '../../../market/time-sales/time-sales.component';
+import { IndicesPerformanceComponent } from '../../../market-performance/indices-performance/indices-performance.component';
+import { SecurityPerformanceComponent } from '../../../market-performance/security-performance/security-performance.component';
+import { PortfolioPositioningComponent } from '../../../portfolio/portfolio-positioning/portfolio-positioning.component';
+import { AnnouncementsTickerComponent } from '../../../tickers/announcements-ticker/announcements-ticker.component';
+import { OrderEntryComponent } from '../../../trading/order-entry/order-entry.component';
+import { OrderMonitoringComponent } from '../../../trading/order-monitoring/order-monitoring.component';
+import { OrderStatisticsComponent } from '../../../trading/order-statistics/order-statistics.component';
+import { PricingTickerComponent } from '../../../tickers/pricing-ticker/pricing-ticker.component';
+import { TradingTickerComponent } from '../../../tickers/trading-ticker/trading-ticker.component';
+import { ExecutionTickerComponent } from '../../../trading/execution-ticker/execution-ticker.component';
+import { SavedWatchListComponent } from '../../../watchlists/saved-watch-list/saved-watch-list.component';
 import { WatchlistsPageComponent } from '../../../watchlists/pages/watchlists-page.component';
 import { DashboardWidgetComponent } from '../widgets/dashboard-widget.component';
 import { PlaceholderWidgetComponent } from '../widgets/placeholder-widget.component';
@@ -43,12 +56,25 @@ type WorkspacePanelType =
   | 'historical-top-symbols'
   | 'news-announcements'
   | 'market-map'
+  | 'market-performance-indices'
+  | 'market-performance-security'
   | 'market-depth-by-price'
   | 'market-depth-by-order'
   | 'price-spectrum'
   | 'time-sales'
+  | 'trading-ticker'
+  | 'pricing-ticker'
+  | 'announcements-ticker'
+  | 'execution-ticker'
+  | 'order-entry'
+  | 'order-monitoring'
+  | 'order-statistics'
+  | 'portfolio-positioning'
+  | 'client-search'
+  | 'client-information'
   | 'price-quote'
   | 'watchlists'
+  | 'saved-watch-list'
   | 'charts'
   | 'placeholder';
 
@@ -83,12 +109,25 @@ export class WorkspaceLayoutService {
     'historical-top-symbols': HistoricalTopSymbolsComponent,
     'news-announcements': NewsAnnouncementsComponent,
     'market-map': MarketMapComponent,
+    'market-performance-indices': IndicesPerformanceComponent,
+    'market-performance-security': SecurityPerformanceComponent,
     'market-depth-by-price': MarketDepthByPriceComponent,
     'market-depth-by-order': MarketDepthByOrderComponent,
     'price-spectrum': PriceSpectrumComponent,
     'time-sales': TimeSalesComponent,
+    'trading-ticker': TradingTickerComponent,
+    'pricing-ticker': PricingTickerComponent,
+    'announcements-ticker': AnnouncementsTickerComponent,
+    'execution-ticker': ExecutionTickerComponent,
+    'order-entry': OrderEntryComponent,
+    'order-monitoring': OrderMonitoringComponent,
+    'order-statistics': OrderStatisticsComponent,
+    'portfolio-positioning': PortfolioPositioningComponent,
+    'client-search': ClientSearchComponent,
+    'client-information': ClientInformationComponent,
     'price-quote': PriceQuoteComponent,
     watchlists: WatchlistsPageComponent,
+    'saved-watch-list': SavedWatchListComponent,
     charts: MarketChartsPageComponent,
     placeholder: PlaceholderWidgetComponent
   } satisfies Record<WorkspacePanelType, object>;
@@ -283,12 +322,25 @@ export class WorkspaceLayoutService {
       componentType === 'historical-top-symbols' ||
       componentType === 'news-announcements' ||
       componentType === 'market-map' ||
+      componentType === 'market-performance-indices' ||
+      componentType === 'market-performance-security' ||
       componentType === 'market-depth-by-price' ||
       componentType === 'market-depth-by-order' ||
       componentType === 'price-spectrum' ||
       componentType === 'time-sales' ||
+      componentType === 'trading-ticker' ||
+      componentType === 'pricing-ticker' ||
+      componentType === 'announcements-ticker' ||
+      componentType === 'execution-ticker' ||
+      componentType === 'order-entry' ||
+      componentType === 'order-monitoring' ||
+      componentType === 'order-statistics' ||
+      componentType === 'portfolio-positioning' ||
+      componentType === 'client-search' ||
+      componentType === 'client-information' ||
       componentType === 'price-quote' ||
       componentType === 'watchlists' ||
+      componentType === 'saved-watch-list' ||
       componentType === 'charts' ||
       componentType === 'placeholder'
     ) {
@@ -376,6 +428,126 @@ export class WorkspaceLayoutService {
       };
     }
 
+    if (routeWithoutRoot === 'pricing/trading-ticker') {
+      return {
+        type: 'trading-ticker',
+        state: {
+          title: 'Trading Ticker',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/pricing-ticker' || routeWithoutRoot === 'pricing/tickers') {
+      return {
+        type: 'pricing-ticker',
+        state: {
+          title: 'Pricing Ticker',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/announcements-ticker') {
+      return {
+        type: 'announcements-ticker',
+        state: {
+          title: 'Announcements Ticker',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'trading/execution-ticker') {
+      return {
+        type: 'execution-ticker',
+        state: {
+          title: 'Execution Ticker',
+          route: normalizedRoute,
+          section: 'trading',
+          screen: 'execution-ticker'
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'trading/order-entry' || routeWithoutRoot.startsWith('trading/order-entry/')) {
+      return {
+        type: 'order-entry',
+        state: {
+          title: routeWithoutRoot.includes('/modify/') ? 'Modify Order' : 'Order Entry',
+          route: normalizedRoute,
+          section: 'trading',
+          screen: 'order-entry'
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'trading/order-monitor') {
+      return {
+        type: 'order-monitoring',
+        state: {
+          title: 'Order Monitor',
+          route: normalizedRoute,
+          section: 'trading',
+          screen: 'order-monitoring'
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'trading/order-statistics') {
+      return {
+        type: 'order-statistics',
+        state: {
+          title: 'Order Statistics',
+          route: normalizedRoute,
+          section: 'trading',
+          screen: 'order-statistics'
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'trading/portfolio-position' || routeWithoutRoot.startsWith('trading/portfolio-position/')) {
+      const clientId = routeWithoutRoot.split('/')[2];
+
+      return {
+        type: 'portfolio-positioning',
+        state: {
+          title: clientId ? `Portfolio Positioning - ${clientId.toUpperCase()}` : 'Portfolio Positioning',
+          route: normalizedRoute,
+          section: 'trading',
+          screen: 'portfolio-positioning',
+          context: clientId ? { clientId: decodeURIComponent(clientId) } : undefined
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'management/client-search') {
+      return {
+        type: 'client-search',
+        state: {
+          title: 'Client Search',
+          route: normalizedRoute,
+          section: 'management',
+          screen: 'client-search'
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'management/client-information' || routeWithoutRoot.startsWith('management/client-information/')) {
+      const clientId = routeWithoutRoot.split('/')[2];
+
+      return {
+        type: 'client-information',
+        state: {
+          title: clientId ? `Client Information - ${clientId.toUpperCase()}` : 'Client Information',
+          route: normalizedRoute,
+          section: 'management',
+          screen: 'client-information',
+          context: clientId ? { clientId: decodeURIComponent(clientId) } : undefined
+        }
+      };
+    }
+
     if (routeWithoutRoot === 'pricing/top-symbols') {
       return {
         type: 'top-symbols',
@@ -411,6 +583,26 @@ export class WorkspaceLayoutService {
         type: 'market-map',
         state: {
           title: 'Market Map',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/market-performance-indices') {
+      return {
+        type: 'market-performance-indices',
+        state: {
+          title: 'Market Performance Indices',
+          route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/market-performance-security') {
+      return {
+        type: 'market-performance-security',
+        state: {
+          title: 'Market Performance Security',
           route: normalizedRoute
         }
       };
@@ -471,12 +663,40 @@ export class WorkspaceLayoutService {
       };
     }
 
-    if (routeWithoutRoot === 'pricing/watch-lists') {
+    if (routeWithoutRoot === 'pricing/watch-lists' || routeWithoutRoot === 'pricing/saved-watch-lists') {
       return {
         type: 'watchlists',
         state: {
-          title: 'Watch Lists',
+          title: 'Saved Watch Lists',
           route: normalizedRoute
+        }
+      };
+    }
+
+    if (routeWithoutRoot === 'pricing/create-watch-list') {
+      return {
+        type: 'watchlists',
+        state: {
+          title: 'Create Watch List',
+          route: normalizedRoute,
+          section: 'pricing',
+          screen: 'create-watch-list',
+          context: { action: 'create' }
+        }
+      };
+    }
+
+    if (routeWithoutRoot.startsWith('pricing/watch-lists/')) {
+      const watchListId = routeWithoutRoot.split('/')[2] ?? '';
+
+      return {
+        type: 'saved-watch-list',
+        state: {
+          title: 'Saved Watch List',
+          route: normalizedRoute,
+          section: 'pricing',
+          screen: 'saved-watch-list',
+          context: { watchListId }
         }
       };
     }

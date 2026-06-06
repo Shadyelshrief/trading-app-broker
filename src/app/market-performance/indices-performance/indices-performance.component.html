@@ -1,0 +1,133 @@
+@if (vm$ | async; as vm) {
+  <section class="performance-page">
+    <header class="performance-page__header">
+      <div>
+        <p class="performance-page__eyebrow">Market Performance</p>
+        <h2>Indices Performance</h2>
+      </div>
+      <div class="performance-page__header-actions">
+        <button mat-stroked-button type="button" (click)="facade.resetChart()">Reset Chart</button>
+        <button mat-stroked-button type="button" (click)="exportChart()">Export Chart</button>
+      </div>
+    </header>
+
+    <section class="performance-page__filters">
+      <mat-form-field appearance="outline" class="performance-page__field performance-page__field--wide">
+        <mat-label>Index</mat-label>
+        <input
+          matInput
+          type="text"
+          placeholder="Search index code or name"
+          [formControl]="indexQueryControl"
+          [matAutocomplete]="indexAutocomplete"
+        />
+        <mat-autocomplete #indexAutocomplete="matAutocomplete" (optionSelected)="selectIndex($event.option.value)">
+          @for (option of vm.indexOptions; track option.indexId) {
+            <mat-option [value]="option">
+              <span>{{ option.indexId }}</span>
+              <small>{{ option.indexName }} · {{ option.market }}</small>
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="performance-page__field">
+        <mat-label>Time Period</mat-label>
+        <mat-select [value]="vm.selectedPeriod" (valueChange)="facade.selectPeriod($event)">
+          @for (period of periods; track period.value) {
+            <mat-option [value]="period.value">{{ period.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-flat-button type="button" class="performance-page__primary" (click)="facade.showChart()">
+        Show Chart
+      </button>
+    </section>
+
+    @if (vm.validationError || vm.error) {
+      <section class="performance-page__message">
+        {{ vm.validationError || vm.error }}
+      </section>
+    }
+
+    <section class="performance-page__chart-card">
+      <div class="performance-page__toolbar">
+        <button mat-stroked-button type="button" (click)="addIndicator(vm)">Add Indicator</button>
+        <mat-checkbox [checked]="vm.showVolume" (change)="facade.toggleVolume($event.checked)">Show Volume</mat-checkbox>
+        <mat-checkbox [checked]="vm.comparisonEnabled" (change)="facade.toggleComparison($event.checked)">
+          Comparison
+        </mat-checkbox>
+
+        @if (vm.comparisonEnabled) {
+          <mat-form-field appearance="outline" class="performance-page__comparison-field">
+            <mat-label>Compare Index</mat-label>
+            <input
+              matInput
+              type="text"
+              placeholder="Search index"
+              [formControl]="comparisonControl"
+              [matAutocomplete]="comparisonAutocomplete"
+            />
+            <mat-autocomplete
+              #comparisonAutocomplete="matAutocomplete"
+              (optionSelected)="selectComparison($event.option.value)"
+            >
+              @for (option of comparisonOptions$ | async; track option.indexId) {
+                <mat-option [value]="option">
+                  <span>{{ option.indexId }}</span>
+                  <small>{{ option.indexName }} · {{ option.market }}</small>
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+          <button mat-stroked-button type="button" (click)="addComparison()">Add</button>
+        }
+      </div>
+
+      @if (vm.indicators.length || vm.comparisonSeries.length) {
+        <div class="performance-page__chips">
+          @for (indicator of vm.indicators; track indicator.id) {
+            <button type="button" class="performance-page__chip" (click)="facade.removeIndicator(indicator.id)">
+              {{ indicator.label }} <span>×</span>
+            </button>
+          }
+          @for (comparison of vm.comparisonSeries; track comparison.id) {
+            <button type="button" class="performance-page__chip" (click)="facade.removeComparison(comparison.id)">
+              Compare: {{ comparison.label }} <span>×</span>
+            </button>
+          }
+        </div>
+      }
+
+      <div class="performance-page__chart">
+        <app-market-chart
+          [series]="chartSeries(vm)"
+          [chartType]="'line'"
+          [timeframe]="chartTimeframe(vm.selectedPeriod)"
+          [symbol]="vm.selectedIndex?.indexName ?? 'Index Performance'"
+          [realtime]="false"
+        />
+      </div>
+    </section>
+
+    <section class="performance-page__grid-card">
+      <div class="performance-page__meta">
+        <p>Historical index performance for the selected trading period.</p>
+        <p>{{ vm.rows.length }} rows</p>
+      </div>
+
+      <app-market-grid
+        class="performance-page__grid"
+        [rowData]="vm.rows"
+        [columnDefs]="columns"
+        [loading]="vm.loading"
+        [contextMenuActions]="contextActions"
+        [marketType]="'market-performance-indices'"
+        [stateKey]="'market-performance-indices-grid-v1'"
+        [settings]="gridSettings"
+        (contextAction)="handleContextAction($event)"
+      />
+    </section>
+  </section>
+}

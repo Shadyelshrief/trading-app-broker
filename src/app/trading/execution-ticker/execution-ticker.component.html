@@ -1,0 +1,46 @@
+@if (vm$ | async; as vm) {
+  <section class="execution-ticker">
+    <header class="execution-ticker__header">
+      <div>
+        <p class="execution-ticker__eyebrow">Trading</p>
+        <h2>Execution Ticker</h2>
+        <p>Private execution transactions received since login for the current authorized session.</p>
+      </div>
+
+      <span
+        class="execution-ticker__status"
+        [class.execution-ticker__status--warn]="vm.connectionState === 'CONNECTING' || vm.connectionState === 'RECONNECTING'"
+        [class.execution-ticker__status--down]="vm.connectionState === 'DISCONNECTED'"
+      >
+        {{ vm.connectionLabel }}
+      </span>
+    </header>
+
+    @if (vm.error) {
+      <section class="execution-ticker__banner">{{ vm.error }}</section>
+    }
+
+    <section class="execution-ticker__meta">
+      <span>{{ vm.rows.length }} transactions since login</span>
+      <span>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</span>
+      <span>F1 Buy / F2 Sell selected row</span>
+    </section>
+
+    <app-market-grid
+      class="execution-ticker__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns"
+      [gridOptions]="gridOptions"
+      [contextMenuActions]="contextActions"
+      [loading]="vm.loading"
+      [marketType]="'execution-ticker'"
+      [stateKey]="'execution-ticker-grid-v1'"
+      [settings]="vm.settings"
+      (rowClicked)="selectRow($event)"
+      (rowDoubleClicked)="openDetails($event)"
+      (buyOrder)="openOrder('buy', $event)"
+      (sellOrder)="openOrder('sell', $event)"
+      (contextAction)="handleContextAction($event)"
+    />
+  </section>
+}

@@ -1,0 +1,152 @@
+@if (vm$ | async; as vm) {
+  <section class="charting">
+    <header class="charting__header">
+      <div>
+        <p class="charting__eyebrow">Pricing</p>
+        <h2>Charts</h2>
+      </div>
+
+      <div class="charting__header-stats">
+        <article>
+          <span>Last Price</span>
+          <strong>{{ vm.lastPrice ?? '--' }}</strong>
+        </article>
+        <article>
+          <span>Last Update</span>
+          <strong>{{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</strong>
+        </article>
+      </div>
+    </header>
+
+    <section class="charting__filters">
+      <mat-form-field appearance="outline" class="charting__instrument-field">
+        <mat-label>Symbol / Index</mat-label>
+        <input
+          matInput
+          type="text"
+          placeholder="Search symbol or index"
+          [formControl]="instrumentControl"
+          [matAutocomplete]="instrumentAutocomplete"
+        />
+        <mat-autocomplete
+          #instrumentAutocomplete="matAutocomplete"
+          [displayWith]="displayInstrument"
+          (optionSelected)="selectInstrument($event.option.value)"
+        >
+          @for (instrument of vm.instrumentOptions; track instrument.type + instrument.market + instrument.id) {
+            <mat-option [value]="instrument">
+              <span>{{ instrument.id }}</span>
+              <small>{{ instrument.name }} · {{ instrument.market }} · {{ instrument.type }}</small>
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Time Period</mat-label>
+        <mat-select [formControl]="timePeriodControl">
+          @for (period of timePeriods; track period) {
+            <mat-option [value]="period">{{ period }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Chart Type</mat-label>
+        <mat-select [formControl]="chartTypeControl">
+          @for (type of chartTypes; track type) {
+            <mat-option [value]="type">{{ type }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Add Indicator</mat-label>
+        <mat-select (valueChange)="addIndicator($event)">
+          @for (definition of facade.indicatorDefinitions; track definition.type) {
+            <mat-option [value]="definition.type">{{ definition.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (vm.timePeriod === 'CUSTOM') {
+        <mat-form-field appearance="outline">
+          <mat-label>From</mat-label>
+          <input matInput type="date" [formControl]="fromDateControl" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>To</mat-label>
+          <input matInput type="date" [formControl]="toDateControl" />
+        </mat-form-field>
+      }
+
+      <mat-slide-toggle [checked]="vm.showVolume" (change)="facade.toggleVolume($event.checked)">
+        Volume
+      </mat-slide-toggle>
+
+      <mat-slide-toggle [checked]="vm.comparisonEnabled" (change)="facade.toggleComparison($event.checked)">
+        Comparison
+      </mat-slide-toggle>
+
+      <mat-slide-toggle [checked]="vm.lineStudiesEnabled" (change)="facade.toggleLineStudies($event.checked)">
+        Line Studies
+      </mat-slide-toggle>
+
+      <button mat-stroked-button type="button" (click)="facade.resetChart()">Reset Chart</button>
+      <button mat-flat-button type="button" class="charting__primary" [disabled]="vm.chartData.length === 0" (click)="exportChartData(vm)">Export Chart</button>
+    </section>
+
+    @if (vm.error) {
+      <section class="charting__message">{{ vm.error }}</section>
+    }
+
+    <app-line-studies-toolbar
+      [enabled]="vm.lineStudiesEnabled"
+      [activeTool]="vm.activeDrawingTool"
+      (toolSelected)="selectDrawingTool($event)"
+      (clearDrawings)="clearDrawings()"
+    />
+
+    <section class="charting__workspace" [class.charting__workspace--comparison]="vm.comparisonEnabled">
+      <div class="charting__chart-panel">
+        @if (!vm.selectedInstrument) {
+          <section class="charting__empty">
+            Select a symbol or index to load historical chart data and subscribe to realtime updates.
+          </section>
+        }
+
+        <app-market-chart
+          [series]="vm.series"
+          [chartType]="chartTypeFor(vm)"
+          [timeframe]="timeframeFor(vm)"
+          [timePeriod]="vm.timePeriod"
+          [symbol]="symbolFor(vm)"
+          [realtime]="true"
+          [showVolume]="vm.showVolume"
+          [loading]="vm.loading"
+          [indicators]="indicatorChips(vm.indicators)"
+          [height]="'100%'"
+          (timeframeChanged)="facade.updateTimePeriod($event === 'INTRADAY' ? 'INTRADAY' : $event)"
+          (indicatorRemoved)="facade.removeIndicator($event)"
+        />
+
+        <app-drawing-overlay
+          [enabled]="vm.lineStudiesEnabled"
+          [activeTool]="vm.activeDrawingTool"
+          [drawings]="drawings()"
+          (drawingsChanged)="updateDrawings($event)"
+        />
+      </div>
+
+      <app-chart-comparison-panel
+        [enabled]="vm.comparisonEnabled"
+        [instrumentOptions]="vm.comparisonOptions"
+        [comparisonSeries]="vm.comparisonSeries"
+        (queryChanged)="facade.updateComparisonQuery($event)"
+        (addComparison)="facade.addComparison($event)"
+        (removeComparison)="facade.removeComparison($event)"
+      />
+    </section>
+  </section>
+}

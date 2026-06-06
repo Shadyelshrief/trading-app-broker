@@ -1,0 +1,118 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.client-search {
+  display: grid;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  gap: 1rem;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.client-search__header,
+.client-search__filters,
+.client-search__message {
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(8, 18, 29, 0.78);
+}
+
+.client-search__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+}
+
+.client-search__eyebrow,
+.client-search h2,
+.client-search p {
+  margin: 0;
+}
+
+.client-search__eyebrow {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.client-search h2 {
+  margin-top: 0.25rem;
+  color: var(--text-primary);
+  font-size: 1.35rem;
+}
+
+.client-search__actions,
+.client-search__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.client-search__primary {
+  min-height: 2.55rem;
+  border-radius: 0.8rem;
+  background: linear-gradient(135deg, #00c2a8, #3b82f6);
+  color: #06101c;
+  font-weight: 800;
+}
+
+.client-search__filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(12rem, 1fr));
+  gap: 0.85rem;
+  padding: 1rem 1.2rem;
+}
+
+.client-search__filters mat-form-field {
+  margin-bottom: -1.25em;
+}
+
+.client-search__message {
+  padding: 0.8rem 1rem;
+  color: #ffb4b4;
+  border-color: rgba(255, 125, 125, 0.32);
+  background: rgba(255, 125, 125, 0.08);
+}
+
+.client-search__meta {
+  justify-content: space-between;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+}
+
+.client-search__grid {
+  display: flex;
+  min-height: 360px;
+  overflow: hidden;
+}
+
+::ng-deep .client-cell--primary,
+::ng-deep .client-cell--name {
+  color: #e7eef8 !important;
+  font-weight: 800;
+}
+
+@media (max-width: 1180px) {
+  .client-search__filters {
+    grid-template-columns: repeat(2, minmax(12rem, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .client-search__header {
+    flex-direction: column;
+  }
+
+  .client-search__filters {
+    grid-template-columns: 1fr;
+  }
+}

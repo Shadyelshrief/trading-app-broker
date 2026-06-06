@@ -1,0 +1,102 @@
+@if (vm$ | async; as vm) {
+  <section class="order-statistics">
+    <header class="order-statistics__header">
+      <div>
+        <p class="order-statistics__eyebrow">Managing Orders</p>
+        <h2>Order Statistics</h2>
+      </div>
+      <div class="order-statistics__actions">
+        <button mat-stroked-button type="button" (click)="reset()">Reset</button>
+        <button mat-flat-button type="button" class="order-statistics__primary" (click)="facade.search()">Search</button>
+      </div>
+    </header>
+
+    <form class="order-statistics__filters" [formGroup]="filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Client</mat-label>
+        <input matInput type="text" formControlName="client" [matAutocomplete]="clientAutocomplete" />
+        <mat-autocomplete #clientAutocomplete="matAutocomplete" [displayWith]="displayClient" (optionSelected)="selectClient($event.option.value)">
+          @for (client of vm.clientOptions; track client.clientId) {
+            <mat-option [value]="client">{{ client.clientId }} · {{ client.clientName }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Market</mat-label>
+        <mat-select formControlName="market">
+          <mat-option value="">All Markets</mat-option>
+          @for (market of vm.markets; track market.value) {
+            <mat-option [value]="market.value">{{ market.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Symbol</mat-label>
+        <input matInput type="text" formControlName="symbol" [matAutocomplete]="symbolAutocomplete" />
+        <mat-autocomplete #symbolAutocomplete="matAutocomplete" [displayWith]="displaySymbol" (optionSelected)="selectSymbol($event.option.value)">
+          @for (symbol of vm.symbolOptions; track symbol.symbolId + symbol.market) {
+            <mat-option [value]="symbol">{{ symbol.symbolId }} · {{ symbol.symbolName }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Order Type</mat-label>
+        <mat-select formControlName="orderType">
+          <mat-option value="">All</mat-option>
+          <mat-option value="LIMIT">Limit Order</mat-option>
+          <mat-option value="MARKET">Market Order</mat-option>
+          <mat-option value="HIT">Hit Order</mat-option>
+          <mat-option value="TAKE">Take Order</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Portfolio</mat-label>
+        <mat-select formControlName="portfolioId">
+          <mat-option value="">All</mat-option>
+          @for (portfolio of vm.portfolioOptions; track portfolio.portfolioId) {
+            <mat-option [value]="portfolio.portfolioId">{{ portfolio.portfolioName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>From Date</mat-label>
+        <input matInput type="date" formControlName="fromDate" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>To Date</mat-label>
+        <input matInput type="date" formControlName="toDate" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Broker ID</mat-label>
+        <input matInput type="text" formControlName="brokerId" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status Group</mat-label>
+        <mat-select formControlName="statusGroup">
+          <mat-option value="">All</mat-option>
+          @for (statusGroup of vm.statusGroups; track statusGroup.value) {
+            <mat-option [value]="statusGroup.value">{{ statusGroup.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </form>
+
+    <app-market-grid
+      class="order-statistics__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns"
+      [loading]="vm.loading"
+      [marketType]="'order-statistics'"
+      [stateKey]="'order-statistics-grid-v1'"
+      [settings]="vm.settings"
+    />
+  </section>
+}

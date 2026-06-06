@@ -1,0 +1,114 @@
+.watch-list-dialog {
+  color: var(--text-primary);
+}
+
+.watch-list-dialog__header {
+  padding: 0 0 0.75rem;
+}
+
+.watch-list-dialog__eyebrow {
+  margin: 0 0 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.watch-list-dialog h2,
+.watch-list-dialog h3,
+.watch-list-dialog p {
+  margin: 0;
+}
+
+.watch-list-dialog__name {
+  width: 100%;
+}
+
+.watch-list-dialog__error {
+  margin-bottom: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(255, 107, 107, 0.28);
+  border-radius: 0.75rem;
+  color: #ff9b9b;
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.watch-list-dialog__tab {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem 0 0;
+}
+
+.watch-list-dialog__filter-grid,
+.watch-list-dialog__selected-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(12rem, 1fr));
+  gap: 0.85rem;
+}
+
+.watch-list-dialog__transfer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.9rem;
+}
+
+.watch-list-dialog__list {
+  min-height: 18rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.85rem;
+  overflow: hidden;
+  background: rgba(8, 18, 29, 0.55);
+}
+
+.watch-list-dialog__list h3 {
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.88rem;
+}
+
+.watch-list-dialog__list mat-selection-list {
+  max-height: 16rem;
+  overflow: auto;
+}
+
+.watch-list-dialog__transfer-buttons {
+  display: grid;
+  align-content: center;
+  gap: 0.5rem;
+}
+
+.watch-list-dialog__condition-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.watch-list-dialog__condition-table {
+  display: grid;
+  grid-template-columns: minmax(6rem, 0.8fr) minmax(12rem, 1.4fr) minmax(7rem, 0.8fr) minmax(8rem, 1fr) auto;
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.watch-list-dialog__condition-head {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.watch-list-dialog .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .watch-list-dialog__filter-grid,
+  .watch-list-dialog__selected-filters,
+  .watch-list-dialog__transfer,
+  .watch-list-dialog__condition-table {
+    grid-template-columns: 1fr;
+  }
+
+  .watch-list-dialog__transfer-buttons {
+    grid-auto-flow: column;
+    justify-content: center;
+  }
+}

@@ -70,6 +70,18 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
         routerLink: appRoute('/pricing/market-map')
       },
       {
+        id: 'pricing-market-performance-indices',
+        label: 'Market Performance Indices',
+        icon: 'chart',
+        routerLink: appRoute('/pricing/market-performance-indices')
+      },
+      {
+        id: 'pricing-market-performance-security',
+        label: 'Market Performance Security',
+        icon: 'trending',
+        routerLink: appRoute('/pricing/market-performance-security')
+      },
+      {
         id: 'pricing-top-symbols',
         label: 'Top Symbols',
         icon: 'hash',
@@ -91,7 +103,26 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
         id: 'pricing-tickers',
         label: 'Tickers',
         icon: 'hash',
-        routerLink: appRoute('/pricing/tickers')
+        children: [
+          {
+            id: 'pricing-trading-ticker',
+            label: 'Trading Ticker',
+            icon: 'activity',
+            routerLink: appRoute('/pricing/trading-ticker')
+          },
+          {
+            id: 'pricing-pricing-ticker',
+            label: 'Pricing Ticker',
+            icon: 'hash',
+            routerLink: appRoute('/pricing/pricing-ticker')
+          },
+          {
+            id: 'pricing-announcements-ticker',
+            label: 'Announcements Ticker',
+            icon: 'book',
+            routerLink: appRoute('/pricing/announcements-ticker')
+          }
+        ]
       },
       {
         id: 'pricing-charts',
@@ -103,7 +134,20 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
         id: 'pricing-watch-lists',
         label: 'Watch Lists',
         icon: 'list',
-        routerLink: appRoute('/pricing/watch-lists')
+        children: [
+          {
+            id: 'pricing-saved-watch-lists',
+            label: 'Saved Watch Lists',
+            icon: 'list',
+            routerLink: appRoute('/pricing/saved-watch-lists')
+          },
+          {
+            id: 'pricing-create-watch-list',
+            label: 'Create Watch List',
+            icon: 'sliders',
+            routerLink: appRoute('/pricing/create-watch-list')
+          }
+        ]
       }
     ]
   },
@@ -118,12 +162,6 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
         routerLink: appRoute('/trading/order-entry')
       },
       {
-        id: 'trading-basket-orders',
-        label: 'Basket Orders',
-        icon: 'grid',
-        routerLink: appRoute('/trading/basket-orders')
-      },
-      {
         id: 'trading-order-monitor',
         label: 'Order Monitor',
         icon: 'eye',
@@ -131,15 +169,15 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
       },
       {
         id: 'trading-portfolio-position',
-        label: 'Portfolio Position',
+        label: 'Portfolio Positioning',
         icon: 'pie',
         routerLink: appRoute('/trading/portfolio-position')
       },
       {
-        id: 'trading-transactions-ticker',
-        label: 'Transactions Ticker',
+        id: 'trading-execution-ticker',
+        label: 'Execution Ticker',
         icon: 'activity',
-        routerLink: appRoute('/trading/transactions-ticker')
+        routerLink: appRoute('/trading/execution-ticker')
       },
       {
         id: 'trading-order-statistics',
@@ -164,12 +202,6 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
         label: 'Client Information',
         icon: 'users',
         routerLink: appRoute('/management/client-information')
-      },
-      {
-        id: 'management-corebank-transfer',
-        label: 'CoreBank Transfer',
-        icon: 'layout',
-        routerLink: appRoute('/management/corebank-transfer')
       }
     ]
   },

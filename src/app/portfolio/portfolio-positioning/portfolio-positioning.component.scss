@@ -1,0 +1,214 @@
+:host {
+  display: block;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+}
+
+.portfolio-positioning {
+  display: grid;
+  grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+  gap: 1rem;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.portfolio-positioning__header,
+.portfolio-positioning__filters,
+.portfolio-positioning__message,
+.portfolio-positioning__summary {
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(8, 18, 29, 0.78);
+}
+
+.portfolio-positioning__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+}
+
+.portfolio-positioning__eyebrow,
+.portfolio-positioning h2,
+.portfolio-positioning p {
+  margin: 0;
+}
+
+.portfolio-positioning__eyebrow {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.portfolio-positioning h2 {
+  margin-top: 0.25rem;
+  color: var(--text-primary);
+  font-size: 1.35rem;
+}
+
+.portfolio-positioning__actions,
+.portfolio-positioning__filters,
+.portfolio-positioning__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.portfolio-positioning__filters {
+  padding: 1rem 1.2rem;
+}
+
+.portfolio-positioning__client-field {
+  width: min(30rem, 100%);
+  margin-bottom: -1.25em;
+}
+
+.portfolio-positioning__portfolio-field {
+  width: min(22rem, 100%);
+  margin-bottom: -1.25em;
+}
+
+.portfolio-positioning__currency {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 8rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(95, 140, 185, 0.2);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.portfolio-positioning__currency span,
+.portfolio-positioning__summary span {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+.portfolio-positioning__currency strong,
+.portfolio-positioning__summary strong {
+  color: var(--text-primary);
+}
+
+.portfolio-positioning__connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.4rem;
+  padding: 0 0.75rem;
+  border: 1px solid rgba(246, 197, 91, 0.25);
+  border-radius: 999px;
+  color: #f6c55b;
+  text-transform: capitalize;
+}
+
+.portfolio-positioning__connection span {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.portfolio-positioning__connection--live {
+  border-color: rgba(61, 220, 151, 0.28);
+  color: #3ddc97;
+}
+
+.portfolio-positioning__primary {
+  min-height: 2.55rem;
+  border-radius: 0.8rem;
+  background: linear-gradient(135deg, #00c2a8, #3b82f6);
+  color: #06101c;
+  font-weight: 800;
+}
+
+.portfolio-positioning__message {
+  padding: 0.8rem 1rem;
+  color: #ffb4b4;
+  border-color: rgba(255, 125, 125, 0.32);
+  background: rgba(255, 125, 125, 0.08);
+}
+
+.portfolio-positioning__summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.9rem;
+}
+
+.portfolio-positioning__summary article {
+  padding: 0.75rem;
+  border: 1px solid rgba(95, 140, 185, 0.18);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.portfolio-positioning__summary span,
+.portfolio-positioning__summary strong {
+  display: block;
+}
+
+.portfolio-positioning__summary strong {
+  margin-top: 0.25rem;
+  font-size: 1.05rem;
+}
+
+.portfolio-positioning__summary--positive strong {
+  color: #3ddc97;
+}
+
+.portfolio-positioning__summary--negative strong {
+  color: #ff7d7d;
+}
+
+.portfolio-positioning__meta {
+  justify-content: space-between;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+}
+
+.portfolio-positioning__grid {
+  display: flex;
+  min-height: 340px;
+  overflow: hidden;
+}
+
+::ng-deep .portfolio-cell--removed {
+  color: #050505 !important;
+  font-weight: 800;
+}
+
+::ng-deep .market-cell--up {
+  color: #3ddc97 !important;
+  font-weight: 800;
+}
+
+::ng-deep .market-cell--down {
+  color: #ff7d7d !important;
+  font-weight: 800;
+}
+
+::ng-deep .market-cell--flat {
+  color: #60a5fa !important;
+  font-weight: 800;
+}
+
+@media (max-width: 1040px) {
+  .portfolio-positioning__header {
+    flex-direction: column;
+  }
+
+  .portfolio-positioning__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portfolio-positioning__client-field,
+  .portfolio-positioning__portfolio-field {
+    width: 100%;
+  }
+}

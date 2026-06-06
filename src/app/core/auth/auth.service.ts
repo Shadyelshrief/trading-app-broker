@@ -13,6 +13,7 @@ import {
 } from './auth.models';
 
 export const AUTH_ACCESS_TOKEN_STORAGE_KEY = 'broker_auth_v1_access_token';
+export const AUTH_LOGIN_TIME_STORAGE_KEY = 'broker_auth_v1_login_time';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -45,6 +46,7 @@ export class AuthService {
   logout(navigate: boolean = true): void {
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+      window.localStorage.removeItem(AUTH_LOGIN_TIME_STORAGE_KEY);
     }
 
     this.accessToken.set(null);
@@ -61,6 +63,7 @@ export class AuthService {
   persistSession(token: string): void {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(AUTH_ACCESS_TOKEN_STORAGE_KEY, token);
+      window.localStorage.setItem(AUTH_LOGIN_TIME_STORAGE_KEY, `${Date.now()}`);
     }
 
     this.accessToken.set(token);

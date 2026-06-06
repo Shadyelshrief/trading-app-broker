@@ -4,6 +4,7 @@ import {
   Component,
   computed,
   effect,
+  HostListener,
   input,
   output,
   signal
@@ -13,6 +14,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { AgGridAngular } from 'ag-grid-angular';
 import {
+  CellClickedEvent,
   CellDoubleClickedEvent,
   ColDef,
   ColumnMovedEvent,
@@ -25,12 +27,19 @@ import {
   GridReadyEvent,
   RowClickedEvent,
   SortChangedEvent,
-  FilterChangedEvent
+  FilterChangedEvent,
+  CellContextMenuEvent
 } from 'ag-grid-community';
 
 import { MarketGridContextAction, MarketGridSettings } from '../../models/market-grid.model';
 
 type MarketGridRow = any;
+
+interface MarketGridContextMenuState {
+  x: number;
+  y: number;
+  row: MarketGridRow | null;
+}
 
 @Component({
   selector: 'app-market-grid',
@@ -66,8 +75,11 @@ export class MarketGridComponent {
   readonly priceQuote = output<any>();
   readonly depthRequest = output<any>();
   readonly chartRequest = output<any>();
+  readonly contextAction = output<{ actionId: string; row: any | null }>();
+  readonly cellClicked = output<{ row: any; field: string }>();
 
   protected gridApi?: GridApi<any>;
+  protected readonly contextMenu = signal<MarketGridContextMenuState | null>(null);
   protected readonly gridClass = computed(() => [
     'market-grid',
     this.settings().theme === 'light' ? 'market-grid--light' : 'market-grid--dark'
@@ -131,6 +143,15 @@ export class MarketGridComponent {
     }
   }
 
+  protected onCellClicked(event: CellClickedEvent<any>): void {
+    if (!event.data) {
+      return;
+    }
+
+    const field = typeof event.colDef.field === 'string' ? event.colDef.field : event.column.getColId();
+    this.cellClicked.emit({ row: event.data, field });
+  }
+
   protected onCellDoubleClicked(event: CellDoubleClickedEvent<any>): void {
     if (!event.data) {
       return;
@@ -138,18 +159,33 @@ export class MarketGridComponent {
 
     const field = typeof event.colDef.field === 'string' ? event.colDef.field : '';
 
-    if (field === 'offerPrice' || field === 'offerQty') {
+    if (field === 'offerPrice' || field === 'offerQty' || field === 'offerSize') {
       this.buyOrder.emit(event.data);
       return;
     }
 
-    if (field === 'bidPrice' || field === 'bidQty') {
+    if (field === 'bidPrice' || field === 'bidQty' || field === 'bidSize') {
       this.sellOrder.emit(event.data);
       return;
     }
 
     this.priceQuote.emit(event.data);
     this.rowDoubleClicked.emit(event.data);
+  }
+
+  protected onCellContextMenu(event: CellContextMenuEvent<any>): void {
+    const mouseEvent = event.event instanceof MouseEvent ? event.event : null;
+
+    if (!mouseEvent || this.contextMenuActions().length === 0) {
+      return;
+    }
+
+    mouseEvent.preventDefault();
+    this.contextMenu.set({
+      x: mouseEvent.clientX,
+      y: mouseEvent.clientY,
+      row: event.data ?? null
+    });
   }
 
   protected persistColumnState(): void {
@@ -189,7 +225,28 @@ export class MarketGridComponent {
     });
   }
 
+  protected isActionDisabled(action: MarketGridContextAction<any>, row: MarketGridRow | null): boolean {
+    return typeof action.disabled === 'function' ? action.disabled(row) : action.disabled === true;
+  }
+
+  protected runContextAction(action: MarketGridContextAction<any>, row: MarketGridRow | null): void {
+    if (this.isActionDisabled(action, row)) {
+      return;
+    }
+
+    this.contextMenu.set(null);
+    this.dispatchContextAction(action.id, row);
+  }
+
+  @HostListener('document:click')
+  @HostListener('document:keydown.escape')
+  protected closeContextMenu(): void {
+    this.contextMenu.set(null);
+  }
+
   private dispatchContextAction(actionId: string, row: MarketGridRow | null): void {
+    this.contextAction.emit({ actionId, row });
+
     if (!row) {
       return;
     }

@@ -1,0 +1,110 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+.execution-ticker {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: 1rem;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.execution-ticker__header,
+.execution-ticker__meta,
+.execution-ticker__banner {
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(7, 17, 31, 0.86);
+}
+
+.execution-ticker__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.execution-ticker__eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.execution-ticker h2,
+.execution-ticker p {
+  margin: 0;
+}
+
+.execution-ticker__header p:not(.execution-ticker__eyebrow) {
+  margin-top: 0.35rem;
+  color: var(--text-secondary);
+}
+
+.execution-ticker__status {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid rgba(61, 220, 151, 0.28);
+  border-radius: 999px;
+  color: #3ddc97;
+  background: rgba(61, 220, 151, 0.1);
+  font-weight: 800;
+}
+
+.execution-ticker__status--warn {
+  border-color: rgba(246, 197, 91, 0.32);
+  color: #f6c55b;
+  background: rgba(246, 197, 91, 0.1);
+}
+
+.execution-ticker__status--down {
+  border-color: rgba(255, 107, 107, 0.32);
+  color: #ff8f8f;
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.execution-ticker__banner {
+  padding: 0.75rem 0.9rem;
+  color: #ffcc88;
+  background: rgba(246, 197, 91, 0.08);
+}
+
+.execution-ticker__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+}
+
+.execution-ticker__grid {
+  min-height: 0;
+}
+
+:host ::ng-deep .execution-cell--buy {
+  color: var(--market-grid-bid-color, #3ddc97);
+  font-weight: 800;
+}
+
+:host ::ng-deep .execution-cell--sell {
+  color: var(--market-grid-offer-color, #ff7d7d);
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .execution-ticker {
+    overflow: auto;
+  }
+
+  .execution-ticker__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

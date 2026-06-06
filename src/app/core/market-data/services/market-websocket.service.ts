@@ -168,7 +168,7 @@ export class MarketWebsocketService {
 
   private openSocket(accessToken: string): void {
     this.socket = webSocket<FeederInboundMessage<unknown> | FeederOutboundMessage>({
-      url: environment.marketData.webSocketUrl,
+      url: resolveWebSocketUrl(environment.marketData.webSocketUrl),
       serializer: (message) => JSON.stringify(message),
       deserializer: ({ data }) => JSON.parse(data as string) as FeederInboundMessage<unknown>,
       openObserver: {
@@ -390,4 +390,18 @@ export class MarketWebsocketService {
 
     return 'Unknown websocket error.';
   }
+}
+
+function resolveWebSocketUrl(url: string): string {
+  if (/^wss?:\/\//i.test(url)) {
+    return url;
+  }
+
+  if (typeof window === 'undefined') {
+    return url;
+  }
+
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const normalizedPath = url.startsWith('/') ? url : `/${url}`;
+  return `${protocol}//${window.location.host}${normalizedPath}`;
 }

@@ -1,0 +1,5 @@
+@use '../pricing-ticker/pricing-ticker.component';
+
+.ticker-page__filters--compact {
+  grid-template-columns: repeat(2, minmax(11rem, 1fr));
+}

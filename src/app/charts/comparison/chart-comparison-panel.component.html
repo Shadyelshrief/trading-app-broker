@@ -1,0 +1,43 @@
+@if (enabled()) {
+  <aside class="comparison-panel">
+    <header>
+      <p>Comparison</p>
+      <h3>Add symbol or index</h3>
+    </header>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Compare with</mat-label>
+      <input
+        matInput
+        type="text"
+        [formControl]="control"
+        [matAutocomplete]="comparisonAutocomplete"
+      />
+      <mat-autocomplete
+        #comparisonAutocomplete="matAutocomplete"
+        [displayWith]="displayInstrument"
+        (optionSelected)="selectInstrument($event.option.value)"
+      >
+        @for (instrument of instrumentOptions(); track instrument.type + instrument.market + instrument.id) {
+          <mat-option [value]="instrument">
+            <span>{{ instrument.id }}</span>
+            <small>{{ instrument.name }} · {{ instrument.market }} · {{ instrument.type }}</small>
+          </mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
+
+    <div class="comparison-panel__list">
+      @for (series of comparisonSeries(); track series.instrument.type + series.instrument.market + series.instrument.id) {
+        <article>
+          <span [style.background]="series.color || '#60a5fa'"></span>
+          <div>
+            <strong>{{ series.instrument.id }}</strong>
+            <small>{{ series.instrument.name }}</small>
+          </div>
+          <button mat-button type="button" (click)="removeComparison.emit(series.instrument)">Remove</button>
+        </article>
+      }
+    </div>
+  </aside>
+}

@@ -1,0 +1,177 @@
+@if (vm$ | async; as vm) {
+  <section class="client-information">
+    <header class="client-information__header">
+      <div>
+        <p class="client-information__eyebrow">Management</p>
+        <h2>Client Information</h2>
+      </div>
+      <button mat-stroked-button type="button" (click)="openClientSearch()">Client Search</button>
+    </header>
+
+    <section class="client-information__filters">
+      <mat-form-field appearance="outline" class="client-information__client-field">
+        <mat-label>Client ID</mat-label>
+        <input
+          matInput
+          type="text"
+          placeholder="Search client ID or name"
+          [formControl]="clientControl"
+          [matAutocomplete]="clientAutocomplete"
+          (keydown.enter)="searchTypedClient()"
+        />
+        <mat-autocomplete
+          #clientAutocomplete="matAutocomplete"
+          [displayWith]="displayClient"
+          (optionSelected)="selectClient($event.option.value)"
+        >
+          @for (client of vm.clientOptions; track client.clientId) {
+            <mat-option [value]="client">
+              <span>{{ client.clientId }}</span>
+              <small>{{ client.clientName }}</small>
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <button mat-flat-button type="button" class="client-information__primary" (click)="searchTypedClient()">Search</button>
+    </section>
+
+    @if (vm.error) {
+      <section class="client-information__message">{{ vm.error }}</section>
+    }
+
+    @if (vm.selectedClient; as client) {
+      <section class="client-information__profile">
+        <div>
+          <span>Client ID</span>
+          <strong>{{ client.clientId || '--' }}</strong>
+        </div>
+        <div>
+          <span>Client Name</span>
+          <strong>{{ client.clientName || '--' }}</strong>
+        </div>
+        <div>
+          <span>ID Type</span>
+          <strong>{{ client.idType || '--' }}</strong>
+        </div>
+        <div>
+          <span>ID Number</span>
+          <strong>{{ client.idNumber || '--' }}</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong>{{ client.status || '--' }}</strong>
+        </div>
+        <div>
+          <span>Address</span>
+          <strong>{{ client.address || '--' }}</strong>
+        </div>
+        <div>
+          <span>City</span>
+          <strong>{{ client.city || '--' }}</strong>
+        </div>
+        <div>
+          <span>P.O. Box</span>
+          <strong>{{ client.poBox || '--' }}</strong>
+        </div>
+        <div>
+          <span>Postal Code</span>
+          <strong>{{ client.postalCode || '--' }}</strong>
+        </div>
+        <div>
+          <span>Telephone</span>
+          <strong>{{ client.telephone || '--' }}</strong>
+        </div>
+        <div>
+          <span>Mobile</span>
+          <strong>{{ client.mobile || '--' }}</strong>
+        </div>
+      </section>
+
+      <mat-tab-group class="client-information__tabs" mat-stretch-tabs="false" animationDuration="180ms">
+        <mat-tab label="Portfolios">
+          <section class="client-information__tab-panel">
+            <app-market-grid
+              class="client-information__grid"
+              [rowData]="vm.portfolios"
+              [columnDefs]="portfolioColumns"
+              [gridOptions]="portfolioGridOptions"
+              [loading]="vm.loading"
+              [marketType]="'client-portfolios'"
+              [stateKey]="'client-portfolios-grid-v1'"
+              (cellClicked)="handlePortfolioCellClick($event, vm)"
+            />
+          </section>
+        </mat-tab>
+
+        <mat-tab label="Delivery Channel">
+          <section class="client-information__delivery">
+            <div class="client-information__delivery-filters">
+              <mat-form-field appearance="outline">
+                <mat-label>Delivery Channel</mat-label>
+                <mat-select
+                  [value]="vm.selectedDeliveryChannelId"
+                  (valueChange)="selectDeliveryChannel($event)"
+                >
+                  @for (channel of vm.deliveryChannels; track channel.deliveryChannelId) {
+                    <mat-option [value]="channel.deliveryChannelId">{{ channel.deliveryChannelName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Login ID</mat-label>
+                <mat-select
+                  [value]="vm.selectedLoginId"
+                  [disabled]="loginIds(vm).length === 0"
+                  (valueChange)="selectLoginId($event)"
+                >
+                  @for (loginId of loginIds(vm); track loginId) {
+                    <mat-option [value]="loginId">{{ loginId }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            @if (vm.deliveryDetails; as details) {
+              <section class="client-information__profile client-information__profile--delivery">
+                <div>
+                  <span>Agent ID</span>
+                  <strong>{{ details.agentId || '--' }}</strong>
+                </div>
+                <div>
+                  <span>ID Type</span>
+                  <strong>{{ details.idType || '--' }}</strong>
+                </div>
+                <div>
+                  <span>Trade Type</span>
+                  <strong>{{ details.tradeType || '--' }}</strong>
+                </div>
+                <div>
+                  <span>Order Limit</span>
+                  <strong>{{ details.orderLimit | number: '1.0-2' }}</strong>
+                </div>
+                <div>
+                  <span>Status</span>
+                  <strong>{{ details.status || '--' }}</strong>
+                </div>
+                <div>
+                  <span>Expiry Date</span>
+                  <strong>{{ details.expiryDate || '--' }}</strong>
+                </div>
+              </section>
+            } @else {
+              <section class="client-information__empty">
+                Select a delivery channel and login ID to view permissions.
+              </section>
+            }
+          </section>
+        </mat-tab>
+      </mat-tab-group>
+    } @else {
+      <section class="client-information__empty">
+        Search for a client or open one from Client Search to view information.
+      </section>
+    }
+  </section>
+}

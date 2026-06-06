@@ -52,7 +52,97 @@ export const routes: Routes = [
           import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
       },
       {
+        path: 'pricing/saved-watch-lists',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'pricing/create-watch-list',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'pricing/watch-lists/:id',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
         path: 'pricing/charts',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'pricing/trading-ticker',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'pricing/pricing-ticker',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'pricing/announcements-ticker',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'pricing/market-performance-indices',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'pricing/market-performance-security',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'trading/execution-ticker',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'trading/order-entry',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'trading/order-entry/:mode/:orderNumber',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'trading/order-monitor',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'trading/order-statistics',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'trading/portfolio-position',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'trading/portfolio-position/:clientId',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'management/client-search',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'management/client-information',
+        loadComponent: () =>
+          import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
+      },
+      {
+        path: 'management/client-information/:clientId',
         loadComponent: () =>
           import('./core/layout/workspace/workspace-page.component').then((m) => m.WorkspacePageComponent)
       },

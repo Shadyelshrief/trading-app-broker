@@ -1,0 +1,117 @@
+@if (vm$ | async; as vm) {
+  <section class="order-monitoring">
+    <header class="order-monitoring__header">
+      <div>
+        <p class="order-monitoring__eyebrow">Managing Orders</p>
+        <h2>Order Monitor</h2>
+      </div>
+      <div class="order-monitoring__actions">
+        @if (vm.missingFeedConfig) {
+          <span class="order-monitoring__feed-warning">No private order feed configured</span>
+        }
+        <button mat-stroked-button type="button" (click)="reset()">Reset</button>
+        <button mat-flat-button type="button" class="order-monitoring__primary" (click)="facade.search()">Search</button>
+      </div>
+    </header>
+
+    <form class="order-monitoring__filters" [formGroup]="filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Client</mat-label>
+        <input matInput type="text" formControlName="client" [matAutocomplete]="clientAutocomplete" />
+        <mat-autocomplete #clientAutocomplete="matAutocomplete" [displayWith]="displayClient" (optionSelected)="selectClient($event.option.value)">
+          @for (client of vm.clientOptions; track client.clientId) {
+            <mat-option [value]="client">{{ client.clientId }} · {{ client.clientName }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Market</mat-label>
+        <mat-select formControlName="market">
+          <mat-option value="">All Markets</mat-option>
+          @for (market of vm.markets; track market.value) {
+            <mat-option [value]="market.value">{{ market.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Symbol</mat-label>
+        <input matInput type="text" formControlName="symbol" [matAutocomplete]="symbolAutocomplete" />
+        <mat-autocomplete #symbolAutocomplete="matAutocomplete" [displayWith]="displaySymbol" (optionSelected)="selectSymbol($event.option.value)">
+          @for (symbol of vm.symbolOptions; track symbol.symbolId + symbol.market) {
+            <mat-option [value]="symbol">{{ symbol.symbolId }} · {{ symbol.symbolName }}</mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="type">
+          <mat-option value="">All</mat-option>
+          <mat-option value="LIMIT">Limit Order</mat-option>
+          <mat-option value="MARKET">Market Order</mat-option>
+          <mat-option value="HIT">Hit Order</mat-option>
+          <mat-option value="TAKE">Take Order</mat-option>
+          <mat-option value="BUY">Buy</mat-option>
+          <mat-option value="SELL">Sell</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Portfolio</mat-label>
+        <mat-select formControlName="portfolioId">
+          <mat-option value="">All</mat-option>
+          @for (portfolio of vm.portfolioOptions; track portfolio.portfolioId) {
+            <mat-option [value]="portfolio.portfolioId">{{ portfolio.portfolioName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>From Date</mat-label>
+        <input matInput type="date" formControlName="fromDate" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>To Date</mat-label>
+        <input matInput type="date" formControlName="toDate" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Order Number</mat-label>
+        <input matInput type="text" formControlName="orderNumber" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="">All</mat-option>
+          @for (status of vm.statuses; track status.value) {
+            <mat-option [value]="status.value">{{ status.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </form>
+
+    <section class="order-monitoring__meta">
+      <p>Search and monitor market orders. Double-click an order for transaction details.</p>
+      <p>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</p>
+    </section>
+
+    <app-market-grid
+      class="order-monitoring__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns"
+      [gridOptions]="gridOptions"
+      [loading]="vm.loading"
+      [contextMenuActions]="contextActions"
+      [marketType]="'order-monitoring'"
+      [stateKey]="'order-monitoring-grid-v1'"
+      [settings]="vm.settings"
+      (rowClicked)="selectRow($event)"
+      (rowDoubleClicked)="openDetails($event)"
+      (contextAction)="handleContextAction($event)"
+    />
+  </section>
+}

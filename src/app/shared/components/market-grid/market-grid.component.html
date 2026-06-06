@@ -13,7 +13,9 @@
       [rowModelType]="'clientSide'"
       (gridReady)="onGridReady($event)"
       (rowClicked)="onRowClicked($event)"
+      (cellClicked)="onCellClicked($event)"
       (cellDoubleClicked)="onCellDoubleClicked($event)"
+      (cellContextMenu)="onCellContextMenu($event)"
       (columnMoved)="onColumnStateChange($event)"
       (columnPinned)="onColumnStateChange($event)"
       (columnResized)="onColumnStateChange($event)"
@@ -22,4 +24,18 @@
       (filterChanged)="onColumnStateChange($event)"
     />
   </div>
+
+  @if (contextMenu(); as menu) {
+    <div class="market-grid-shell__context-menu" [style.left.px]="menu.x" [style.top.px]="menu.y">
+      @for (action of contextMenuActions(); track action.id) {
+        <button
+          type="button"
+          [disabled]="isActionDisabled(action, menu.row)"
+          (click)="runContextAction(action, menu.row)"
+        >
+          {{ action.label }}
+        </button>
+      }
+    </div>
+  }
 </section>

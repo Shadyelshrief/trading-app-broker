@@ -26,6 +26,7 @@ The production bundle is generated under `dist/trading-app-broker/browser/`.
 ## Docker
 
 This repo includes a production Docker image build for the Angular app using Nginx.
+The container also proxies feeder HTTP and websocket traffic through Nginx so the browser does not hit the feeder directly.
 
 ### Build image locally
 
@@ -45,7 +46,7 @@ Docker Hub repository:
 
 ## Run with Docker Compose
 
-Your colleague can run the frontend with:
+Your colleague can run the frontend and feeder together with:
 
 ```bash
 docker compose up -d
@@ -54,21 +55,37 @@ docker compose up -d
 The app will be available on:
 
 ```text
-http://localhost:8080
+http://localhost:8081
 ```
 
-The included `docker-compose.yml` pulls the published image directly from Docker Hub:
+The feeder will be available on:
+
+```text
+http://localhost:7070
+```
+
+The included `docker-compose.yml` pulls the published image directly from Docker Hub and runs the feeder on the same Docker network:
 
 ```yaml
 services:
+  feeder:
+    image: awad422/k-feeder:v1
+    ports:
+      - "7070:7070"
+
   broker-ui:
     image: shadyelshrief/broker-karepo:latest
+    depends_on:
+      - feeder
+    environment:
+      FEEDER_HOST: feeder
+      FEEDER_PORT: "7070"
     ports:
-      - "8080:80"
+      - "8081:80"
 ```
 
 ## Notes
 
 - The frontend is a static Angular build served by Nginx.
 - Angular client-side routes are supported through `try_files ... /index.html`.
-- The production environment currently points feeder auth/websocket to `localhost:7070`, so the colleague should also have the feeder/backend exposed on that host port if they want live market data.
+- The Angular production build now uses same-origin feeder paths (`/feeder-api` and `/feeder-ws`), and Nginx forwards them to the feeder container.

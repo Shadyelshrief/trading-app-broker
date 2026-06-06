@@ -1,0 +1,25 @@
+<section class="client-dialog">
+  <header class="client-dialog__header">
+    <div>
+      <p>Cash Accounts</p>
+      <h2>{{ data.portfolio }}</h2>
+    </div>
+    <button mat-stroked-button type="button" mat-dialog-close>Close</button>
+  </header>
+
+  @if (vm$ | async; as vm) {
+    @if (vm.error) {
+      <section class="client-dialog__message">{{ vm.error }}</section>
+    }
+
+    <app-market-grid
+      class="client-dialog__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns"
+      [gridOptions]="gridOptions"
+      [loading]="vm.loading"
+      [marketType]="'cash-accounts'"
+      [stateKey]="'cash-accounts-dialog-grid-v1'"
+    />
+  }
+</section>

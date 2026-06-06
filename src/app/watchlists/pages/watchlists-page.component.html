@@ -1,21 +1,53 @@
-@if (vm$ | async; as vm) {
+@if (watchLists$ | async; as watchLists) {
   <section class="watchlists-page">
     <header class="watchlists-page__header">
       <div>
         <p class="watchlists-page__eyebrow">Pricing</p>
-        <h2>Watch Lists</h2>
+        <h2>{{ state()?.title ?? 'Saved Watch Lists' }}</h2>
+        <p>Create, edit, and open reusable realtime market watch lists.</p>
       </div>
-      <span>{{ vm.rows.length }} symbols</span>
+
+      <button mat-flat-button type="button" (click)="openCreateWatchList()">Create New Watch List</button>
     </header>
 
-    <app-market-grid
-      class="watchlists-page__grid"
-      [rowData]="vm.rows"
-      [columnDefs]="columns"
-      [loading]="vm.loading"
-      [marketType]="'watchlists'"
-      [stateKey]="'watchlists-grid-v1'"
-      [settings]="vm.settings"
-    />
+    @if (watchLists.length === 0) {
+      <section class="watchlists-page__empty">
+        <p>No saved watch lists yet.</p>
+        <h3>Build a list from all symbols, filters, selected symbols, or conditions.</h3>
+        <button mat-stroked-button type="button" (click)="openCreateWatchList()">Create Watch List</button>
+      </section>
+    } @else {
+      <section class="watchlists-page__grid" aria-label="Saved watch lists">
+        @for (watchList of watchLists; track watchList.id) {
+          <article class="watchlists-page__card">
+            <div>
+              <p class="watchlists-page__card-eyebrow">{{ watchList.sourceType.replace('_', ' ') }}</p>
+              <h3>{{ watchList.name }}</h3>
+            </div>
+
+            <dl>
+              <div>
+                <dt>Symbols</dt>
+                <dd>{{ watchList.sourceType === 'SELECTED_SYMBOLS' ? (watchList.selectedSymbols?.length ?? 0) : 'Dynamic' }}</dd>
+              </div>
+              <div>
+                <dt>Conditions</dt>
+                <dd>{{ watchList.conditions?.length ?? 0 }}</dd>
+              </div>
+              <div>
+                <dt>Updated</dt>
+                <dd>{{ watchList.updatedAt | date: 'MMM d, HH:mm' }}</dd>
+              </div>
+            </dl>
+
+            <div class="watchlists-page__card-actions">
+              <button mat-flat-button type="button" (click)="openWatchList(watchList)">Open</button>
+              <button mat-stroked-button type="button" (click)="editWatchList(watchList)">Edit</button>
+              <button mat-stroked-button type="button" (click)="deleteWatchList(watchList)">Delete</button>
+            </div>
+          </article>
+        }
+      </section>
+    }
   </section>
 }

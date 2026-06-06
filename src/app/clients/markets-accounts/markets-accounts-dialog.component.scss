@@ -1,0 +1,53 @@
+:host {
+  display: block;
+}
+
+.client-dialog {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 1rem;
+  width: min(760px, 92vw);
+  height: min(520px, 82vh);
+  min-height: 0;
+  padding: 1rem;
+  background: #07111f;
+  color: var(--text-primary);
+}
+
+.client-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.client-dialog__header p,
+.client-dialog__header h2 {
+  margin: 0;
+}
+
+.client-dialog__header p {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.client-dialog__header h2 {
+  margin-top: 0.25rem;
+  font-size: 1.25rem;
+}
+
+.client-dialog__message {
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(255, 125, 125, 0.32);
+  border-radius: 0.85rem;
+  background: rgba(255, 125, 125, 0.08);
+  color: #ffb4b4;
+}
+
+.client-dialog__grid {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}

@@ -1,6 +1,11 @@
-<section class="market-chart">
+<section class="market-chart" [class.market-chart--light]="theme() === 'light'" [style.height]="resolvedHeight()">
   <header class="market-chart__toolbar">
-    <h3>{{ symbol() }}</h3>
+    <div>
+      <h3>{{ symbol() }}</h3>
+      @if (loading()) {
+        <span>Loading chart data...</span>
+      }
+    </div>
 
     <mat-button-toggle-group [value]="timeframe()" (change)="onTimeframeChange($event.value)">
       @for (option of timeframeOptions; track option) {
@@ -8,6 +13,18 @@
       }
     </mat-button-toggle-group>
   </header>
+
+  @if (indicators().length > 0) {
+    <section class="market-chart__indicator-strip">
+      @for (indicator of indicators(); track indicator.id) {
+        <button type="button" mat-stroked-button (click)="removeIndicator(indicator.id)">
+          <span [style.background]="indicator.color || '#60a5fa'"></span>
+          {{ indicator.label }}
+          <strong>×</strong>
+        </button>
+      }
+    </section>
+  }
 
   <ag-charts class="market-chart__canvas" [options]="chartOptions()" />
 </section>

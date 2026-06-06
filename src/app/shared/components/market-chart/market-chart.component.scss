@@ -5,7 +5,7 @@
 
 .market-chart {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   gap: 0.75rem;
   min-height: 0;
   height: 100%;
@@ -13,6 +13,10 @@
   border: 1px solid var(--border-subtle);
   border-radius: 1rem;
   background: rgba(6, 14, 22, 0.92);
+}
+
+.market-chart--light {
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .market-chart__toolbar {
@@ -24,6 +28,36 @@
 
 .market-chart__toolbar h3 {
   margin: 0;
+}
+
+.market-chart__toolbar span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.market-chart__indicator-strip {
+  display: flex;
+  gap: 0.5rem;
+  overflow: auto;
+  padding-bottom: 0.15rem;
+}
+
+.market-chart__indicator-strip button {
+  min-height: 2rem;
+  border-radius: 999px;
+}
+
+.market-chart__indicator-strip span {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+}
+
+.market-chart__indicator-strip strong {
+  margin-left: 0.35rem;
+  font-size: 1rem;
 }
 
 .market-chart__canvas {

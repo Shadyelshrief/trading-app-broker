@@ -1,5 +1,3 @@
-@if (vm$ | async; as vm) {
-  <section class="market-charts-page">
-    <app-market-chart [symbol]="vm.symbol" [series]="vm.series" [chartType]="'line'" [timeframe]="'1D'" [realtime]="true" />
-  </section>
-}
+<section class="market-charts-page">
+  <app-charting [state]="state()" />
+</section>

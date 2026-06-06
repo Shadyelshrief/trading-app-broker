@@ -1,0 +1,16 @@
+@if (enabled()) {
+  <section
+    class="drawing-overlay"
+    (pointerdown)="start($event)"
+    (pointermove)="move($event)"
+    (pointerup)="finish()"
+    (pointerleave)="finish()"
+  >
+    @for (drawing of drawings(); track drawing.id) {
+      <span class="drawing-overlay__shape" [class.drawing-overlay__shape--rectangle]="drawing.tool === 'RECTANGLE'" [ngStyle]="styleForDrawing(drawing)"></span>
+    }
+    @if (draft(); as drawing) {
+      <span class="drawing-overlay__shape drawing-overlay__shape--draft" [class.drawing-overlay__shape--rectangle]="drawing.tool === 'RECTANGLE'" [ngStyle]="styleForDrawing(drawing)"></span>
+    }
+  </section>
+}

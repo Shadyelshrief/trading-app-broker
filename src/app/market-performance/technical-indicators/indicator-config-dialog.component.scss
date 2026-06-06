@@ -1,0 +1,30 @@
+.indicator-dialog {
+  color: var(--text-primary);
+}
+
+.indicator-dialog header p {
+  margin: 0 0 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.indicator-dialog h2 {
+  margin: 0;
+}
+
+.indicator-dialog mat-form-field {
+  width: 100%;
+}
+
+.indicator-dialog__params {
+  display: grid;
+  gap: 0.75rem;
+  min-width: min(26rem, 80vw);
+}
+
+.indicator-dialog__empty {
+  margin: 0;
+  color: var(--text-secondary);
+}

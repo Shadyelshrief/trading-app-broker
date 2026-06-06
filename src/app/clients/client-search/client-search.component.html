@@ -1,0 +1,103 @@
+@if (vm$ | async; as vm) {
+  <section class="client-search">
+    <header class="client-search__header">
+      <div>
+        <p class="client-search__eyebrow">Management</p>
+        <h2>Client Search</h2>
+      </div>
+      <div class="client-search__actions">
+        <button mat-stroked-button type="button" (click)="clearAll()">Clear All</button>
+        <button mat-flat-button type="button" class="client-search__primary" (click)="search()">Search</button>
+      </div>
+    </header>
+
+    <form class="client-search__filters" [formGroup]="form" (ngSubmit)="search()">
+      <mat-form-field appearance="outline">
+        <mat-label>Client ID</mat-label>
+        <input matInput formControlName="clientId" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Client Name</mat-label>
+        <input matInput formControlName="clientName" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>ID Type</mat-label>
+        <input matInput formControlName="idType" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>ID Number</mat-label>
+        <input matInput formControlName="idNumber" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="">All statuses</mat-option>
+          @for (status of statusOptions; track status) {
+            <mat-option [value]="status">{{ status }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Address</mat-label>
+        <input matInput formControlName="address" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>City</mat-label>
+        <input matInput formControlName="city" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>P.O. Box</mat-label>
+        <input matInput formControlName="poBox" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Postal Code</mat-label>
+        <input matInput formControlName="postalCode" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Telephone</mat-label>
+        <input matInput formControlName="telephone" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Mobile</mat-label>
+        <input matInput formControlName="mobile" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>E-mail</mat-label>
+        <input matInput type="email" formControlName="email" />
+      </mat-form-field>
+    </form>
+
+    @if (vm.error) {
+      <section class="client-search__message">{{ vm.error }}</section>
+    }
+
+    <section class="client-search__meta">
+      <p>Search clients by identity, contact, address, or status.</p>
+      <p>{{ vm.rows.length }} clients</p>
+    </section>
+
+    <app-market-grid
+      class="client-search__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns"
+      [gridOptions]="gridOptions"
+      [loading]="vm.loading"
+      [contextMenuActions]="contextActions"
+      [marketType]="'client-search'"
+      [stateKey]="'client-search-grid-v1'"
+      (rowDoubleClicked)="openClientInformation($event)"
+      (contextAction)="handleContextAction($event)"
+    />
+  </section>
+}

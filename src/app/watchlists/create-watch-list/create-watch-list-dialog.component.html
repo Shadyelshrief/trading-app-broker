@@ -1,0 +1,221 @@
+<section class="watch-list-dialog">
+  <header class="watch-list-dialog__header">
+    <div>
+      <p class="watch-list-dialog__eyebrow">Watch Lists</p>
+      <h2 mat-dialog-title>{{ title }}</h2>
+    </div>
+  </header>
+
+  <mat-dialog-content>
+    <mat-form-field appearance="outline" class="watch-list-dialog__name">
+      <mat-label>Watch List Name</mat-label>
+      <input matInput [formControl]="nameControl" />
+    </mat-form-field>
+
+    @if (error()) {
+      <section class="watch-list-dialog__error">{{ error() }}</section>
+    }
+
+    <mat-tab-group>
+      <mat-tab label="Source">
+        <section class="watch-list-dialog__tab">
+          <mat-form-field appearance="outline">
+            <mat-label>Source</mat-label>
+            <mat-select [formControl]="sourceControl">
+              @for (option of facade.sourceOptions; track option.value) {
+                <mat-option [value]="option.value">{{ option.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          @if (sourceControl.value === 'FILTER') {
+            <section class="watch-list-dialog__filter-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Markets</mat-label>
+                <mat-select [formControl]="marketControl">
+                  @for (option of facade.marketOptions; track option.value) {
+                    <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Sectors</mat-label>
+                <mat-select [formControl]="sectorControl">
+                  @for (sector of sectors(); track sector) {
+                    <mat-option [value]="sector">{{ sector === 'all' ? 'All Sectors' : sector }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Index</mat-label>
+                <mat-select [formControl]="indexControl">
+                  @for (index of facade.indexOptions; track index) {
+                    <mat-option [value]="index">{{ index }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Trading Session</mat-label>
+                <mat-select [formControl]="sessionControl">
+                  @for (session of facade.tradingSessionOptions; track session) {
+                    <mat-option [value]="session">{{ session }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Client</mat-label>
+                <input matInput [formControl]="clientControl" placeholder="Client ID or name" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Portfolio</mat-label>
+                <mat-select [formControl]="portfolioControl">
+                  <mat-option value="">No portfolio selected</mat-option>
+                  @for (portfolio of facade.portfolioOptions; track portfolio.portfolioId) {
+                    <mat-option [value]="portfolio.portfolioId">{{ portfolio.portfolioName }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </section>
+          }
+
+          @if (sourceControl.value === 'SELECTED_SYMBOLS') {
+            <section class="watch-list-dialog__selected-source">
+              <div class="watch-list-dialog__selected-filters">
+                <mat-form-field appearance="outline">
+                  <mat-label>Markets</mat-label>
+                  <mat-select [formControl]="marketControl">
+                    @for (option of facade.marketOptions; track option.value) {
+                      <mat-option [value]="option.value">{{ option.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Sectors</mat-label>
+                  <mat-select [formControl]="sectorControl">
+                    @for (sector of sectors(); track sector) {
+                      <mat-option [value]="sector">{{ sector === 'all' ? 'All Sectors' : sector }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="watch-list-dialog__transfer">
+                <section class="watch-list-dialog__list">
+                  <h3>Symbols</h3>
+                  <mat-selection-list
+                    [multiple]="true"
+                    [ngModel]="availableSelection()"
+                    (ngModelChange)="updateAvailableSelection($event)"
+                  >
+                    @for (symbol of availableSymbols(); track symbolKey(symbol)) {
+                      <mat-list-option [value]="symbolKey(symbol)">
+                        {{ symbol.symbolId }} - {{ symbol.symbolName }} ({{ symbol.marketShortName }})
+                      </mat-list-option>
+                    }
+                  </mat-selection-list>
+                </section>
+
+                <div class="watch-list-dialog__transfer-buttons">
+                  <button mat-stroked-button type="button" (click)="moveSelectedToWatched()">&gt;</button>
+                  <button mat-stroked-button type="button" (click)="moveAllToWatched()">&gt;&gt;</button>
+                  <button mat-stroked-button type="button" (click)="removeSelectedFromWatched()">&lt;</button>
+                  <button mat-stroked-button type="button" (click)="removeAllFromWatched()">&lt;&lt;</button>
+                </div>
+
+                <section class="watch-list-dialog__list">
+                  <h3>Watched Symbols</h3>
+                  <mat-selection-list
+                    [multiple]="true"
+                    [ngModel]="watchedSelection()"
+                    (ngModelChange)="updateWatchedSelection($event)"
+                  >
+                    @for (symbol of watchedSymbols(); track symbolKey(symbol)) {
+                      <mat-list-option [value]="symbolKey(symbol)">
+                        {{ symbol.symbolId }} - {{ symbol.symbolName }} ({{ symbol.marketShortName }})
+                      </mat-list-option>
+                    }
+                  </mat-selection-list>
+                </section>
+              </div>
+            </section>
+          }
+        </section>
+      </mat-tab>
+
+      <mat-tab label="Condition">
+        <section class="watch-list-dialog__tab">
+          <div class="watch-list-dialog__condition-actions">
+            <button mat-stroked-button type="button" (click)="addExpression()">Add New Expression</button>
+          </div>
+
+          <div class="watch-list-dialog__condition-table">
+            <div class="watch-list-dialog__condition-head">Join</div>
+            <div class="watch-list-dialog__condition-head">Field</div>
+            <div class="watch-list-dialog__condition-head">Operator</div>
+            <div class="watch-list-dialog__condition-head">Value</div>
+            <div class="watch-list-dialog__condition-head"></div>
+
+            @for (condition of conditions(); track $index) {
+              <mat-form-field appearance="outline">
+                <mat-label>Join</mat-label>
+                <mat-select
+                  [disabled]="$index === 0"
+                  [value]="condition.join"
+                  (selectionChange)="updateCondition($index, { join: $event.value })"
+                >
+                  @for (join of facade.joins; track join) {
+                    <mat-option [value]="join">{{ join }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Field</mat-label>
+                <mat-select [value]="condition.field" (selectionChange)="updateCondition($index, { field: $event.value })">
+                  @for (field of facade.conditionFields; track field.value) {
+                    <mat-option [value]="field.value">{{ field.label }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Operator</mat-label>
+                <mat-select [value]="condition.operator" (selectionChange)="updateCondition($index, { operator: $event.value })">
+                  @for (operator of facade.operators; track operator) {
+                    <mat-option [value]="operator">{{ operator }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Value</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  [value]="condition.value"
+                  (input)="updateCondition($index, { value: $any($event.target).value })"
+                />
+              </mat-form-field>
+
+              <button mat-stroked-button type="button" (click)="removeExpression($index)">Remove</button>
+            }
+          </div>
+        </section>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-stroked-button type="button" (click)="clear()">Clear</button>
+    @if (mode === 'edit') {
+      <button mat-stroked-button type="button" (click)="delete()">Delete</button>
+    }
+    <button mat-flat-button type="button" (click)="save()">Save</button>
+  </mat-dialog-actions>
+</section>

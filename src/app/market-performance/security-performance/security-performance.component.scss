@@ -1,0 +1,187 @@
+:host {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.performance-page {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(300px, 0.95fr) minmax(260px, 1fr);
+  gap: 1rem;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.performance-page__header,
+.performance-page__filters,
+.performance-page__chart-card,
+.performance-page__grid-card,
+.performance-page__message {
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  background: rgba(8, 18, 29, 0.78);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.22);
+}
+
+.performance-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+}
+
+.performance-page__eyebrow,
+.performance-page h2,
+.performance-page p {
+  margin: 0;
+}
+
+.performance-page__eyebrow {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.performance-page h2 {
+  margin-top: 0.25rem;
+  color: var(--text-primary);
+  font-size: 1.35rem;
+}
+
+.performance-page__header-actions,
+.performance-page__filters,
+.performance-page__toolbar,
+.performance-page__chips,
+.performance-page__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.performance-page__filters {
+  padding: 1rem 1.2rem;
+}
+
+.performance-page__field {
+  width: min(16rem, 100%);
+  margin-bottom: -1.25em;
+}
+
+.performance-page__field--wide {
+  width: min(30rem, 100%);
+}
+
+.performance-page__comparison-field {
+  width: 13rem;
+  margin-bottom: -1.25em;
+}
+
+.performance-page__primary {
+  min-height: 3rem;
+  border-radius: 0.8rem;
+  background: linear-gradient(135deg, #00c2a8, #3b82f6);
+  color: #06101c;
+  font-weight: 800;
+}
+
+.performance-page__message {
+  padding: 0.8rem 1rem;
+  color: #ffb4b4;
+  border-color: rgba(255, 125, 125, 0.32);
+  background: rgba(255, 125, 125, 0.08);
+}
+
+.performance-page__chart-card,
+.performance-page__grid-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.performance-page__toolbar {
+  margin-bottom: 0.8rem;
+}
+
+.performance-page__chips {
+  margin-bottom: 0.8rem;
+}
+
+.performance-page__chip {
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #d9e5f2;
+  cursor: pointer;
+  font: inherit;
+  padding: 0.35rem 0.7rem;
+}
+
+.performance-page__chip span {
+  color: #ffb4b4;
+  padding-left: 0.35rem;
+}
+
+.performance-page__chart {
+  flex: 1;
+  min-height: 260px;
+  overflow: hidden;
+}
+
+.performance-page__chart app-market-chart {
+  display: block;
+  height: 100%;
+}
+
+.performance-page__meta {
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+}
+
+.performance-page__grid {
+  display: flex;
+  flex: 1;
+  min-height: 240px;
+  overflow: hidden;
+}
+
+::ng-deep .market-cell--up {
+  color: #3ddc97 !important;
+  font-weight: 800;
+}
+
+::ng-deep .market-cell--down {
+  color: #ff7d7d !important;
+  font-weight: 800;
+}
+
+::ng-deep .market-cell--flat {
+  color: #60a5fa !important;
+  font-weight: 800;
+}
+
+@media (max-width: 980px) {
+  .performance-page {
+    grid-template-rows: auto auto auto minmax(280px, auto) minmax(320px, auto);
+  }
+
+  .performance-page__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .performance-page__field,
+  .performance-page__field--wide,
+  .performance-page__comparison-field {
+    width: 100%;
+  }
+}

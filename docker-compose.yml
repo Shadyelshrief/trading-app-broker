@@ -1,10 +1,22 @@
 services:
+  feeder:
+    image: awad422/k-feeder:v1
+    container_name: broker-karepo-feeder
+    ports:
+      - "7070:7070"
+    restart: unless-stopped
+
   broker-ui:
     image: shadyelshrief/broker-karepo:latest
     container_name: broker-karepo-ui
     pull_policy: always
+    depends_on:
+      - feeder
+    environment:
+      FEEDER_HOST: feeder
+      FEEDER_PORT: "7070"
     ports:
-      - "8080:80"
+      - "8081:80"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]

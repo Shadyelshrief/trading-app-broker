@@ -1,0 +1,73 @@
+@if (vm$ | async; as vm) {
+  <section class="ticker-page">
+    <header class="ticker-page__header">
+      <div>
+        <p class="ticker-page__eyebrow">Pricing</p>
+        <h2>Pricing Ticker</h2>
+        <p>Realtime symbol prices from the shared K-Feeder market data connection.</p>
+      </div>
+
+      <span
+        class="ticker-page__status"
+        [class.ticker-page__status--warn]="vm.connectionState === 'CONNECTING' || vm.connectionState === 'RECONNECTING'"
+        [class.ticker-page__status--down]="vm.connectionState === 'DISCONNECTED'"
+      >
+        {{ vm.connectionLabel }}
+      </span>
+    </header>
+
+    <section class="ticker-page__filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Market</mat-label>
+        <mat-select [value]="vm.settings.market" (selectionChange)="facade.updateMarket($event.value)">
+          @for (market of marketOptions; track market.value) {
+            <mat-option [value]="market.value">{{ market.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Sector</mat-label>
+        <mat-select [value]="vm.settings.sector ?? 'all'" (selectionChange)="facade.updateSector($event.value)">
+          @for (sector of vm.sectorOptions; track sector) {
+            <mat-option [value]="sector">{{ sector === 'all' ? 'All Sectors' : sector }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Ticker Mode</mat-label>
+        <mat-select [value]="vm.settings.mode ?? 'MARKET_FEED'" (selectionChange)="facade.updateMode($event.value)">
+          @for (mode of modes; track mode.value) {
+            <mat-option [value]="mode.value">{{ mode.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Speed Seconds</mat-label>
+        <input matInput type="number" min="8" max="120" [value]="vm.settings.speed" (change)="facade.updateSpeed(+$any($event.target).value)" />
+      </mat-form-field>
+    </section>
+
+    @if (vm.error) {
+      <section class="ticker-page__error">{{ vm.error }}</section>
+    }
+
+    <section class="ticker-page__ticker">
+      <app-market-ticker
+        [items]="toTickerItems(vm.items)"
+        [tickerType]="'PRICING'"
+        [speed]="vm.settings.speed"
+        [loading]="vm.loading"
+        [settings]="{ fontSize: 13, fontFamily: 'IBM Plex Sans, sans-serif' }"
+        (itemDoubleClicked)="openPriceQuote($event)"
+      />
+    </section>
+
+    <footer class="ticker-page__footer">
+      <span>{{ vm.items.length }} symbols</span>
+      <span>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</span>
+    </footer>
+  </section>
+}

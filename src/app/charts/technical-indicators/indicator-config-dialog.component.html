@@ -1,0 +1,40 @@
+<section class="indicator-dialog">
+  <header>
+    <p>Technical Indicator</p>
+    <h2>{{ data.definition.label }}</h2>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    @for (field of data.definition.fields; track field.key) {
+      <mat-form-field appearance="outline">
+        <mat-label>{{ field.label }}</mat-label>
+
+        @if (field.type === 'select') {
+          <mat-select [formControlName]="field.key">
+            @for (option of field.options ?? []; track option) {
+              <mat-option [value]="option">{{ option }}</mat-option>
+            }
+          </mat-select>
+        } @else {
+          <input
+            matInput
+            [type]="field.type"
+            [min]="field.min"
+            [max]="field.max"
+            [step]="field.step"
+            [formControlName]="field.key"
+          />
+        }
+      </mat-form-field>
+    }
+
+    @if (data.definition.fields.length === 0) {
+      <p class="indicator-dialog__empty">This indicator does not need additional parameters.</p>
+    }
+
+    <footer>
+      <button mat-stroked-button type="button" mat-dialog-close>Cancel</button>
+      <button mat-flat-button type="submit">OK</button>
+    </footer>
+  </form>
+</section>

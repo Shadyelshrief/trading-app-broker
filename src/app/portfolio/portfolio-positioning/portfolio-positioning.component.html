@@ -1,0 +1,112 @@
+@if (vm$ | async; as vm) {
+  <section class="portfolio-positioning">
+    <header class="portfolio-positioning__header">
+      <div>
+        <p class="portfolio-positioning__eyebrow">Clients Portfolios</p>
+        <h2>Portfolio Positioning</h2>
+      </div>
+
+      <div class="portfolio-positioning__actions">
+        <span class="portfolio-positioning__connection" [class.portfolio-positioning__connection--live]="vm.connectionState.status === 'authenticated' || vm.connectionState.status === 'connected'">
+          <span></span>
+          {{ vm.connectionState.status }}
+        </span>
+        <button mat-stroked-button type="button" [disabled]="!vm.selectedClient || !vm.selectedPortfolio" (click)="openCashDetails(vm)">
+          Cash Details
+        </button>
+        <button mat-flat-button type="button" class="portfolio-positioning__primary" (click)="facade.refresh()">Refresh</button>
+      </div>
+    </header>
+
+    <section class="portfolio-positioning__filters">
+      <mat-form-field appearance="outline" class="portfolio-positioning__client-field">
+        <mat-label>Client</mat-label>
+        <input
+          matInput
+          type="text"
+          placeholder="Search client ID or name"
+          [formControl]="clientControl"
+          [matAutocomplete]="clientAutocomplete"
+        />
+        <mat-autocomplete
+          #clientAutocomplete="matAutocomplete"
+          [displayWith]="displayClient"
+          (optionSelected)="selectClient($event.option.value)"
+        >
+          @for (client of vm.clientOptions; track client.clientId) {
+            <mat-option [value]="client">
+              <span>{{ client.clientId }}</span>
+              <small>{{ client.clientName }}</small>
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
+      <button mat-stroked-button type="button" (click)="openClientSearch()">Client Search</button>
+
+      <mat-form-field appearance="outline" class="portfolio-positioning__portfolio-field">
+        <mat-label>Portfolio</mat-label>
+        <mat-select
+          [value]="vm.selectedPortfolio?.portfolioId ?? ''"
+          [disabled]="!vm.selectedClient"
+          (valueChange)="facade.selectPortfolio($event)"
+        >
+          @for (portfolio of vm.portfolioOptions; track portfolio.portfolioId) {
+            <mat-option [value]="portfolio.portfolioId">
+              {{ portfolio.portfolioName }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="portfolio-positioning__currency">
+        <span>Currency</span>
+        <strong>{{ vm.selectedPortfolio?.currency || '--' }}</strong>
+      </div>
+    </section>
+
+    @if (vm.validationError || vm.error) {
+      <section class="portfolio-positioning__message">
+        {{ vm.validationError || vm.error }}
+      </section>
+    }
+
+    <section class="portfolio-positioning__summary">
+      <article>
+        <span>Total Cost (CCC)</span>
+        <strong>{{ vm.totals.totalCostCcc | number: '1.2-2' }}</strong>
+      </article>
+      <article>
+        <span>Total Market Value (CCC)</span>
+        <strong>{{ vm.totals.totalMarketValueCcc | number: '1.2-2' }}</strong>
+      </article>
+      <article [class.portfolio-positioning__summary--positive]="vm.totals.totalUnrealizedGainLossCcc > 0" [class.portfolio-positioning__summary--negative]="vm.totals.totalUnrealizedGainLossCcc < 0">
+        <span>Total Unrealized Gain/Loss (CCC)</span>
+        <strong>{{ vm.totals.totalUnrealizedGainLossCcc | number: '1.2-2' }}</strong>
+      </article>
+      <article>
+        <span>Last update</span>
+        <strong>{{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</strong>
+      </article>
+    </section>
+
+    <section class="portfolio-positioning__meta">
+      <p>Current client portfolio statement with realtime feeder price updates.</p>
+      <p>{{ vm.rows.length }} positions</p>
+    </section>
+
+    <app-market-grid
+      class="portfolio-positioning__grid"
+      [rowData]="vm.rows"
+      [columnDefs]="columns"
+      [gridOptions]="gridOptions"
+      [loading]="vm.loading"
+      [contextMenuActions]="contextActions"
+      [marketType]="'portfolio-positioning'"
+      [stateKey]="'portfolio-positioning-grid-v1'"
+      [settings]="vm.settings"
+      (rowDoubleClicked)="openCustodianDetails($event, vm)"
+      (contextAction)="handleContextAction($event)"
+    />
+  </section>
+}

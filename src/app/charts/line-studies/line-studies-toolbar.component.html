@@ -1,0 +1,16 @@
+@if (enabled()) {
+  <section class="line-studies-toolbar">
+    <span>Line studies</span>
+    @for (tool of tools; track tool.value) {
+      <button
+        mat-stroked-button
+        type="button"
+        [class.line-studies-toolbar__active]="activeTool() === tool.value"
+        (click)="toolSelected.emit(tool.value)"
+      >
+        {{ tool.label }}
+      </button>
+    }
+    <button mat-button type="button" (click)="clearDrawings.emit()">Clear</button>
+  </section>
+}

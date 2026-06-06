@@ -33,19 +33,57 @@
           <ul class="trading-sidebar__list">
             @for (item of group.items; track trackByItemId($index, item)) {
               <li>
-                <a
-                  class="trading-sidebar__link"
-                  [routerLink]="item.routerLink ?? ['/']"
-                  routerLinkActive="trading-sidebar__link--active"
-                  [routerLinkActiveOptions]="linkMatch"
-                  [title]="layout.sidebarCollapsed() ? item.label : ''"
-                  (click)="collapseAndNavigate()"
-                >
-                  <span class="trading-sidebar__icon" aria-hidden="true">
-                    <app-trading-icon [name]="item.icon" />
-                  </span>
-                  <span class="trading-sidebar__text">{{ item.label }}</span>
-                </a>
+                @if (item.children?.length) {
+                  <button
+                    type="button"
+                    class="trading-sidebar__link trading-sidebar__link--parent"
+                    [attr.aria-expanded]="itemAriaExpanded(item.id)"
+                    [title]="layout.sidebarCollapsed() ? item.label : ''"
+                    (click)="toggleItem(item.id)"
+                  >
+                    <span class="trading-sidebar__icon" aria-hidden="true">
+                      <app-trading-icon [name]="item.icon" />
+                    </span>
+                    <span class="trading-sidebar__text">{{ item.label }}</span>
+                    <span class="trading-sidebar__item-chevron" aria-hidden="true">â–¾</span>
+                  </button>
+
+                  @if (isItemExpanded(item.id) && !layout.sidebarCollapsed()) {
+                    <ul class="trading-sidebar__sub-list">
+                      @for (child of item.children; track trackByItemId($index, child)) {
+                        <li>
+                          <a
+                            class="trading-sidebar__link trading-sidebar__link--child"
+                            [routerLink]="child.routerLink ?? ['/']"
+                            routerLinkActive="trading-sidebar__link--active"
+                            [routerLinkActiveOptions]="linkMatch"
+                            [title]="child.label"
+                            (click)="collapseAndNavigate()"
+                          >
+                            <span class="trading-sidebar__icon" aria-hidden="true">
+                              <app-trading-icon [name]="child.icon" />
+                            </span>
+                            <span class="trading-sidebar__text">{{ child.label }}</span>
+                          </a>
+                        </li>
+                      }
+                    </ul>
+                  }
+                } @else {
+                  <a
+                    class="trading-sidebar__link"
+                    [routerLink]="item.routerLink ?? ['/']"
+                    routerLinkActive="trading-sidebar__link--active"
+                    [routerLinkActiveOptions]="linkMatch"
+                    [title]="layout.sidebarCollapsed() ? item.label : ''"
+                    (click)="collapseAndNavigate()"
+                  >
+                    <span class="trading-sidebar__icon" aria-hidden="true">
+                      <app-trading-icon [name]="item.icon" />
+                    </span>
+                    <span class="trading-sidebar__text">{{ item.label }}</span>
+                  </a>
+                }
               </li>
             }
           </ul>

@@ -1,0 +1,65 @@
+<section
+  class="market-ticker"
+  [class.market-ticker--loading]="loading()"
+  [class.market-ticker--announcements]="tickerType() === 'ANNOUNCEMENTS'"
+  [ngStyle]="cssVariables()"
+  (mouseenter)="pause()"
+  (mouseleave)="resume()"
+>
+  @if (loading()) {
+    <div class="market-ticker__state">Connecting ticker feed...</div>
+  } @else if (tickerItems().length === 0) {
+    <div class="market-ticker__state">Waiting for realtime ticker feed.</div>
+  } @else {
+    <div class="market-ticker__viewport">
+      <div class="market-ticker__track">
+        @for (item of duplicatedItems(); track item.id + '-' + $index) {
+          <button
+            type="button"
+            class="market-ticker__item"
+            [ngClass]="directionClass(item)"
+            (click)="itemClicked.emit(item)"
+            (dblclick)="itemDoubleClicked.emit(item)"
+          >
+            @if (tickerType() === 'ANNOUNCEMENTS') {
+              <span class="market-ticker__headline">{{ item.headline ?? item.primary }}</span>
+              @if (item.market) {
+                <span class="market-ticker__pill">{{ item.market }}</span>
+              }
+              @if (item.secondary) {
+                <span class="market-ticker__muted">{{ item.secondary }}</span>
+              }
+              @if (item.time) {
+                <span class="market-ticker__muted">{{ item.time }}</span>
+              }
+            } @else {
+              <span class="market-ticker__symbol">{{ item.primary }}</span>
+              @if (item.secondary) {
+                <span class="market-ticker__muted">{{ item.secondary }}</span>
+              }
+              <span class="market-ticker__direction">{{ directionGlyph(item) }}</span>
+              <span class="market-ticker__value market-ticker__number" [ngClass]="pulseClass(item)">
+                {{ formatNumber(item.price) }}
+              </span>
+              @if (tickerType() === 'TRADING') {
+                <span class="market-ticker__muted market-ticker__number" [ngClass]="pulseClass(item)">
+                  Qty {{ formatQuantity(item.quantity) }}
+                </span>
+              } @else {
+                <span class="market-ticker__muted market-ticker__number" [ngClass]="pulseClass(item)">
+                  Vol {{ formatQuantity(item.volume) }}
+                </span>
+              }
+              <span class="market-ticker__change market-ticker__number" [ngClass]="pulseClass(item)">
+                {{ formatNumber(item.change) }}
+              </span>
+              <span class="market-ticker__change market-ticker__number" [ngClass]="pulseClass(item)">
+                {{ formatNumber(item.changePercent) }}%
+              </span>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  }
+</section>

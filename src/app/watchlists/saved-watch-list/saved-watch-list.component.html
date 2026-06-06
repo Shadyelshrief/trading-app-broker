@@ -1,0 +1,56 @@
+@if (vm$ | async; as vm) {
+  <section class="saved-watch-list">
+    <header class="saved-watch-list__header">
+      <div>
+        <p class="saved-watch-list__eyebrow">Pricing</p>
+        <h2>{{ vm.config?.name ?? 'Saved Watch List' }}</h2>
+      </div>
+
+      <div class="saved-watch-list__actions">
+        <span
+          class="saved-watch-list__status"
+          [class.saved-watch-list__status--connecting]="vm.connectionTone === 'connecting' || vm.connectionTone === 'reconnecting'"
+          [class.saved-watch-list__status--disconnected]="vm.connectionTone === 'disconnected'"
+        >
+          <span class="saved-watch-list__status-dot"></span>
+          {{ vm.connectionLabel }}
+        </span>
+
+        @if (vm.config) {
+          <button mat-stroked-button type="button" (click)="editWatchList(vm.config)">Edit</button>
+          <button mat-stroked-button type="button" (click)="deleteWatchList(vm.config)">Delete</button>
+        }
+      </div>
+    </header>
+
+    @if (vm.error) {
+      <section class="saved-watch-list__banner">
+        {{ vm.error }}
+      </section>
+    }
+
+    <section class="saved-watch-list__meta">
+      <p>{{ vm.rows.length }} symbols</p>
+      <p>Last update: {{ vm.lastUpdatedAt ? (vm.lastUpdatedAt | date: 'HH:mm:ss') : '--' }}</p>
+    </section>
+
+    @if (vm.config) {
+      <app-market-grid
+        class="saved-watch-list__grid"
+        [rowData]="vm.rows"
+        [columnDefs]="columns"
+        [gridOptions]="gridOptions"
+        [contextMenuActions]="menuActions"
+        [loading]="vm.loading"
+        [marketType]="'watch-list'"
+        [stateKey]="'saved-watch-list-grid-' + vm.config.id"
+        [settings]="vm.settings"
+        (priceQuote)="openPriceQuote($event)"
+        (rowDoubleClicked)="openPriceQuote($event)"
+        (sellOrder)="openOrder('sell', $event)"
+        (buyOrder)="openOrder('buy', $event)"
+        (contextAction)="handleContextAction($event, vm.config)"
+      />
+    }
+  </section>
+}
