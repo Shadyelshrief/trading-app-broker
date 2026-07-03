@@ -1,18 +1,13 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import {
-  buildClientSearchParams,
-  mapClientSearchResponse
-} from '../client-search/client-search.mapper';
+import { BrokerLookupsService } from '../../shared/lookups/broker-lookups.service';
 import type { ClientSearchFilters, ClientSearchResult } from '../client-search/client-search.models';
 import {
   mapCashAccountsResponse,
   mapClientInformationResponse,
-  mapClientOptionsResponse,
-  mapClientPortfoliosResponse,
   mapDeliveryChannelDetailsResponse,
   mapDeliveryChannelsResponse,
   mapMarketAccountsResponse
@@ -29,18 +24,16 @@ import type {
 @Injectable({ providedIn: 'root' })
 export class ClientService {
   private readonly http = inject(HttpClient);
+  private readonly brokerLookups = inject(BrokerLookupsService);
   private readonly base = `${environment.apiUrl}/clients`;
 
   searchClientOptions(query: string): Observable<ClientSearchResult[]> {
-    return this.http
-      .get<unknown>(this.base, { params: new HttpParams().set('query', query) })
-      .pipe(map(mapClientOptionsResponse));
+    return this.brokerLookups.searchClients(query).pipe(map(toClientSearchResults));
   }
 
   searchClients(filters: ClientSearchFilters): Observable<ClientSearchResult[]> {
-    return this.http
-      .get<unknown>(`${this.base}/search`, { params: buildClientSearchParams(filters) })
-      .pipe(map(mapClientSearchResponse));
+    const query = resolveClientQuery(filters);
+    return query ? this.brokerLookups.searchClients(query).pipe(map(toClientSearchResults)) : of([]);
   }
 
   getClientInformation(clientId: string): Observable<ClientInformation> {
@@ -50,9 +43,17 @@ export class ClientService {
   }
 
   getClientPortfolios(clientId: string): Observable<ClientPortfolio[]> {
-    return this.http
-      .get<unknown>(`${this.base}/${encodeURIComponent(clientId)}/portfolios`)
-      .pipe(map(mapClientPortfoliosResponse));
+    return this.brokerLookups.getClientPortfolios(clientId).pipe(
+      map((portfolios) =>
+        portfolios.map((portfolio) => ({
+          portfolio: portfolio.portfolioName,
+          portfolioId: portfolio.portfolioId,
+          custodyType: portfolio.type ?? '',
+          marketsAccounts: [],
+          cashAccounts: []
+        }))
+      )
+    );
   }
 
   getMarketsAccounts(clientId: string, portfolioId: string): Observable<MarketAccount[]> {
@@ -84,4 +85,30 @@ export class ClientService {
       )
       .pipe(map(mapDeliveryChannelDetailsResponse));
   }
+}
+
+function toClientSearchResults(clients: Array<{ clientId: string; clientName: string }>): ClientSearchResult[] {
+  return clients.map((client) => ({
+    clientId: client.clientId,
+    clientName: client.clientName
+  }));
+}
+
+function resolveClientQuery(filters: ClientSearchFilters): string {
+  for (const value of [
+    filters.clientId,
+    filters.clientName,
+    filters.idNumber,
+    filters.mobile,
+    filters.telephone,
+    filters.email
+  ]) {
+    const query = value?.trim();
+
+    if (query) {
+      return query;
+    }
+  }
+
+  return '';
 }

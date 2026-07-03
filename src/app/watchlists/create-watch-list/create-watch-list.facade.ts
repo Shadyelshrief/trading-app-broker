@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
+import { BrokerLookupsService } from '../../shared/lookups/broker-lookups.service';
 import {
   getWatchListSymbolUniverse
 } from '../saved-watch-list/saved-watch-list.mapper';
@@ -17,6 +18,7 @@ import { WatchListSourceOption } from './create-watch-list.models';
 @Injectable()
 export class CreateWatchListFacade {
   private readonly service = inject(WatchListService);
+  private readonly brokerLookups = inject(BrokerLookupsService);
 
   readonly sourceOptions: readonly WatchListSourceOption[] = [
     { label: 'All Symbols', value: 'ALL_SYMBOLS' },
@@ -31,8 +33,6 @@ export class CreateWatchListFacade {
   ] as const;
   readonly indexOptions = ['All Indexes', 'FADX 15', 'DFMGI', 'TASI'];
   readonly tradingSessionOptions = ['All Sessions', 'Regular', 'Pre Open', 'Pre Close'];
-  readonly clientOptions: readonly ClientOption[] = [];
-  readonly portfolioOptions: readonly PortfolioOption[] = [];
   readonly conditionFields = [
     { label: 'Bid Price', value: 'bidPrice' },
     { label: 'Last Trade Quantity', value: 'lastTradeQty' },
@@ -64,6 +64,28 @@ export class CreateWatchListFacade {
       const sectorMatches = sector === 'all' || symbol.sector === sector;
       return marketMatches && sectorMatches;
     });
+  }
+
+  searchClients(query: string): Observable<ClientOption[]> {
+    return this.brokerLookups.searchClients(query).pipe(
+      map((clients) =>
+        clients.map((client) => ({
+          clientId: client.clientId,
+          clientName: client.clientName
+        }))
+      )
+    );
+  }
+
+  getClientPortfolios(clientId: string): Observable<PortfolioOption[]> {
+    return this.brokerLookups.getClientPortfolios(clientId).pipe(
+      map((portfolios) =>
+        portfolios.map((portfolio) => ({
+          portfolioId: portfolio.portfolioId,
+          portfolioName: portfolio.portfolioName
+        }))
+      )
+    );
   }
 
   save(config: WatchListConfig): Observable<WatchListConfig> {

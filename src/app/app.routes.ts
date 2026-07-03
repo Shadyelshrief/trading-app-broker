@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard } from './core/auth/auth.guard';
+import { authChildGuard, authGuard } from './core/auth/auth.guard';
 import { guestGuard } from './core/auth/guest.guard';
 
 export const routes: Routes = [
@@ -31,8 +31,16 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'system-offline',
+    loadComponent: () =>
+      import('./features/auth/system-offline/system-offline-page.component').then(
+        (m) => m.SystemOfflinePageComponent
+      )
+  },
+  {
     path: 'app',
     canActivate: [authGuard],
+    canActivateChild: [authChildGuard],
     loadComponent: () => import('./core/layout/app-shell.component').then((m) => m.AppShellComponent),
     children: [
       {

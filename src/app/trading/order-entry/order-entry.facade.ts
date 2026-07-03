@@ -169,17 +169,8 @@ export class OrderEntryFacade {
   }
 
   calculateTakeHitOrder(order: OrderEntryForm): Observable<OrderEntryViewModel['calculation']> {
-    if (order.orderType !== 'TAKE' && order.orderType !== 'HIT') {
-      return of(null);
-    }
-
     return this.service
-      .calculateTakeHitOrder({
-        symbolId: order.symbolId,
-        market: order.market,
-        orderSide: order.orderSide,
-        tradeAmount: order.tradeAmount ?? 0
-      })
+      .calculateOrder(order)
       .pipe(tap((calculation) => this.patch({ calculation, lastResult: null, error: undefined })));
   }
 

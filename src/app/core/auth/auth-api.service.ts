@@ -6,9 +6,12 @@ import { environment } from '../../../environments/environment';
 import {
   ForgotPasswordRequest,
   ForgotPasswordResponse,
-  LoginRequest,
+  ApiResponseWrapper,
+  AdminLoginRequest,
+  AuthTokenBody,
   LoginResponse,
   MessageResponse,
+  PublicKeyBody,
   ResetPasswordRequest,
   ResetTokenValidResponse
 } from './auth.models';
@@ -19,8 +22,12 @@ export class AuthApiService {
 
   private readonly base = `${environment.apiUrl}/auth`;
 
-  login(body: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.base}/login`, body);
+  getPublicKey(): Observable<ApiResponseWrapper<PublicKeyBody>> {
+    return this.http.get<ApiResponseWrapper<PublicKeyBody>>(`${this.base}/public-key`);
+  }
+
+  login(body: AdminLoginRequest): Observable<ApiResponseWrapper<AuthTokenBody> | LoginResponse> {
+    return this.http.post<ApiResponseWrapper<AuthTokenBody> | LoginResponse>(`${this.base}/login`, body);
   }
 
   forgotPassword(body: ForgotPasswordRequest): Observable<ForgotPasswordResponse> {

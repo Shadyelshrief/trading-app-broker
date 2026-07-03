@@ -13,8 +13,12 @@ services:
     depends_on:
       - feeder
     environment:
+      ADMIN_API_HOST: host.docker.internal
+      ADMIN_API_PORT: "9090"
       FEEDER_HOST: feeder
       FEEDER_PORT: "7070"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8081:80"
     restart: unless-stopped

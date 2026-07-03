@@ -1,4 +1,13 @@
 {
+  "/api": {
+    "target": "http://127.0.0.1:9090",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/api": "/b1"
+    }
+  },
   "/feeder-api": {
     "target": "http://localhost:7070",
     "secure": false,

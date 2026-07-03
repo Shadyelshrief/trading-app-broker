@@ -1,16 +1,20 @@
 import { AsyncPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatListModule } from '@angular/material/list';
+import { catchError, debounceTime, of, switchMap } from 'rxjs';
 
 import {
+  ClientOption,
+  PortfolioOption,
   SymbolOption,
   WatchListCondition,
   WatchListConfig,
@@ -30,6 +34,7 @@ import { validateWatchListConfig } from './create-watch-list.validators';
     AsyncPipe,
     FormsModule,
     ReactiveFormsModule,
+    MatAutocompleteModule,
     MatButtonModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -46,6 +51,7 @@ import { validateWatchListConfig } from './create-watch-list.validators';
 export class CreateWatchListDialogComponent {
   private readonly data = inject<WatchListDialogData>(MAT_DIALOG_DATA);
   private readonly dialogRef = inject<MatDialogRef<CreateWatchListDialogComponent, WatchListDialogResult>>(MatDialogRef);
+  private readonly destroyRef = inject(DestroyRef);
   protected readonly facade = inject(CreateWatchListFacade);
   protected readonly mode = this.data.mode;
   protected readonly title = this.mode === 'edit' ? 'Edit Watch List' : 'Create New Watch List';
@@ -60,10 +66,12 @@ export class CreateWatchListDialogComponent {
   protected readonly sessionControl = new FormControl(this.data.config?.filters?.tradingSession ?? 'All Sessions', {
     nonNullable: true
   });
-  protected readonly clientControl = new FormControl(this.data.config?.filters?.client?.clientId ?? '', { nonNullable: true });
+  protected readonly clientControl = new FormControl<string | ClientOption>(this.data.config?.filters?.client ?? '', { nonNullable: true });
   protected readonly portfolioControl = new FormControl(this.data.config?.filters?.portfolio?.portfolioId ?? '', {
     nonNullable: true
   });
+  protected readonly clientOptions = signal<readonly ClientOption[]>([]);
+  protected readonly portfolioOptions = signal<readonly PortfolioOption[]>([]);
   protected readonly availableSelection = signal<readonly string[]>([]);
   protected readonly watchedSelection = signal<readonly string[]>([]);
   protected readonly watchedSymbols = signal<SymbolOption[]>(this.data.config?.selectedSymbols ?? []);
@@ -91,6 +99,29 @@ export class CreateWatchListDialogComponent {
     this.sectorControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       this.filterVersion.update((version) => version + 1);
     });
+
+    this.clientControl.valueChanges
+      .pipe(
+        debounceTime(220),
+        switchMap((value) => (typeof value === 'string' ? this.facade.searchClients(value).pipe(catchError(() => of([]))) : of([]))),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((clients) => this.clientOptions.set(clients));
+
+    const initialClient = this.data.config?.filters?.client;
+    if (initialClient) {
+      this.loadPortfolios(initialClient.clientId);
+    }
+  }
+
+  protected displayClient(value: string | ClientOption | null): string {
+    return !value ? '' : typeof value === 'string' ? value : `${value.clientId} - ${value.clientName}`;
+  }
+
+  protected selectClient(client: ClientOption): void {
+    this.clientControl.setValue(client, { emitEvent: false });
+    this.portfolioControl.setValue('');
+    this.loadPortfolios(client.clientId);
   }
 
   protected clear(): void {
@@ -102,6 +133,8 @@ export class CreateWatchListDialogComponent {
     this.sessionControl.setValue('All Sessions');
     this.clientControl.setValue('');
     this.portfolioControl.setValue('');
+    this.clientOptions.set([]);
+    this.portfolioOptions.set([]);
     this.availableSelection.set([]);
     this.watchedSelection.set([]);
     this.watchedSymbols.set([]);
@@ -111,6 +144,9 @@ export class CreateWatchListDialogComponent {
 
   protected save(): void {
     const now = Date.now();
+    const selectedClient = typeof this.clientControl.value === 'string' ? null : this.clientControl.value;
+    const selectedPortfolio =
+      this.portfolioOptions().find((portfolio) => portfolio.portfolioId === this.portfolioControl.value) ?? null;
     const config: WatchListConfig = {
       id: this.data.config?.id ?? crypto.randomUUID(),
       name: this.nameControl.value,
@@ -119,7 +155,9 @@ export class CreateWatchListDialogComponent {
         market: this.marketControl.value,
         sector: this.sectorControl.value,
         index: this.indexControl.value,
-        tradingSession: this.sessionControl.value
+        tradingSession: this.sessionControl.value,
+        client: selectedClient,
+        portfolio: selectedPortfolio
       },
       selectedSymbols: this.watchedSymbols(),
       conditions: this.conditions(),
@@ -209,6 +247,13 @@ export class CreateWatchListDialogComponent {
 
   protected symbolKey(symbol: SymbolOption): string {
     return symbolKey(symbol);
+  }
+
+  private loadPortfolios(clientId: string): void {
+    this.facade
+      .getClientPortfolios(clientId)
+      .pipe(catchError(() => of([])), takeUntilDestroyed(this.destroyRef))
+      .subscribe((portfolios) => this.portfolioOptions.set(portfolios));
   }
 }
 

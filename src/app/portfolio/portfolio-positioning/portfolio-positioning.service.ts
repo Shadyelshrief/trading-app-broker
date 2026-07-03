@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { BrokerLookupsService } from '../../shared/lookups/broker-lookups.service';
 import type { CashDetailsRow, CashPositionSummary } from '../cash-details/cash-details.models';
 import type { CustodianDetailsRow } from '../custodian-details/custodian-details.models';
 import {
@@ -12,9 +13,7 @@ import {
   buildSymbolParams,
   mapCashDetailsResponse,
   mapCashPositionSummaryResponse,
-  mapClientOptionsResponse,
   mapCustodianDetailsResponse,
-  mapPortfolioOptionsResponse,
   mapPortfolioPositioningResponse
 } from './portfolio-positioning.mapper';
 import type {
@@ -30,25 +29,26 @@ import type {
 @Injectable({ providedIn: 'root' })
 export class PortfolioPositioningService {
   private readonly http = inject(HttpClient);
+  private readonly brokerLookups = inject(BrokerLookupsService);
   private readonly base = `${environment.apiUrl}/portfolio`;
 
   searchClients(query: string): Observable<ClientOption[]> {
-    return this.http
-      .get<unknown>(`${this.base}/clients`, {
-        params: new HttpParams().set('query', query)
-      })
-      .pipe(map((response) => mapClientOptionsResponse(response)));
+    return this.brokerLookups.searchClients(query);
   }
 
   getClientPortfolios(clientId: string): Observable<PortfolioOption[]> {
-    return this.http
-      .get<unknown>(`${this.base}/clients/${encodeURIComponent(clientId)}/portfolios`)
-      .pipe(map((response) => mapPortfolioOptionsResponse(response)));
+    return this.brokerLookups.getClientPortfolios(clientId);
   }
 
   getPortfolioPositioning(request: PortfolioPositioningRequest): Observable<PortfolioPositionRow[]> {
+    let params = new HttpParams();
+
+    if (request.portfolioId) {
+      params = params.set('portfolioId', request.portfolioId);
+    }
+
     return this.http
-      .get<unknown>(`${this.base}/positioning`, { params: buildPositioningParams(request) })
+      .get<unknown>(`${environment.apiUrl}/clients/${encodeURIComponent(request.clientId)}/positions`, { params })
       .pipe(map((response) => mapPortfolioPositioningResponse(response)));
   }
 

@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { MarketDropdownComponent } from '../../shared/components';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import { MarketGridContextAction } from '../../shared/models/market-grid.model';
 import { TimeSalesFacade } from './time-sales.facade';
@@ -29,6 +30,7 @@ import { SymbolOption, TimeSalesRow } from './time-sales.models';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MarketDropdownComponent,
     MarketGridComponent
   ],
   templateUrl: './time-sales.component.html',

@@ -16,6 +16,7 @@ export interface PortfolioOption {
 }
 
 export interface SymbolOption {
+  assetId?: string;
   symbolId: string;
   symbolName: string;
   market: string;

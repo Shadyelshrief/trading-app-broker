@@ -76,12 +76,13 @@ export function mapCalculationResponse(response: unknown): OrderCalculationResul
 
 export function mapOrderActionResponse(response: unknown): OrderActionResult {
   const record = toRecord(response) ?? {};
-  const success = Boolean(record['success'] ?? record['isSuccess'] ?? record['succeeded'] ?? true);
+  const body = toRecord(record['body']) ?? {};
+  const success = (record['status'] ?? 'SUCCESS') !== 'ERROR_POPUP' && (record['status'] ?? 'SUCCESS') !== 'VALIDATION_FAIL';
 
   return {
     success,
     message: toString(record['message'] ?? record['statusMessage']) ?? (success ? 'Order request completed.' : 'Order request failed.'),
-    orderNumber: toString(record['orderNumber'] ?? record['order_no'] ?? record['id']),
+    orderNumber: toString(record['orderNumber'] ?? record['order_no'] ?? record['id'] ?? body['correlationId'] ?? body['basketId']),
     orderAmount: toNumber(record['orderAmount'] ?? record['totalOrderAmount']),
     orderTradeAmount: toNumber(record['orderTradeAmount'] ?? record['tradeAmount']),
     orderFees: toNumber(record['orderFees'] ?? record['fees'])
@@ -164,17 +165,24 @@ export function applyOrderEventToRows(rows: readonly OrderMonitoringRow[], event
 
 function mapClientOption(value: unknown): ClientOption | null {
   const record = toRecord(value);
-  const clientId = toString(record?.['clientId'] ?? record?.['id']);
-  return clientId ? { clientId, clientName: toString(record?.['clientName'] ?? record?.['name']) ?? clientId } : null;
+  const clientId = toString(record?.['clientId'] ?? record?.['id'] ?? record?.['code']);
+  return clientId
+    ? {
+        clientId,
+        clientName:
+          toString(record?.['clientName'] ?? record?.['name'] ?? record?.['label'] ?? record?.['fullName'] ?? record?.['username'] ?? record?.['friendlyId']) ??
+          clientId
+      }
+    : null;
 }
 
 function mapPortfolioOption(value: unknown): PortfolioOption | null {
   const record = toRecord(value);
-  const portfolioId = toString(record?.['portfolioId'] ?? record?.['id']);
+  const portfolioId = toString(record?.['portfolioId'] ?? record?.['id'] ?? record?.['code']);
   return portfolioId
     ? {
         portfolioId,
-        portfolioName: toString(record?.['portfolioName'] ?? record?.['name']) ?? portfolioId,
+        portfolioName: toString(record?.['portfolioName'] ?? record?.['name'] ?? record?.['label']) ?? portfolioId,
         currency: toString(record?.['currency']) ?? ''
       }
     : null;
@@ -182,11 +190,11 @@ function mapPortfolioOption(value: unknown): PortfolioOption | null {
 
 function mapCashAccountOption(value: unknown): CashAccountOption | null {
   const record = toRecord(value);
-  const cashAccountId = toString(record?.['cashAccountId'] ?? record?.['cashAccount'] ?? record?.['id']);
+  const cashAccountId = toString(record?.['cashAccountId'] ?? record?.['cashAccount'] ?? record?.['walletId'] ?? record?.['id']);
   return cashAccountId
     ? {
         cashAccountId,
-        cashAccountName: toString(record?.['cashAccountName'] ?? record?.['name']) ?? cashAccountId,
+        cashAccountName: toString(record?.['cashAccountName'] ?? record?.['walletName'] ?? record?.['name']) ?? cashAccountId,
         currency: toString(record?.['currency']) ?? ''
       }
     : null;
@@ -197,6 +205,8 @@ function mapSymbolOption(value: unknown): SymbolOption | null {
   const symbolId = toString(record?.['symbolId'] ?? record?.['symbol'] ?? record?.['id']);
   return symbolId
     ? {
+        productId: toString(record?.['productId'] ?? record?.['assetId'] ?? record?.['id']),
+        marketId: toString(record?.['marketId']),
         symbolId,
         symbolName: toString(record?.['symbolName'] ?? record?.['name']) ?? symbolId,
         symbolShortName: toString(record?.['symbolShortName'] ?? record?.['shortName']) ?? symbolId,
@@ -212,7 +222,7 @@ function mapSymbolOption(value: unknown): SymbolOption | null {
 
 function mapOrderMonitoringRow(value: unknown): OrderMonitoringRow | null {
   const record = toRecord(value);
-  const orderNumber = toString(record?.['orderNumber'] ?? record?.['order_number'] ?? record?.['id']);
+  const orderNumber = toString(record?.['orderNumber'] ?? record?.['order_number'] ?? record?.['id'] ?? record?.['friendlyId']);
 
   if (!record || !orderNumber) {
     return null;
@@ -226,17 +236,19 @@ function mapOrderMonitoringRow(value: unknown): OrderMonitoringRow | null {
     portfolioId: toString(record['portfolioId'] ?? record['portfolio_id']),
     status: toString(record['status'] ?? record['orderStatus']) ?? '',
     orderType: toString(record['orderType'] ?? record['order_type'] ?? record['type']) ?? '',
-    orderSide: mapSide(record['orderSide'] ?? record['side']),
-    symbolId: toString(record['symbolId'] ?? record['symbol']) ?? '',
+    orderSide: mapSide(record['orderSide'] ?? record['side'] ?? record['direction']),
+    symbolId: toString(record['symbolId'] ?? record['symbol'] ?? record['symbolName']) ?? '',
     symbolShortName: toString(record['symbolShortName'] ?? record['shortName']) ?? '',
     symbolName: toString(record['symbolName'] ?? record['name']) ?? '',
-    market: toString(record['market'] ?? record['exchange']),
+    market: toString(record['market'] ?? record['exchange'] ?? record['marketName']),
     price: toNumber(record['price'] ?? record['orderPrice']) ?? toString(record['price'] ?? record['orderPrice']) ?? '--',
     currency: toString(record['currency']) ?? '',
     quantity: toNumber(record['quantity'] ?? record['orderQuantity']) ?? 0,
     executedQuantity: toNumber(record['executedQuantity'] ?? record['executed_quantity']) ?? 0,
-    remainingQuantity: toNumber(record['remainingQuantity'] ?? record['remaining_quantity']) ?? 0,
-    expiryDate: toString(record['expiryDate'] ?? record['expiry_date']) ?? '',
+    remainingQuantity:
+      toNumber(record['remainingQuantity'] ?? record['remaining_quantity']) ??
+      Math.max(0, (toNumber(record['quantity'] ?? record['orderQuantity']) ?? 0) - (toNumber(record['executedQuantity'] ?? record['executed_quantity']) ?? 0)),
+    expiryDate: toString(record['expiryDate'] ?? record['expiry_date'] ?? record['createdAt']) ?? '',
     removedFromSystem: Boolean(record['removedFromSystem'] ?? record['removed_from_system']),
     updatedAt: resolveTimestamp(record['updatedAt'] ?? record['updated_at'] ?? record['timestamp']),
     raw: value
@@ -309,7 +321,14 @@ function mapArray(response: unknown): unknown[] {
   if (!record) {
     return [];
   }
-  for (const key of ['items', 'data', 'rows', 'results', 'orders', 'statistics', 'history']) {
+  const body = toRecord(record['body']);
+  if (body) {
+    const nested = mapArray(body);
+    if (nested.length) {
+      return nested;
+    }
+  }
+  for (const key of ['body', 'items', 'data', 'rows', 'results', 'orders', 'statistics', 'history', 'wallets']) {
     if (Array.isArray(record[key])) {
       return record[key] as unknown[];
     }

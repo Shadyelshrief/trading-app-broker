@@ -68,14 +68,28 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Client</mat-label>
-                <input matInput [formControl]="clientControl" placeholder="Client ID or name" />
+                <input
+                  matInput
+                  [formControl]="clientControl"
+                  [matAutocomplete]="clientAutocomplete"
+                  placeholder="Client ID or name"
+                />
+                <mat-autocomplete
+                  #clientAutocomplete="matAutocomplete"
+                  [displayWith]="displayClient"
+                  (optionSelected)="selectClient($event.option.value)"
+                >
+                  @for (client of clientOptions(); track client.clientId) {
+                    <mat-option [value]="client">{{ client.clientId }} · {{ client.clientName }}</mat-option>
+                  }
+                </mat-autocomplete>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Portfolio</mat-label>
                 <mat-select [formControl]="portfolioControl">
                   <mat-option value="">No portfolio selected</mat-option>
-                  @for (portfolio of facade.portfolioOptions; track portfolio.portfolioId) {
+                  @for (portfolio of portfolioOptions(); track portfolio.portfolioId) {
                     <mat-option [value]="portfolio.portfolioId">{{ portfolio.portfolioName }}</mat-option>
                   }
                 </mat-select>

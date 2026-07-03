@@ -23,7 +23,11 @@ export function mapPortfolioOptionsResponse(response: unknown): PortfolioOption[
 }
 
 export function mapPortfolioPositioningResponse(response: unknown): PortfolioPositionRow[] {
-  return mapArray(response)
+  const record = toRecord(response);
+  const body = toRecord(record?.['body']);
+  const source = body?.['holdings'] ?? response;
+
+  return mapArray(source)
     .map(mapPortfolioPositionRow)
     .filter((row): row is PortfolioPositionRow => row !== null);
 }
@@ -160,7 +164,9 @@ function mapClientOption(value: unknown): ClientOption | null {
   return clientId
     ? {
         clientId,
-        clientName: toString(record['clientName'] ?? record['name'] ?? record['label']) ?? clientId
+        clientName:
+          toString(record['clientName'] ?? record['name'] ?? record['label'] ?? record['fullName'] ?? record['username'] ?? record['friendlyId']) ??
+          clientId
       }
     : null;
 }
@@ -191,18 +197,19 @@ function mapPortfolioPositionRow(value: unknown): PortfolioPositionRow | null {
   }
 
   const symbolId = toString(record['symbolId'] ?? record['symbol'] ?? record['id']);
-  const exchange = toString(record['exchange'] ?? record['marketShortName'] ?? record['market_short_name']);
+  const exchange = toString(record['exchange'] ?? record['marketShortName'] ?? record['market_short_name'] ?? record['marketName']);
 
   if (!symbolId || !exchange) {
     return null;
   }
 
-  const quantity = toNumber(record['quantity']) ?? 0;
+  const quantity = toNumber(record['quantity'] ?? record['totalQty']) ?? 0;
   const evaluationPrice = toNumber(record['evaluationPrice'] ?? record['lastPrice'] ?? record['price']) ?? 0;
-  const cost = toNumber(record['cost']) ?? quantity * (toNumber(record['averageCost'] ?? record['average_cost']) ?? 0);
+  const averageCost = toNumber(record['averageCost'] ?? record['average_cost'] ?? record['costPrice']) ?? 0;
+  const cost = toNumber(record['cost']) ?? quantity * averageCost;
   const marketValue = toNumber(record['marketValue'] ?? record['market_value']) ?? quantity * evaluationPrice;
   const unrealizedGainLoss =
-    toNumber(record['unrealizedGainLoss'] ?? record['unrealized_gain_loss']) ?? marketValue - cost;
+    toNumber(record['unrealizedGainLoss'] ?? record['unrealized_gain_loss'] ?? record['unrealizedPnl']) ?? marketValue - cost;
   const costCcc = toNumber(record['costCcc'] ?? record['costCCC'] ?? record['cost_ccc']) ?? cost;
   const marketValueCcc =
     toNumber(record['marketValueCcc'] ?? record['marketValueCCC'] ?? record['market_value_ccc']) ?? marketValue;
@@ -214,13 +221,13 @@ function mapPortfolioPositionRow(value: unknown): PortfolioPositionRow | null {
     marketShortName: toString(record['marketShortName'] ?? record['market_short_name']) ?? exchange,
     exchange,
     symbolId,
-    symbolName: toString(record['symbolName'] ?? record['name']) ?? symbolId,
-    currency: toString(record['currency']) ?? '',
-    averageCost: toNumber(record['averageCost'] ?? record['average_cost']) ?? 0,
+    symbolName: toString(record['symbolName'] ?? record['name'] ?? record['productName']) ?? symbolId,
+    currency: toString(record['currency'] ?? record['currencyId']) ?? '',
+    averageCost,
     evaluationPrice,
     quantity,
     pledged: toNumber(record['pledged']) ?? 0,
-    available: toNumber(record['available']) ?? 0,
+    available: toNumber(record['available'] ?? record['availableQty']) ?? 0,
     cost,
     marketValue,
     unrealizedGainLoss,
@@ -228,7 +235,7 @@ function mapPortfolioPositionRow(value: unknown): PortfolioPositionRow | null {
     marketValueCcc,
     unrealizedGainLossCcc,
     outstanding: toNumber(record['outstanding']) ?? 0,
-    outstandingBuyUnits: toNumber(record['outstandingBuyUnits'] ?? record['outstanding_buy_units']) ?? 0,
+    outstandingBuyUnits: toNumber(record['outstandingBuyUnits'] ?? record['outstanding_buy_units'] ?? record['pendingBuyQty']) ?? 0,
     inTransfer: toNumber(record['inTransfer'] ?? record['in_transfer']) ?? 0,
     allocated: toNumber(record['allocated']) ?? 0,
     allocatedInTransit: toNumber(record['allocatedInTransit'] ?? record['allocated_in_transit']) ?? 0,
@@ -237,9 +244,9 @@ function mapPortfolioPositionRow(value: unknown): PortfolioPositionRow | null {
     dayAllocationInTransit: toNumber(record['dayAllocationInTransit'] ?? record['day_allocation_in_transit']) ?? 0,
     outsellUnitsSameDay: toNumber(record['outsellUnitsSameDay'] ?? record['outsell_units_same_day']) ?? 0,
     outstandingBuyAmount: toNumber(record['outstandingBuyAmount'] ?? record['outstanding_buy_amount']) ?? 0,
-    unsettledBuyIn: toNumber(record['unsettledBuyIn'] ?? record['unsettled_buy_in']) ?? 0,
+    unsettledBuyIn: toNumber(record['unsettledBuyIn'] ?? record['unsettled_buy_in'] ?? record['unsettledBuyQty']) ?? 0,
     unsettledBuyOut: toNumber(record['unsettledBuyOut'] ?? record['unsettled_buy_out']) ?? 0,
-    unsettledSellUnits: toNumber(record['unsettledSellUnits'] ?? record['unsettled_sell_units']) ?? 0,
+    unsettledSellUnits: toNumber(record['unsettledSellUnits'] ?? record['unsettled_sell_units'] ?? record['unsettledSellQty']) ?? 0,
     removedFromSystem: Boolean(record['removedFromSystem'] ?? record['removed_from_system']),
     updatedAt: resolveTimestamp(record['updatedAt'] ?? record['updated_at']),
     priceDirection: 'UNCHANGED'
@@ -301,7 +308,7 @@ function mapArray(response: unknown): unknown[] {
     return [];
   }
 
-  for (const key of ['items', 'data', 'rows', 'results', 'portfolios', 'clients', 'positions', 'cashAccounts']) {
+  for (const key of ['body', 'items', 'data', 'rows', 'results', 'portfolios', 'clients', 'positions', 'holdings', 'cashAccounts']) {
     if (Array.isArray(record[key])) {
       return record[key] as unknown[];
     }

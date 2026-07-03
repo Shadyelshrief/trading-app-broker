@@ -6,14 +6,6 @@
       <p class="auth-subtitle">Access your broker dashboard securely.</p>
     </header>
 
-    <div class="auth-demo" aria-label="Demo credentials">
-      <span class="auth-demo__label">Demo access</span>
-      <div class="auth-demo__credentials">
-        <span>demo&#64;broker.local</span>
-        <span>Password1!</span>
-      </div>
-    </div>
-
     @if (feedback(); as alert) {
       <p
         class="auth-alert"
@@ -28,19 +20,19 @@
     <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="auth-field auth-field--material">
         <mat-form-field appearance="outline">
-          <mat-label>Email address</mat-label>
+          <mat-label>Username</mat-label>
           <app-trading-icon matPrefix name="user" />
           <input
-            id="login-email"
+            id="login-username"
             matInput
-            type="email"
+            type="text"
             autocomplete="username"
-            placeholder="name@broker.local"
-            formControlName="email"
+            placeholder="Enter your username"
+            formControlName="username"
           />
         </mat-form-field>
-        @if (form.controls.email.invalid && form.controls.email.touched) {
-          <p class="auth-error">Enter a valid email address.</p>
+        @if (form.controls.username.invalid && form.controls.username.touched) {
+          <p class="auth-error">Enter your username.</p>
         }
       </div>
 
@@ -69,7 +61,7 @@
           </button>
         </mat-form-field>
         @if (form.controls.password.invalid && form.controls.password.touched) {
-          <p class="auth-error">Use at least 8 characters with upper, lower, and numeric characters.</p>
+          <p class="auth-error">Enter your password.</p>
         }
       </div>
 

@@ -7,14 +7,7 @@
       </div>
 
       <div class="market-map-page__filters">
-        <mat-form-field appearance="outline">
-          <mat-label>Market</mat-label>
-          <mat-select [value]="vm.filters.market" (selectionChange)="selectMarket($event.value)">
-            @for (option of vm.marketOptions; track option.value) {
-              <mat-option [value]="option.value">{{ option.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <app-market-dropdown [value]="vm.filters.market" (valueChange)="selectMarket($any($event))" />
 
         <mat-form-field appearance="outline">
           <mat-label>Sort Order</mat-label>

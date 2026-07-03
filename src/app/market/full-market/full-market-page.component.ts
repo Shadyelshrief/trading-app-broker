@@ -12,6 +12,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
+import { MarketDropdownComponent, SectorDropdownComponent } from '../../shared/components';
 import { MarketGridContextAction } from '../../shared/models/market-grid.model';
 import { FullMarketRow } from '../models/full-market-row.model';
 import { createFullMarketColumns } from './full-market.columns';
@@ -30,6 +31,8 @@ import { FullMarketFacade } from './full-market.facade';
     MatMenuModule,
     MatSelectModule,
     MatSlideToggleModule,
+    MarketDropdownComponent,
+    SectorDropdownComponent,
     MarketGridComponent
   ],
   templateUrl: './full-market-page.component.html',
@@ -68,7 +71,7 @@ export class FullMarketPageComponent {
   }
 
   protected selectExchange(exchange: string): void {
-    this.facade.updateFilters({ exchange: exchange.toLowerCase() });
+    this.facade.updateFilters({ exchange: exchange.toLowerCase(), sector: 'ALL' });
   }
 
   protected selectSector(sector: string): void {

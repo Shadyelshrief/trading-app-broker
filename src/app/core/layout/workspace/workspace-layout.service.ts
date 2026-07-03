@@ -5,16 +5,19 @@ import {
   Injectable,
   Type,
   createComponent,
-  inject
+  inject,
+  signal
 } from '@angular/core';
 import {
   ComponentContainer,
   ComponentItemConfig,
   GoldenLayout,
   LayoutConfig,
+  ResolvedLayoutConfig,
   ResolvedComponentItemConfig,
   VirtualLayout
 } from 'golden-layout';
+import { catchError, debounceTime, EMPTY, finalize, Subject, switchMap, take, tap } from 'rxjs';
 
 import { ClientInformationComponent } from '../../../clients/client-information/client-information.component';
 import { ClientSearchComponent } from '../../../clients/client-search/client-search.component';
@@ -46,6 +49,7 @@ import { SavedWatchListComponent } from '../../../watchlists/saved-watch-list/sa
 import { WatchlistsPageComponent } from '../../../watchlists/pages/watchlists-page.component';
 import { DashboardWidgetComponent } from '../widgets/dashboard-widget.component';
 import { PlaceholderWidgetComponent } from '../widgets/placeholder-widget.component';
+import { WorkspacePreferencesService, WorkspaceThemePreference } from './workspace-preferences.service';
 
 type WorkspacePanelType =
   | 'dashboard'
@@ -78,6 +82,38 @@ type WorkspacePanelType =
   | 'charts'
   | 'placeholder';
 
+const WORKSPACE_PANEL_TYPES = [
+  'dashboard',
+  'full-market',
+  'market-indices',
+  'market-summary',
+  'top-symbols',
+  'historical-top-symbols',
+  'news-announcements',
+  'market-map',
+  'market-performance-indices',
+  'market-performance-security',
+  'market-depth-by-price',
+  'market-depth-by-order',
+  'price-spectrum',
+  'time-sales',
+  'trading-ticker',
+  'pricing-ticker',
+  'announcements-ticker',
+  'execution-ticker',
+  'order-entry',
+  'order-monitoring',
+  'order-statistics',
+  'portfolio-positioning',
+  'client-search',
+  'client-information',
+  'price-quote',
+  'watchlists',
+  'saved-watch-list',
+  'charts',
+  'placeholder'
+] satisfies WorkspacePanelType[];
+
 interface WorkspacePanelState {
   title: string;
   route: string;
@@ -99,6 +135,7 @@ interface WorkspacePanelDescriptor {
 export class WorkspaceLayoutService {
   private readonly applicationRef = inject(ApplicationRef);
   private readonly environmentInjector = inject(EnvironmentInjector);
+  private readonly preferences = inject(WorkspacePreferencesService);
 
   private readonly panelRegistry = {
     dashboard: DashboardWidgetComponent,
@@ -139,6 +176,25 @@ export class WorkspaceLayoutService {
   private hostElement?: HTMLElement;
   private resizeObserver?: ResizeObserver;
   private activeRoute = '/app';
+  private languageId = '00000000-0000-0000-0000-000000000000';
+  private theme: WorkspaceThemePreference = 'DARK';
+  private loadingRemoteLayout = false;
+  private suppressNextSave = false;
+  private workspaceLoaded = false;
+  private readonly saveRequests = new Subject<void>();
+
+  readonly loading = signal(false);
+  readonly saving = signal(false);
+  readonly error = signal<string | null>(null);
+
+  constructor() {
+    this.saveRequests
+      .pipe(
+        debounceTime(500),
+        switchMap(() => this.saveWorkspace())
+      )
+      .subscribe();
+  }
 
   init(hostElement: HTMLElement): void {
     if (typeof window === 'undefined') {
@@ -155,7 +211,9 @@ export class WorkspaceLayoutService {
 
     this.hostElement = hostElement;
     this.layout = new GoldenLayout(hostElement, this.bindComponent, this.unbindComponent);
-    this.loadCurrentLayout();
+    this.layout.on('stateChanged', this.onLayoutStateChanged);
+    this.workspaceLoaded = false;
+    this.loadWorkspace();
 
     this.resizeObserver = new ResizeObserver(() => this.syncSize());
     this.resizeObserver.observe(hostElement);
@@ -168,6 +226,10 @@ export class WorkspaceLayoutService {
 
     if (!this.openPanels.has(normalizedRoute)) {
       this.openPanels.set(normalizedRoute, this.routeToPanel(normalizedRoute));
+    }
+
+    if (!this.workspaceLoaded) {
+      return;
     }
 
     this.loadCurrentLayout();
@@ -184,6 +246,11 @@ export class WorkspaceLayoutService {
         route: normalizedRoute
       }
     });
+
+    if (!this.workspaceLoaded) {
+      return;
+    }
+
     this.loadCurrentLayout();
     this.syncSize();
   }
@@ -194,12 +261,14 @@ export class WorkspaceLayoutService {
     this.openPanels.set(activeDescriptor.state.route, activeDescriptor);
     this.loadCurrentLayout();
     this.syncSize();
+    this.queueSave();
   }
 
   destroy(): void {
     this.resizeObserver?.disconnect();
     this.resizeObserver = undefined;
 
+    this.layout?.off('stateChanged', this.onLayoutStateChanged);
     this.layout?.destroy();
     this.layout = undefined;
 
@@ -300,6 +369,124 @@ export class WorkspaceLayoutService {
     this.layout.loadLayout(layoutConfig);
   }
 
+  private loadSavedLayout(layoutConfig: LayoutConfig): void {
+    if (!this.layout) {
+      return;
+    }
+
+    this.loadingRemoteLayout = true;
+    this.suppressNextSave = true;
+    this.layout.loadLayout(layoutConfig);
+    this.loadingRemoteLayout = false;
+    this.rebuildOpenPanelsFromLayout();
+  }
+
+  private loadWorkspace(): void {
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.preferences
+      .getPreferences()
+      .pipe(
+        take(1),
+        tap((preferences) => {
+          this.languageId = preferences.languageId || this.languageId;
+          this.theme = preferences.theme || this.theme;
+          this.workspaceLoaded = true;
+
+          if (isLayoutConfig(preferences.layoutJson)) {
+            this.loadSavedLayout(preferences.layoutJson);
+            if (!this.openPanels.has(this.activeRoute)) {
+              this.openPanels.set(this.activeRoute, this.routeToPanel(this.activeRoute));
+              this.loadCurrentLayout();
+            }
+          } else {
+            this.loadCurrentLayout();
+          }
+
+          this.syncSize();
+        }),
+        catchError(() => {
+          this.error.set('Workspace preferences could not be loaded.');
+          this.workspaceLoaded = true;
+          this.loadCurrentLayout();
+          this.syncSize();
+          return EMPTY;
+        }),
+        finalize(() => this.loading.set(false))
+      )
+      .subscribe();
+  }
+
+  private readonly onLayoutStateChanged = (): void => {
+    if (this.loadingRemoteLayout) {
+      return;
+    }
+
+    if (this.suppressNextSave) {
+      this.suppressNextSave = false;
+      return;
+    }
+
+    this.rebuildOpenPanelsFromLayout();
+    this.queueSave();
+  };
+
+  private queueSave(): void {
+    if (this.layout) {
+      this.saveRequests.next();
+    }
+  }
+
+  private saveWorkspace() {
+    if (!this.layout) {
+      return EMPTY;
+    }
+
+    this.saving.set(true);
+
+    return this.preferences
+      .savePreferences({
+        theme: this.theme,
+        languageId: this.languageId,
+        layoutJson: this.layout.saveLayout()
+      })
+      .pipe(
+        tap((preferences) => {
+          this.languageId = preferences.languageId || this.languageId;
+          this.theme = preferences.theme || this.theme;
+          this.error.set(null);
+        }),
+        catchError(() => {
+          this.error.set('Workspace preferences could not be saved.');
+          return EMPTY;
+        }),
+        finalize(() => this.saving.set(false))
+      );
+  }
+
+  private rebuildOpenPanelsFromLayout(): void {
+    const saved = this.layout?.saveLayout();
+    const panels = saved?.root ? collectPanels(saved.root) : [];
+
+    if (panels.length === 0) {
+      return;
+    }
+
+    this.openPanels.clear();
+
+    for (const panel of panels) {
+      const normalizedRoute = this.normalizeRoute(panel.state.route);
+      this.openPanels.set(normalizedRoute, {
+        ...panel,
+        state: {
+          ...panel.state,
+          route: normalizedRoute
+        }
+      });
+    }
+  }
+
   private createPanelConfig(panel: WorkspacePanelDescriptor): ComponentItemConfig {
     return {
       type: 'component',
@@ -313,37 +500,7 @@ export class WorkspaceLayoutService {
   private resolvePanelType(itemConfig: ResolvedComponentItemConfig): WorkspacePanelType {
     const componentType = itemConfig.componentType;
 
-    if (
-      componentType === 'dashboard' ||
-      componentType === 'full-market' ||
-      componentType === 'market-indices' ||
-      componentType === 'market-summary' ||
-      componentType === 'top-symbols' ||
-      componentType === 'historical-top-symbols' ||
-      componentType === 'news-announcements' ||
-      componentType === 'market-map' ||
-      componentType === 'market-performance-indices' ||
-      componentType === 'market-performance-security' ||
-      componentType === 'market-depth-by-price' ||
-      componentType === 'market-depth-by-order' ||
-      componentType === 'price-spectrum' ||
-      componentType === 'time-sales' ||
-      componentType === 'trading-ticker' ||
-      componentType === 'pricing-ticker' ||
-      componentType === 'announcements-ticker' ||
-      componentType === 'execution-ticker' ||
-      componentType === 'order-entry' ||
-      componentType === 'order-monitoring' ||
-      componentType === 'order-statistics' ||
-      componentType === 'portfolio-positioning' ||
-      componentType === 'client-search' ||
-      componentType === 'client-information' ||
-      componentType === 'price-quote' ||
-      componentType === 'watchlists' ||
-      componentType === 'saved-watch-list' ||
-      componentType === 'charts' ||
-      componentType === 'placeholder'
-    ) {
+    if (typeof componentType === 'string' && isWorkspacePanelType(componentType)) {
       return componentType;
     }
 
@@ -749,4 +906,59 @@ export class WorkspaceLayoutService {
       this.layout.setSize(width, height);
     }
   }
+}
+
+function isWorkspacePanelType(value: string): value is WorkspacePanelType {
+  return WORKSPACE_PANEL_TYPES.includes(value as WorkspacePanelType);
+}
+
+function isLayoutConfig(value: unknown): value is LayoutConfig {
+  return !!value && typeof value === 'object' && 'root' in value;
+}
+
+function collectPanels(item: NonNullable<ResolvedLayoutConfig['root']>): WorkspacePanelDescriptor[] {
+  const itemRecord = item as unknown as Record<string, unknown>;
+
+  if (itemRecord['type'] === 'component') {
+    const componentType = itemRecord['componentType'];
+
+    if (typeof componentType === 'string' && isWorkspacePanelType(componentType)) {
+      return [
+        {
+          type: componentType,
+          state: resolvePanelState(itemRecord)
+        }
+      ];
+    }
+  }
+
+  const content = itemRecord['content'];
+
+  if (!Array.isArray(content)) {
+    return [];
+  }
+
+  return content.flatMap((child) => collectPanels(child as NonNullable<ResolvedLayoutConfig['root']>));
+}
+
+function resolvePanelState(itemRecord: Record<string, unknown>): WorkspacePanelState {
+  const rawState = itemRecord['componentState'];
+  const stateRecord = rawState && typeof rawState === 'object' && !Array.isArray(rawState)
+    ? (rawState as Record<string, unknown>)
+    : {};
+
+  return {
+    title: typeof stateRecord['title'] === 'string'
+      ? stateRecord['title']
+      : typeof itemRecord['title'] === 'string'
+        ? itemRecord['title']
+        : 'Workspace',
+    route: typeof stateRecord['route'] === 'string' ? stateRecord['route'] : '/app',
+    section: typeof stateRecord['section'] === 'string' ? stateRecord['section'] : undefined,
+    screen: typeof stateRecord['screen'] === 'string' ? stateRecord['screen'] : undefined,
+    context:
+      stateRecord['context'] && typeof stateRecord['context'] === 'object' && !Array.isArray(stateRecord['context'])
+        ? (stateRecord['context'] as Record<string, unknown>)
+        : undefined
+  };
 }

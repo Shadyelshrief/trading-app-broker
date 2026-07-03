@@ -7,14 +7,11 @@
           <h2>Top Symbols</h2>
         </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Market</mat-label>
-          <mat-select [formControl]="marketControl">
-            @for (market of vm.marketOptions; track market.value) {
-              <mat-option [value]="market.value">{{ market.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <app-market-dropdown
+          [includeAll]="true"
+          [value]="marketControl.value"
+          (valueChange)="marketControl.setValue($any($event))"
+        />
 
         <mat-form-field appearance="outline" class="top-symbols__view-field">
           <mat-label>Select View</mat-label>

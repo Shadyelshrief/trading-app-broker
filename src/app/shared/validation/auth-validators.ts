@@ -2,6 +2,10 @@ import { AbstractControl, ValidationErrors, Validators } from '@angular/forms';
 
 export const emailFieldValidators = [Validators.required, Validators.email];
 
+export const usernameFieldValidators = [Validators.required];
+
+export const loginPasswordFieldValidators = [Validators.required];
+
 export const passwordFieldValidators = [
   Validators.required,
   Validators.minLength(8),

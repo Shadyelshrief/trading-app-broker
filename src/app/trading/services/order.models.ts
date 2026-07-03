@@ -23,6 +23,8 @@ export interface CashAccountOption {
 }
 
 export interface SymbolOption {
+  productId?: string;
+  marketId?: string;
   symbolId: string;
   symbolName: string;
   symbolShortName: string;

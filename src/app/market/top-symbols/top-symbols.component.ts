@@ -9,6 +9,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { distinctUntilChanged } from 'rxjs';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { MarketDropdownComponent } from '../../shared/components';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import { MarketGridContextAction } from '../../shared/models/market-grid.model';
 import { TopSymbolsFacade } from './top-symbols.facade';
@@ -25,6 +26,7 @@ import { TopSymbolRow, TopSymbolsViewKey } from './top-symbols.models';
     MatFormFieldModule,
     MatSelectModule,
     MatSliderModule,
+    MarketDropdownComponent,
     MarketGridComponent
   ],
   templateUrl: './top-symbols.component.html',

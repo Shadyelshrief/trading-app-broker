@@ -7,23 +7,13 @@
           <h2>Full Market</h2>
         </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Market</mat-label>
-          <mat-select (valueChange)="selectExchange($event)" [value]="vm.selectedExchange">
-            <mat-option value="adx">ADX</mat-option>
-            <mat-option value="dfm">DFM</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <app-market-dropdown [value]="vm.selectedExchange" (valueChange)="selectExchange($event)" />
 
-        <mat-form-field appearance="outline">
-          <mat-label>Sector</mat-label>
-          <mat-select (valueChange)="selectSector($event)" [value]="'ALL'">
-            <mat-option value="ALL">All sectors</mat-option>
-            @for (sector of vm.sectors; track sector) {
-              <mat-option [value]="sector">{{ sector }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <app-sector-dropdown
+          [marketCode]="vm.selectedExchange"
+          [value]="vm.selectedSector"
+          (valueChange)="selectSector($event)"
+        />
 
         <mat-form-field appearance="outline" class="full-market-page__search">
           <mat-label>Symbol Search</mat-label>

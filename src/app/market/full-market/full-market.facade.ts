@@ -77,6 +77,7 @@ export class FullMarketFacade {
         sectors,
         exchanges,
         selectedExchange: filters.exchange,
+        selectedSector: filters.sector,
         totalSymbols: filteredRows.length,
         loading: payload.rows.length === 0,
         connectionLabel:

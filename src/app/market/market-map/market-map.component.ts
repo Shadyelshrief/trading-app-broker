@@ -12,6 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { MarketDropdownComponent } from '../../shared/components';
 import {
   buildMarketMapTooltip,
   criteriaLabel as resolveCriteriaLabel,
@@ -34,7 +35,7 @@ interface TileContextMenuState {
 @Component({
   selector: 'app-market-map',
   standalone: true,
-  imports: [AsyncPipe, DatePipe, NgClass, MatFormFieldModule, MatSelectModule, MatTooltipModule],
+  imports: [AsyncPipe, DatePipe, NgClass, MatFormFieldModule, MatSelectModule, MatTooltipModule, MarketDropdownComponent],
   templateUrl: './market-map.component.html',
   styleUrl: './market-map.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

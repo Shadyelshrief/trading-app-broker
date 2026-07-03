@@ -36,7 +36,6 @@ export class ForgotPasswordPageComponent {
 
   protected readonly loading = signal(false);
   protected readonly feedback = signal<{ type: 'error' | 'success'; text: string } | null>(null);
-  protected readonly devResetUrl = signal<string | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
     email: ['', emailFieldValidators]
@@ -44,7 +43,6 @@ export class ForgotPasswordPageComponent {
 
   protected submit(): void {
     this.feedback.set(null);
-    this.devResetUrl.set(null);
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -67,7 +65,6 @@ export class ForgotPasswordPageComponent {
             type: 'success',
             text: response.message
           });
-          this.devResetUrl.set(response.resetUrl ?? null);
         },
         error: (error: unknown) => {
           this.feedback.set({

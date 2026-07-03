@@ -1,0 +1,1046 @@
+openapi: 3.0.3
+info:
+  title: K-Command Admin API (B1)
+  description: Backoffice administrative interface for broker management.
+  version: 1.0.0
+servers:
+  - url: http://localhost:9090/b1
+    description: Local Admin Portal
+
+paths:
+  /auth/public-key:
+    get:
+      summary: Retrieve Admin RSA Public Key
+      tags: [Admin Auth]
+      responses:
+        '200':
+          description: Public key retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicKeyResponse'
+
+  /auth/login:
+    post:
+      summary: Broker Login
+      description: Login for internal brokers. Supports System or LDAP auth modes.
+      tags: [Admin Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminLoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponseWrapper'
+
+  /auth/forget-password:
+    post:
+      summary: Forget Password
+      description: Initiates password recovery process.
+      tags: [Admin Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgetPasswordRequest'
+      responses:
+        '200':
+          description: Recovery initiated
+
+  /workspaces/my-preferences:
+    get:
+      summary: Get My Workspace
+      description: Retrieve the logged-in broker's workspace preferences.
+      tags: [Workspace]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Workspace preferences retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspacePreferencesResponse'
+    put:
+      summary: Update My Workspace
+      description: Upsert the broker's workspace layout and theme.
+      tags: [Workspace]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkspaceRequest'
+      responses:
+        '200':
+          description: Workspace preferences saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspacePreferencesResponse'
+
+  /markets:
+    get:
+      summary: Get Broker Allowed Markets
+      description: Retrieves the list of markets this specific broker is allowed to access.
+      tags: [ Reference Data ]
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketListResponse'
+  /markets/{marketCode}/products:
+    get:
+      summary: Get Products by Market
+      tags: [ Reference Data ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: marketCode
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "DFM"
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+  /markets/{marketCode}/sectors:
+    get:
+      summary: Get Sectors by Market
+      tags: [ Reference Data ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: marketCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SectorListResponse'
+
+  /sectors/search:
+    get:
+      summary: Search Sectors
+      tags: [ Reference Data ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SectorListResponse'
+  /sectors/{sectorId}/products:
+    get:
+      summary: Get Products by Sector
+      tags: [ Reference Data ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: sectorId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+  /clients/search:
+    get:
+      summary: Search Assigned Clients (Broker Only)
+      description: Searches clients by friendly ID, username, or full name, strictly filtered by the broker's inclusion/exclusion lists.
+      tags: [ Broker Operations ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: "Search query (min 2 characters)"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful search
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientSearchResponse'
+
+  /clients/{clientId}/portfolios:
+    get:
+      summary: Get Client Active Portfolios (Broker)
+      description: Administrative drop-down route to fetch active portfolios for a chosen client.
+      tags: [Broker Portfolio Management]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioListResponse'
+
+  /portfolios/{portfolioId}/wallets:
+    get:
+      summary: Get Wallets by Portfolio (Broker)
+      description: Administrative drop-down route to fetch compliant, linked wallets for a portfolio.
+      tags: [Broker Portfolio Management]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: portfolioId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletDropdownListResponse'
+
+  /clients/{clientId}/positions:
+    get:
+      summary: Get Client Consolidated Positions (Broker)
+      description: Administrative position monitoring console. Supports total view or deep filtering per portfolio/wallet.
+      tags: [Broker Portfolio Management]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: portfolioId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: walletId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientPositionResponseWrapper'
+
+  /watchlists:
+    get:
+      summary: Get Watchlists
+      tags: [ Watchlist ]
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchlistListResponse'
+    post:
+      summary: Create Watchlist
+      tags: [ Watchlist ]
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWatchlistRequest'
+      responses:
+        '200':
+          description: Watchlist created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchlistSingleResponse'
+
+  /watchlists/{id}:
+    get:
+      summary: Get Watchlist Details
+      tags: [Watchlist]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WatchlistDetailsResponse'
+    delete:
+      summary: Delete Watchlist
+      tags: [Watchlist]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Watchlist deleted
+
+  /watchlists/{id}/items:
+    post:
+      summary: Add Asset to Watchlist
+      tags: [Watchlist]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddWatchlistItemRequest'
+      responses:
+        '200':
+          description: Asset added
+
+  /watchlists/{id}/items/{assetId}:
+    delete:
+      summary: Remove Asset from Watchlist
+      tags: [Watchlist]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: assetId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Asset removed
+
+  /orders:
+    get:
+      summary: Get Broker Orders
+      description: Fetches orders explicitly bound to this broker. Can optionally filter by specific client.
+      tags: [ Broker Orders ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: size
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: clientId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: marketId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: orderType
+          in: query
+          schema: { type: string }
+        - name: q
+          in: query
+          description: Search by friendly order ID
+          schema: { type: string }
+      responses:
+        '200':
+          description: Orders retrieved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedOrderGridResponse' }
+
+  /orders/{orderId}:
+    put:
+      summary: Modify Order (Broker)
+      tags: [ Broker Orders ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderModifyRequest' }
+      responses:
+        '200':
+          description: Modification queued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CorrelationResponse' }
+    delete:
+      summary: Cancel Order (Broker)
+      tags: [ Broker Orders ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Cancellation queued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CorrelationResponse' }
+
+  /orders/basket:
+    get:
+      summary: Get Broker Basket
+      tags: [ Broker Orders ]
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Basket retrieved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BasketListResponse' }
+
+  /clients/{clientId}/orders:
+    post:
+      summary: Place Order for Client
+      description: Publishes an order event targeting a specific client. The payload's targetClientId is forcefully overridden by the path variable.
+      tags: [ Broker Client Operations ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OnlineOrderRequest' }
+      responses:
+        '200':
+          description: Order queued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CorrelationResponse' }
+
+  /clients/{clientId}/orders/calculate:
+    post:
+      summary: Order Calculator for Client
+      tags: [ Broker Client Operations ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OnlineOrderRequest' }
+      responses:
+        '200':
+          description: Calculation successful
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderCalculatorResponse' }
+
+  /clients/{clientId}/orders/basket:
+    post:
+      summary: Save to Client Basket
+      tags: [ Broker Client Operations ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OnlineOrderRequest' }
+      responses:
+        '200':
+          description: Saved to basket
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BasketIdResponse' }
+
+
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    BaseApiResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [SUCCESS, WARN_POPUP, ERROR_POPUP, VALIDATION_FAIL, FATAL_CRASH] }
+        messageCode: { type: string }
+        message: { type: string }
+        messageLocale: { type: string }
+
+    AdminLoginRequest:
+      type: object
+      required: [username, password, devicePlatform, deviceName]
+      properties:
+        username: { type: string, example: "BROKER_01" }
+        password: { type: string, description: "Encrypted password" }
+        devicePlatform: { type: string, example: "WEB" }
+        deviceName: { type: string, example: "Admin Workstation" }
+
+    ForgetPasswordRequest:
+      type: object
+      required: [username]
+      properties:
+        username: { type: string }
+
+    PublicKeyBody:
+      type: object
+      properties:
+        publicKey: { type: string }
+
+    PublicKeyResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body: { $ref: '#/components/schemas/PublicKeyBody' }
+
+    AuthTokenBody:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresIn: { type: integer }
+
+    AuthTokenResponseWrapper:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body: { $ref: '#/components/schemas/AuthTokenBody' }
+
+    WorkspaceTheme:
+      type: string
+      enum: [SYSTEM, LIGHT, DARK]
+
+    WorkspacePreferencesDto:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        theme: { $ref: '#/components/schemas/WorkspaceTheme' }
+        languageId: { type: string, format: uuid }
+        layoutJson: { type: object, nullable: true }
+
+    UpdateWorkspaceRequest:
+      type: object
+      required: [theme, languageId]
+      properties:
+        theme: { $ref: '#/components/schemas/WorkspaceTheme' }
+        languageId: { type: string, format: uuid }
+        layoutJson: { type: object, nullable: true }
+
+    WorkspacePreferencesResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              $ref: '#/components/schemas/WorkspacePreferencesDto'
+
+    MarketDto:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        nameLocal: { type: string, nullable: true }
+        code: { type: string }
+        timezone: { type: string }
+        marketOpenTime: { type: string }
+        marketCloseTime: { type: string }
+    SectorDto:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string, nullable: true }
+
+    ProductDto:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        nameLocal: { type: string, nullable: true }
+        symbol: { type: string }
+        isin: { type: string, nullable: true }
+        type: { type: string }
+        logoPath: { type: string, nullable: true }
+        lastPrice: { type: number, format: double, nullable: true }
+        changePercentage: { type: number, format: double, nullable: true }
+
+    ClientLookupDto:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        friendlyId: { type: integer }
+        username: { type: string }
+        fullName: { type: string }
+
+    MarketListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: array
+              items: { $ref: '#/components/schemas/MarketDto' }
+    SectorListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: array
+              items: { $ref: '#/components/schemas/SectorDto' }
+    ProductListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: array
+              items: { $ref: '#/components/schemas/ProductDto' }
+    ClientSearchResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: array
+              items: { $ref: '#/components/schemas/ClientLookupDto' }
+
+    PortfolioDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [ REGULAR, MARGIN ]
+
+    PortfolioListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: array
+              items:
+                $ref: '#/components/schemas/PortfolioDto'
+
+    WalletDropdownDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [ REGULAR, MARGIN ]
+
+    WalletDropdownListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: array
+              items:
+                $ref: '#/components/schemas/WalletDropdownDto'
+
+    HoldingPositionDto:
+      type: object
+      properties:
+        marketName:
+          type: string
+        productName:
+          type: string
+        symbol:
+          type: string
+        currencyId:
+          type: string
+          format: uuid
+        totalQty:
+          type: number
+          format: double
+        availableQty:
+          type: number
+          format: double
+        pendingSellQty:
+          type: number
+          format: double
+        pendingBuyQty:
+          type: number
+          format: double
+        unsettledSellQty:
+          type: number
+          format: double
+        unsettledBuyQty:
+          type: number
+          format: double
+        costPrice:
+          type: number
+          format: double
+        evaluationPrice:
+          type: number
+          format: double
+        marketValue:
+          type: number
+          format: double
+        unrealizedPnl:
+          type: number
+          format: double
+        portfolioId:
+          type: string
+          format: uuid
+
+    WalletPositionDto:
+      type: object
+      properties:
+        walletId:
+          type: string
+          format: uuid
+        walletName:
+          type: string
+        isMargin:
+          type: boolean
+        availableAmount:
+          type: number
+          format: double
+        blockedAmount:
+          type: number
+          format: double
+        pendingBuyAmount:
+          type: number
+          format: double
+        limitAmount:
+          type: number
+          format: double
+        unsettledBuyAmount:
+          type: number
+          format: double
+        unsettledSellAmount:
+          type: number
+          format: double
+        holdingMarketValue:
+          type: number
+          format: double
+        marginableValue:
+          type: number
+          format: double
+        purchasingPower:
+          type: number
+          format: double
+        ppMargin:
+          type: number
+          format: double
+        coverRatio:
+          type: number
+          format: double
+
+    PositionSummaryDto:
+      type: object
+      properties:
+        totalCashAvailable:
+          type: number
+          format: double
+        totalHoldingValue:
+          type: number
+          format: double
+        totalPurchasingPower:
+          type: number
+          format: double
+
+    ClientPositionResponse:
+      type: object
+      properties:
+        holdings:
+          type: array
+          items:
+            $ref: '#/components/schemas/HoldingPositionDto'
+        wallets:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletPositionDto'
+        summary:
+          $ref: '#/components/schemas/PositionSummaryDto'
+
+    ClientPositionResponseWrapper:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              $ref: '#/components/schemas/ClientPositionResponse'
+
+    WatchlistDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    WatchlistDetailsDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductDto'
+
+    CreateWatchlistRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+
+    AddWatchlistItemRequest:
+      type: object
+      required: [assetId]
+      properties:
+        assetId:
+          type: string
+          format: uuid
+
+    WatchlistListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: array
+              items:
+                $ref: '#/components/schemas/WatchlistDto'
+
+    WatchlistSingleResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              $ref: '#/components/schemas/WatchlistDto'
+
+    WatchlistDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              $ref: '#/components/schemas/WatchlistDetailsDto'
+
+    OnlineOrderRequest:
+      type: object
+      required: [ targetClientId, portfolioId, walletId, productId, marketId, direction, orderType, timeInForce, quantity ]
+      properties:
+        targetClientId:
+          type: string
+          format: uuid
+          description: "Ignored/Overridden by Retail Gateway. Required for Broker Gateway."
+        portfolioId: { type: string, format: uuid }
+        walletId: { type: string, format: uuid }
+        productId: { type: string, format: uuid }
+        marketId: { type: string, format: uuid }
+        direction: { type: string, enum: [ BUY, SELL ] }
+        orderType: { type: string, enum: [ MARKET, LIMIT ] }
+        timeInForce: { type: string, enum: [ DAY, GTC, IOC, FOK ] }
+        quantity: { type: integer, format: int64 }
+        price: { type: number, format: double, nullable: true }
+
+    OrderModifyRequest:
+      type: object
+      required: [ orderId, newQuantity ]
+      properties:
+        orderId: { type: string, format: uuid }
+        newQuantity: { type: number, format: double }
+        newPrice: { type: number, format: double, nullable: true }
+
+    OrderCalculatorResponseDto:
+      type: object
+      properties:
+        tradeValue: { type: number, format: double }
+        estimatedCommission: { type: number, format: double }
+        estimatedVat: { type: number, format: double }
+        totalRequiredOrReceived: { type: number, format: double }
+
+    OrderGridDto:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        friendlyId: { type: integer }
+        marketName: { type: string }
+        symbolName: { type: string }
+        status: { type: string }
+        orderType: { type: string }
+        direction: { type: string }
+        quantity: { type: number, format: double }
+        price: { type: number, format: double, nullable: true }
+        executedQuantity: { type: number, format: double }
+        createdAt: { type: string, format: date-time }
+
+    CorrelationResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: object
+              properties:
+                correlationId: { type: string, format: uuid }
+
+    BasketIdResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: object
+              properties:
+                basketId: { type: string, format: uuid }
+
+    OrderCalculatorResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body: { $ref: '#/components/schemas/OrderCalculatorResponseDto' }
+
+    BasketListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: array
+              items: { $ref: '#/components/schemas/OnlineOrderRequest' }
+
+    PaginatedOrderGridResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items: { $ref: '#/components/schemas/OrderGridDto' }
+                currentPage: { type: integer }
+                totalPages: { type: integer }
+                totalElements: { type: integer, format: int64 }
+                hasNext: { type: boolean }

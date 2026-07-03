@@ -51,6 +51,7 @@ export interface FullMarketViewModel {
   sectors: string[];
   exchanges: string[];
   selectedExchange: string;
+  selectedSector: string;
   totalSymbols: number;
   loading: boolean;
   connectionLabel: string;

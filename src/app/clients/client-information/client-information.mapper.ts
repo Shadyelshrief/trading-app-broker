@@ -78,7 +78,7 @@ function mapPortfolio(value: unknown): ClientPortfolio | null {
     ? {
         portfolio,
         portfolioId: portfolioId ?? portfolio,
-        custodyType: toString(record?.['custodyType'] ?? record?.['custody_type']) ?? '',
+        custodyType: toString(record?.['custodyType'] ?? record?.['custody_type'] ?? record?.['type']) ?? '',
         marketsAccounts: mapMarketAccountsResponse(record?.['marketsAccounts'] ?? record?.['marketAccounts']),
         cashAccounts: mapCashAccountsResponse(record?.['cashAccounts'])
       }

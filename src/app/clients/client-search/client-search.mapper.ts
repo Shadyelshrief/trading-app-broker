@@ -25,7 +25,9 @@ export function mapClientSearchResult(value: unknown): ClientSearchResult | null
   return clientId
     ? {
         clientId,
-        clientName: toString(record?.['clientName'] ?? record?.['name'] ?? record?.['label']) ?? clientId
+        clientName:
+          toString(record?.['clientName'] ?? record?.['name'] ?? record?.['label'] ?? record?.['fullName'] ?? record?.['username'] ?? record?.['friendlyId']) ??
+          clientId
       }
     : null;
 }
@@ -41,7 +43,7 @@ export function mapArray(response: unknown): unknown[] {
     return [];
   }
 
-  for (const key of ['items', 'data', 'rows', 'results', 'clients', 'portfolios', 'accounts', 'deliveryChannels']) {
+  for (const key of ['body', 'items', 'data', 'rows', 'results', 'clients', 'portfolios', 'accounts', 'deliveryChannels']) {
     if (Array.isArray(record[key])) {
       return record[key] as unknown[];
     }
