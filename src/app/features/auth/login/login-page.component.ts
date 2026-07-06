@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -16,6 +17,13 @@ import { AuthChromeComponent } from '../auth-chrome/auth-chrome.component';
 import { loginPasswordFieldValidators, usernameFieldValidators } from '../../../shared/validation/auth-validators';
 import { readHttpErrorMessage } from '../../../shared/utils/http-error.util';
 
+const REMEMBERED_LOGIN_STORAGE_KEY = 'broker_auth_v1_remembered_login';
+
+interface RememberedLogin {
+  username: string;
+  password: string;
+}
+
 @Component({
   selector: 'app-login-page',
   standalone: true,
@@ -24,6 +32,7 @@ import { readHttpErrorMessage } from '../../../shared/utils/http-error.util';
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
+    MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
     MatSnackBarModule,
@@ -48,10 +57,12 @@ export class LoginPageComponent {
 
   protected readonly form = this.fb.nonNullable.group({
     username: ['', usernameFieldValidators],
-    password: ['', loginPasswordFieldValidators]
+    password: ['', loginPasswordFieldValidators],
+    rememberPassword: [false]
   });
 
   constructor() {
+    this.restoreRememberedCredentials();
     this.auth.prepareLoginEncryption();
   }
 
@@ -67,7 +78,7 @@ export class LoginPageComponent {
       return;
     }
 
-    const { username, password } = this.form.getRawValue();
+    const { username, password, rememberPassword } = this.form.getRawValue();
 
     this.loading.set(true);
 
@@ -79,6 +90,8 @@ export class LoginPageComponent {
       )
       .subscribe({
         next: (response) => {
+          this.persistRememberedCredentials(username, password, rememberPassword);
+
           if (response.warningMessage) {
             this.snackBar.open(response.warningMessage, 'Dismiss', { duration: 5000 });
           }
@@ -103,5 +116,47 @@ export class LoginPageComponent {
           this.form.patchValue({ password: '' });
         }
       });
+  }
+
+  private restoreRememberedCredentials(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const raw = window.localStorage.getItem(REMEMBERED_LOGIN_STORAGE_KEY);
+
+    if (!raw) {
+      return;
+    }
+
+    try {
+      const remembered = JSON.parse(raw) as Partial<RememberedLogin>;
+
+      if (typeof remembered.username === 'string' && typeof remembered.password === 'string') {
+        this.form.patchValue({
+          username: remembered.username,
+          password: remembered.password,
+          rememberPassword: true
+        });
+      }
+    } catch {
+      window.localStorage.removeItem(REMEMBERED_LOGIN_STORAGE_KEY);
+    }
+  }
+
+  private persistRememberedCredentials(username: string, password: string, rememberPassword: boolean): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (!rememberPassword) {
+      window.localStorage.removeItem(REMEMBERED_LOGIN_STORAGE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(
+      REMEMBERED_LOGIN_STORAGE_KEY,
+      JSON.stringify({ username, password } satisfies RememberedLogin)
+    );
   }
 }

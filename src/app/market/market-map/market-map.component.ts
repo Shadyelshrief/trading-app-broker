@@ -3,16 +3,24 @@ import {
   ChangeDetectionStrategy,
   Component,
   HostListener,
+  OnInit,
   inject,
   input,
   signal
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
-import { MarketDropdownComponent } from '../../shared/components';
+import { LinkedFilterGroupControlComponent, MarketDropdownComponent } from '../../shared/components';
+import {
+  LinkedFilterGroupId,
+  LinkedFilterGroupService,
+  readLinkedFilterGroupFromState
+} from '../../shared/services/linked-filter-group.service';
 import {
   buildMarketMapTooltip,
   criteriaLabel as resolveCriteriaLabel,
@@ -35,19 +43,36 @@ interface TileContextMenuState {
 @Component({
   selector: 'app-market-map',
   standalone: true,
-  imports: [AsyncPipe, DatePipe, NgClass, MatFormFieldModule, MatSelectModule, MatTooltipModule, MarketDropdownComponent],
+  imports: [
+    AsyncPipe,
+    DatePipe,
+    NgClass,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatTooltipModule,
+    LinkedFilterGroupControlComponent,
+    MarketDropdownComponent
+  ],
   templateUrl: './market-map.component.html',
   styleUrl: './market-map.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [MarketMapFacade]
 })
-export class MarketMapComponent {
+export class MarketMapComponent implements OnInit {
   readonly state = input<{ title: string; route: string; section?: string; screen?: string; context?: Record<string, unknown> }>();
 
   protected readonly facade = inject(MarketMapFacade);
   protected readonly workspace = inject(WorkspaceLayoutService);
+  private readonly linkedFilters = inject(LinkedFilterGroupService);
+  private readonly linkedFilterSourceId = this.linkedFilters.createSourceId('market-map');
+  private readonly linkedFilterGroupSubject = this.linkedFilters.createGroupSubject();
   protected readonly vm$ = this.facade.vm$;
   protected readonly contextMenu = signal<TileContextMenuState | null>(null);
+  protected readonly linkedFilterGroup = signal<LinkedFilterGroupId | null>(null);
+  private currentMarket: MarketMapFilters['market'] = 'adx';
+  private currentSortOrder: MarketMapFilters['sortOrder'] = 'DESC';
+  private currentSortCriteria: MarketMapFilters['sortCriteria'] = 'CHANGE_PERCENT';
   protected readonly contextActions = [
     { id: 'watchlist', label: 'Add To Watch List' },
     { id: 'watchlist-wizard', label: 'Add To Watch List Wizard' },
@@ -62,16 +87,65 @@ export class MarketMapComponent {
     { id: 'time-sales', label: 'Time & Sales' }
   ] as const;
 
+  constructor() {
+    this.linkedFilters
+      .observe<MarketMapFilters['market']>(this.linkedFilterGroupSubject, this.linkedFilterSourceId, 'market')
+      .pipe(takeUntilDestroyed())
+      .subscribe((market) => this.applyMarket(market, false));
+
+    this.linkedFilters
+      .observe<MarketMapFilters['sortOrder']>(this.linkedFilterGroupSubject, this.linkedFilterSourceId, 'sortOrder')
+      .pipe(takeUntilDestroyed())
+      .subscribe((sortOrder) => this.applySortOrder(sortOrder, false));
+
+    this.linkedFilters
+      .observe<MarketMapFilters['sortCriteria']>(this.linkedFilterGroupSubject, this.linkedFilterSourceId, 'sortCriteria')
+      .pipe(takeUntilDestroyed())
+      .subscribe((sortCriteria) => this.applySortCriteria(sortCriteria, false));
+  }
+
+  ngOnInit(): void {
+    this.setLinkedFilterGroup(readLinkedFilterGroupFromState(this.state()));
+  }
+
   protected selectMarket(market: MarketMapFilters['market']): void {
-    this.facade.selectMarket(market);
+    this.applyMarket(market, true);
   }
 
   protected selectSortOrder(sortOrder: MarketMapFilters['sortOrder']): void {
-    this.facade.selectSortOrder(sortOrder);
+    this.applySortOrder(sortOrder, true);
   }
 
   protected selectSortCriteria(sortCriteria: MarketMapFilters['sortCriteria']): void {
-    this.facade.selectSortCriteria(sortCriteria);
+    this.applySortCriteria(sortCriteria, true);
+  }
+
+  protected setLinkedFilterGroup(groupId: LinkedFilterGroupId | null): void {
+    if (groupId === this.linkedFilterGroup()) {
+      return;
+    }
+
+    this.linkedFilterGroupSubject.next(null);
+    this.linkedFilterGroup.set(groupId);
+    const groupState = this.linkedFilters.joinGroup(groupId, this.linkedFilterSourceId, {
+      market: this.currentMarket,
+      sortOrder: this.currentSortOrder,
+      sortCriteria: this.currentSortCriteria
+    });
+
+    if (typeof groupState['market'] === 'string') {
+      this.applyMarket(groupState['market'] as MarketMapFilters['market'], false);
+    }
+
+    if (isMarketMapSortOrder(groupState['sortOrder'])) {
+      this.applySortOrder(groupState['sortOrder'], false);
+    }
+
+    if (isMarketMapSortCriteria(groupState['sortCriteria'])) {
+      this.applySortCriteria(groupState['sortCriteria'], false);
+    }
+
+    this.linkedFilterGroupSubject.next(groupId);
   }
 
   protected tooltipFor(symbol: MarketMapSymbol): string {
@@ -235,6 +309,64 @@ export class MarketMapComponent {
   }
 
   captureState() {
-    return this.state();
+    const state = this.state();
+    const context = { ...(state?.context ?? {}) };
+
+    if (this.linkedFilterGroup()) {
+      context['linkedFilterGroup'] = this.linkedFilterGroup();
+    } else {
+      delete context['linkedFilterGroup'];
+    }
+
+    return { ...(state ?? {}), context };
   }
+
+  private applyMarket(market: MarketMapFilters['market'], publish: boolean): void {
+    const next = market.toLowerCase() as MarketMapFilters['market'];
+
+    if (next === this.currentMarket) {
+      return;
+    }
+
+    this.currentMarket = next;
+    this.facade.selectMarket(next);
+
+    if (publish) {
+      this.linkedFilters.publish(this.linkedFilterGroup(), this.linkedFilterSourceId, 'market', next);
+    }
+  }
+
+  private applySortOrder(sortOrder: MarketMapFilters['sortOrder'], publish: boolean): void {
+    if (sortOrder === this.currentSortOrder) {
+      return;
+    }
+
+    this.currentSortOrder = sortOrder;
+    this.facade.selectSortOrder(sortOrder);
+
+    if (publish) {
+      this.linkedFilters.publish(this.linkedFilterGroup(), this.linkedFilterSourceId, 'sortOrder', sortOrder);
+    }
+  }
+
+  private applySortCriteria(sortCriteria: MarketMapFilters['sortCriteria'], publish: boolean): void {
+    if (sortCriteria === this.currentSortCriteria) {
+      return;
+    }
+
+    this.currentSortCriteria = sortCriteria;
+    this.facade.selectSortCriteria(sortCriteria);
+
+    if (publish) {
+      this.linkedFilters.publish(this.linkedFilterGroup(), this.linkedFilterSourceId, 'sortCriteria', sortCriteria);
+    }
+  }
+}
+
+function isMarketMapSortOrder(value: unknown): value is MarketMapFilters['sortOrder'] {
+  return value === 'ASC' || value === 'DESC';
+}
+
+function isMarketMapSortCriteria(value: unknown): value is MarketMapFilters['sortCriteria'] {
+  return value === 'CHANGE_PERCENT' || value === 'LAST_PRICE' || value === 'NUMBER_OF_TRADES';
 }

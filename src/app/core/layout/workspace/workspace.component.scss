@@ -1,75 +1,58 @@
 :host {
   display: block;
   flex: 1;
+  min-width: 0;
   min-height: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .workspace-shell {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
   min-height: 0;
   height: 100%;
+  max-width: 100%;
   overflow: hidden;
-  padding: 1rem;
+  padding: 0.25rem;
 }
 
-.workspace-shell__toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.95rem 1rem;
-  border-radius: 1.1rem;
-  border: 1px solid var(--border-subtle);
-  background: rgba(7, 15, 23, 0.58);
+:host-context(body.gl-popout-window) .workspace-shell {
+  gap: 0;
+  padding: 0;
 }
 
-.workspace-shell__eyebrow {
-  margin: 0 0 0.35rem;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-h3,
 p {
   margin: 0;
 }
 
-.workspace-shell__actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  color: var(--text-secondary);
-}
-
-.workspace-shell__actions button {
-  border: 1px solid rgba(96, 135, 255, 0.32);
-  border-radius: 999px;
-  background: rgba(96, 135, 255, 0.12);
-  color: var(--text-primary);
-  padding: 0.7rem 1rem;
-  cursor: pointer;
+.workspace-shell__message {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(255, 107, 107, 0.24);
+  border-radius: 0.8rem;
+  background: rgba(255, 107, 107, 0.08);
+  color: var(--danger);
+  font-size: 0.85rem;
 }
 
 .workspace-shell__host {
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
   height: 100%;
   width: 100%;
-  border-radius: 1.3rem;
+  max-width: 100%;
+  border-radius: 0.7rem;
   border: 1px solid var(--border-subtle);
-  overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent),
-    rgba(6, 14, 22, 0.9);
+  overflow: clip;
+  background: var(--surface-2);
 }
 
-@media (max-width: 860px) {
-  .workspace-shell__toolbar,
-  .workspace-shell__actions {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+:host-context(body.gl-popout-window) .workspace-shell__host {
+  border: 0;
+  border-radius: 0;
+  background: var(--surface-1);
 }

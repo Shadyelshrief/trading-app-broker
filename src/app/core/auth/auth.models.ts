@@ -14,6 +14,8 @@ export interface AdminLoginRequest extends LoginRequest {
 
 export interface LoginResponse {
   accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
   user: AuthUser;
   warningMessage?: string;
 }

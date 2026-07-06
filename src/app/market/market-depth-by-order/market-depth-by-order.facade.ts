@@ -19,7 +19,6 @@ import {
   getSharedSymbolOptions
 } from '../../shared/utils/symbol-reference.util';
 import {
-  mapConnectionLabel,
   mapConnectionState,
   mapMboMessageToDepthViewModel
 } from './market-depth-by-order.mapper';
@@ -83,7 +82,6 @@ export class MarketDepthByOrderFacade {
               symbol,
               orderType,
               connectionState: connection,
-              connectionLabel: mapConnectionLabel(connection),
               book,
               error:
                 payload && typeof payload === 'object' && '__error' in payload
@@ -109,7 +107,6 @@ export class MarketDepthByOrderFacade {
       loading: !feedState.book && !feedState.error,
       error: feedState.error,
       connectionState: feedState.connectionState,
-      connectionLabel: feedState.connectionLabel,
       lastUpdated: feedState.book?.lastUpdated,
       settings,
       symbolOptions: getSharedSymbolOptions(),

@@ -55,3 +55,39 @@ export function findSharedSymbolOption(symbolId: string, market?: string): Share
     ) ?? null
   );
 }
+
+export function normalizeSharedSymbolOption(value: unknown): SharedSymbolOption | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const symbolId = typeof record['symbolId'] === 'string' ? record['symbolId'] : null;
+  const market =
+    typeof record['market'] === 'string'
+      ? record['market']
+      : typeof record['marketShortName'] === 'string'
+        ? record['marketShortName']
+        : undefined;
+
+  if (!symbolId) {
+    return null;
+  }
+
+  const existing = findSharedSymbolOption(symbolId, market);
+
+  if (existing) {
+    return existing;
+  }
+
+  if (typeof record['symbolName'] !== 'string' || !market) {
+    return null;
+  }
+
+  return {
+    symbolId: symbolId.trim().toUpperCase(),
+    symbolName: record['symbolName'],
+    market: market.trim().toUpperCase(),
+    currency: typeof record['currency'] === 'string' ? record['currency'] : ''
+  };
+}

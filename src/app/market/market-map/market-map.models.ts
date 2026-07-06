@@ -59,6 +59,5 @@ export interface MarketMapViewModel {
   loading: boolean;
   error?: string;
   connectionState: MarketMapConnectionState;
-  connectionLabel: string;
   lastUpdated?: number;
 }

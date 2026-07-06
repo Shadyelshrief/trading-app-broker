@@ -114,19 +114,6 @@ export function mapConnectionState(state: WebSocketState | null): TimeSalesConne
   return 'DISCONNECTED';
 }
 
-export function mapConnectionLabel(state: TimeSalesConnectionState): string {
-  switch (state) {
-    case 'CONNECTED':
-      return 'Feed live';
-    case 'RECONNECTING':
-      return 'Reconnecting...';
-    case 'CONNECTING':
-      return 'Connecting...';
-    default:
-      return 'Disconnected';
-  }
-}
-
 export function symbolDisplayValue(symbol: SymbolOption | null, fallbackQuery = ''): string {
   if (!symbol) {
     return fallbackQuery;

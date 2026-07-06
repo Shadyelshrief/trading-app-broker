@@ -106,19 +106,6 @@ export function mapConnectionState(state: WebSocketState | null): MarketIndicesC
   return 'DISCONNECTED';
 }
 
-export function mapConnectionLabel(state: MarketIndicesConnectionState): string {
-  switch (state) {
-    case 'CONNECTED':
-      return 'Realtime connected';
-    case 'RECONNECTING':
-      return 'Reconnecting...';
-    case 'CONNECTING':
-      return 'Connecting...';
-    default:
-      return 'Disconnected';
-  }
-}
-
 export function directionClass(row: MarketIndexRow): string {
   return getDirectionClass(row.changeDirection);
 }

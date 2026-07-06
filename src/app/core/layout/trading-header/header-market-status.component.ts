@@ -1,5 +1,5 @@
 import { AsyncPipe, DecimalPipe, NgClass } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 
@@ -15,6 +15,7 @@ import { HeaderMarketStatusFacade } from './header-market-status.facade';
   providers: [HeaderMarketStatusFacade]
 })
 export class HeaderMarketStatusComponent {
+  readonly state = input<unknown>();
   protected readonly facade = inject(HeaderMarketStatusFacade);
   protected readonly vm$ = this.facade.vm$;
 

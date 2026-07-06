@@ -136,19 +136,6 @@ export function mapConnectionTone(
   return 'disconnected';
 }
 
-export function mapConnectionLabel(tone: SavedWatchListViewModelTone): string {
-  switch (tone) {
-    case 'connected':
-      return 'Feed live';
-    case 'reconnecting':
-      return 'Reconnecting...';
-    case 'connecting':
-      return 'Connecting...';
-    default:
-      return 'Disconnected';
-  }
-}
-
 type SavedWatchListViewModelTone = 'connected' | 'connecting' | 'reconnecting' | 'disconnected';
 
 function matchesSourceFilters(symbol: SymbolOption, config: WatchListConfig): boolean {

@@ -100,7 +100,6 @@ export interface SavedWatchListViewModel {
   rows: WatchListRow[];
   loading: boolean;
   error?: string;
-  connectionLabel: string;
   connectionTone: 'connected' | 'connecting' | 'reconnecting' | 'disconnected';
   lastUpdatedAt: number | null;
   settings: MarketGridSettings;

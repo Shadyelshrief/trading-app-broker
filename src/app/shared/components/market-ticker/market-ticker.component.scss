@@ -18,6 +18,12 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
+:host-context([data-theme='light']) .market-ticker {
+  border-color: var(--border-subtle);
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
 .market-ticker__viewport {
   overflow: hidden;
   width: 100%;

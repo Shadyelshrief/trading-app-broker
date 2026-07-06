@@ -2,14 +2,14 @@ import { MarketIndexReference, MarketOption } from './market-indices.models';
 
 export const MARKET_INDEX_OPTIONS: readonly MarketOption[] = [
   { label: 'All Markets', value: 'all' },
-  { label: 'Saudi Arabian Stock Market', value: 'saudi' },
+  { label: 'Saudi Arabian Stock Market', value: 'tadawul' },
   { label: 'Dubai Stock Market', value: 'dfm' },
   { label: 'AbuDhabi Stock Market', value: 'adx' }
 ] as const;
 
 export const MARKET_INDEX_REFERENCES: readonly MarketIndexReference[] = [
   {
-    marketFilter: 'saudi',
+    marketFilter: 'tadawul',
     exchange: 'tadawul',
     indexId: 'tasi',
     index: 'TASI',
@@ -19,7 +19,7 @@ export const MARKET_INDEX_REFERENCES: readonly MarketIndexReference[] = [
     marketShortName: 'TADAWUL'
   },
   {
-    marketFilter: 'saudi',
+    marketFilter: 'tadawul',
     exchange: 'tadawul',
     indexId: 'nomuc',
     index: 'NOMUC',

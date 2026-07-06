@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { filter, startWith } from 'rxjs';
+import { filter } from 'rxjs';
 
 import { WorkspaceLayoutService } from './workspace-layout.service';
 
@@ -35,7 +35,6 @@ export class WorkspaceComponent implements AfterViewInit, OnDestroy {
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-        startWith({ urlAfterRedirects: this.router.url } as NavigationEnd),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((event) => {
@@ -47,7 +46,4 @@ export class WorkspaceComponent implements AfterViewInit, OnDestroy {
     this.workspace.destroy();
   }
 
-  protected resetLayout(): void {
-    this.workspace.resetLayout();
-  }
 }

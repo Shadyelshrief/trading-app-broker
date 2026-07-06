@@ -1,42 +1,35 @@
 @if (vm$ | async; as vm) {
   <section class="market-map-page">
-    <header class="market-map-page__toolbar">
+    <header class="market-map-page__toolbar screen-title-card">
       <div>
         <p class="market-map-page__eyebrow">Pricing</p>
         <h2>Market Map</h2>
       </div>
 
-      <div class="market-map-page__filters">
-        <app-market-dropdown [value]="vm.filters.market" (valueChange)="selectMarket($any($event))" />
-
-        <mat-form-field appearance="outline">
-          <mat-label>Sort Order</mat-label>
-          <mat-select [value]="vm.filters.sortOrder" (selectionChange)="selectSortOrder($event.value)">
-            @for (option of vm.sortOrderOptions; track option.value) {
-              <mat-option [value]="option.value">{{ option.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Sort Criteria</mat-label>
-          <mat-select [value]="vm.filters.sortCriteria" (selectionChange)="selectSortCriteria($event.value)">
-            @for (option of vm.sortCriteriaOptions; track option.value) {
-              <mat-option [value]="option.value">{{ option.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <div
-        class="market-map-page__status"
-        [class.market-map-page__status--reconnecting]="vm.connectionState === 'RECONNECTING' || vm.connectionState === 'CONNECTING'"
-        [class.market-map-page__status--disconnected]="vm.connectionState === 'DISCONNECTED'"
-      >
-        <span class="market-map-page__status-dot"></span>
-        <span>{{ vm.connectionLabel }}</span>
-      </div>
     </header>
+
+    <section class="market-map-page__filters screen-filter-panel">
+      <app-market-dropdown [value]="vm.filters.market" (valueChange)="selectMarket($any($event))" />
+      <app-linked-filter-group-control [value]="linkedFilterGroup()" (valueChange)="setLinkedFilterGroup($event)" />
+
+      <mat-form-field appearance="outline">
+        <mat-label>Sort Order</mat-label>
+        <mat-select [value]="vm.filters.sortOrder" (selectionChange)="selectSortOrder($event.value)">
+          @for (option of vm.sortOrderOptions; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Sort Criteria</mat-label>
+        <mat-select [value]="vm.filters.sortCriteria" (selectionChange)="selectSortCriteria($event.value)">
+          @for (option of vm.sortCriteriaOptions; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </section>
 
     @if (vm.error) {
       <section class="market-map-page__banner">

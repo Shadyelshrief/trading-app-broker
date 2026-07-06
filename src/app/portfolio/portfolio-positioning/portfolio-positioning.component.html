@@ -7,10 +7,6 @@
       </div>
 
       <div class="portfolio-positioning__actions">
-        <span class="portfolio-positioning__connection" [class.portfolio-positioning__connection--live]="vm.connectionState.status === 'authenticated' || vm.connectionState.status === 'connected'">
-          <span></span>
-          {{ vm.connectionState.status }}
-        </span>
         <button mat-stroked-button type="button" [disabled]="!vm.selectedClient || !vm.selectedPortfolio" (click)="openCashDetails(vm)">
           Cash Details
         </button>

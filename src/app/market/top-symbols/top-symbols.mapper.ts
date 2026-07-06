@@ -231,19 +231,6 @@ export function mapConnectionState(state: WebSocketState | null): TopSymbolsConn
   return 'DISCONNECTED';
 }
 
-export function mapConnectionLabel(state: TopSymbolsConnectionState): string {
-  switch (state) {
-    case 'CONNECTED':
-      return 'Feed live';
-    case 'RECONNECTING':
-      return 'Reconnecting...';
-    case 'CONNECTING':
-      return 'Connecting...';
-    default:
-      return 'Disconnected';
-  }
-}
-
 function mapTopSymbolRecord(
   entry: unknown,
   exchange: string,

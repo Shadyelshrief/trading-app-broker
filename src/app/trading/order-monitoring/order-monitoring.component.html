@@ -25,15 +25,12 @@
         </mat-autocomplete>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Market</mat-label>
-        <mat-select formControlName="market">
-          <mat-option value="">All Markets</mat-option>
-          @for (market of vm.markets; track market.value) {
-            <mat-option [value]="market.value">{{ market.label }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <app-market-dropdown
+        [includeAll]="true"
+        allValue=""
+        [value]="filters.controls.market.value"
+        (valueChange)="filters.controls.market.setValue($event)"
+      />
 
       <mat-form-field appearance="outline">
         <mat-label>Symbol</mat-label>

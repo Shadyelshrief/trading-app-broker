@@ -56,21 +56,6 @@ export function mapConnectionState(
   return 'DISCONNECTED';
 }
 
-export function mapConnectionLabel(
-  state: 'CONNECTED' | 'CONNECTING' | 'RECONNECTING' | 'DISCONNECTED'
-): string {
-  switch (state) {
-    case 'CONNECTED':
-      return 'Feed live';
-    case 'RECONNECTING':
-      return 'Reconnecting...';
-    case 'CONNECTING':
-      return 'Connecting...';
-    default:
-      return 'Disconnected';
-  }
-}
-
 function createEmptyRow(price: number): PriceSpectrumRow {
   return {
     price,

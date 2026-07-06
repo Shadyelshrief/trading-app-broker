@@ -7,13 +7,6 @@
         <p>Private execution transactions received since login for the current authorized session.</p>
       </div>
 
-      <span
-        class="execution-ticker__status"
-        [class.execution-ticker__status--warn]="vm.connectionState === 'CONNECTING' || vm.connectionState === 'RECONNECTING'"
-        [class.execution-ticker__status--down]="vm.connectionState === 'DISCONNECTED'"
-      >
-        {{ vm.connectionLabel }}
-      </span>
     </header>
 
     @if (vm.error) {

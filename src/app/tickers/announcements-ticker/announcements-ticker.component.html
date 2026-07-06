@@ -9,14 +9,11 @@
     </header>
 
     <section class="ticker-page__filters ticker-page__filters--compact">
-      <mat-form-field appearance="outline">
-        <mat-label>Market</mat-label>
-        <mat-select [value]="vm.settings.market" (selectionChange)="facade.updateMarket($event.value)">
-          @for (market of marketOptions; track market.value) {
-            <mat-option [value]="market.value">{{ market.label }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <app-market-dropdown
+        [includeAll]="true"
+        [value]="vm.settings.market ?? 'all'"
+        (valueChange)="facade.updateMarket($any($event))"
+      />
 
       <mat-form-field appearance="outline">
         <mat-label>Speed Seconds</mat-label>

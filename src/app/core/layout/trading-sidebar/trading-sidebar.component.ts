@@ -1,30 +1,41 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { IsActiveMatchOptions, RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  QueryList,
+  ViewChildren,
+  inject,
+  signal
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { APP_MENU_GROUPS } from '../../navigation/app-menu.config';
 import { NavMenuGroup, NavMenuItem } from '../../navigation/app-menu.types';
 import { ShellLayoutService } from '../shell-layout.service';
 import { TradingIconComponent } from '../trading-icon/trading-icon.component';
+import { WorkspaceLayoutService } from '../workspace/workspace-layout.service';
 
 @Component({
   selector: 'app-trading-sidebar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, TradingIconComponent],
+  imports: [TradingIconComponent],
   templateUrl: './trading-sidebar.component.html',
   styleUrl: './trading-sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TradingSidebarComponent {
+export class TradingSidebarComponent implements AfterViewInit {
+  @ViewChildren('workspaceMenuItem')
+  private readonly workspaceMenuElements!: QueryList<ElementRef<HTMLElement>>;
+
   protected readonly layout = inject(ShellLayoutService);
+  private readonly workspace = inject(WorkspaceLayoutService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly registeredMenuElements = new Set<HTMLElement>();
 
   protected readonly groups: readonly NavMenuGroup[] = APP_MENU_GROUPS;
 
-  protected readonly linkMatch: IsActiveMatchOptions = {
-    paths: 'exact',
-    queryParams: 'ignored',
-    matrixParams: 'ignored',
-    fragment: 'ignored'
-  };
   protected readonly expanded = signal<ReadonlySet<string>>(
     new Set(APP_MENU_GROUPS.map((g) => g.id))
   );
@@ -35,6 +46,17 @@ export class TradingSidebarComponent {
       )
     )
   );
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.unregisterMenuDragSources());
+  }
+
+  ngAfterViewInit(): void {
+    queueMicrotask(() => this.registerMenuDragSources());
+    this.workspaceMenuElements.changes
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.registerMenuDragSources());
+  }
 
   protected toggleGroup(id: string): void {
     this.expanded.update((current) => {
@@ -80,17 +102,31 @@ export class TradingSidebarComponent {
     return this.isItemExpanded(id);
   }
 
-  protected collapseAndNavigate(): void {
-    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 960px)').matches) {
-      this.layout.closeMobileNav();
-    }
-  }
-
   protected trackByGroupId(_index: number, group: NavMenuGroup): string {
     return group.id;
   }
 
   protected trackByItemId(_index: number, item: NavMenuItem): string {
     return item.id;
+  }
+
+  private registerMenuDragSources(): void {
+    this.unregisterMenuDragSources();
+    this.workspaceMenuElements.forEach((source) => {
+      const route = source.nativeElement.dataset['route'];
+
+      if (route) {
+        this.workspace.registerRouteDragSource(source.nativeElement, route);
+        this.registeredMenuElements.add(source.nativeElement);
+      }
+    });
+  }
+
+  private unregisterMenuDragSources(): void {
+    for (const element of this.registeredMenuElements) {
+      this.workspace.unregisterDragSource(element);
+    }
+
+    this.registeredMenuElements.clear();
   }
 }

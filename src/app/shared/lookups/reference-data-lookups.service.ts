@@ -1,6 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of, shareReplay } from 'rxjs';
+import { Observable, catchError, map, of, shareReplay, switchMap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 
@@ -47,18 +47,41 @@ interface ProductDto {
   symbol?: string;
 }
 
+interface LanguageDto {
+  id?: string;
+  languageId?: string;
+  isDefault?: boolean;
+  default?: boolean;
+}
+
+const DEFAULT_LANGUAGE_ID = '';
+
 @Injectable({ providedIn: 'root' })
 export class ReferenceDataLookupsService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.apiUrl;
-  private readonly markets$ = this.http.get<ApiResponse<MarketDto[]>>(`${this.base}/markets`).pipe(
+  private readonly sectorsByMarket = new Map<string, Observable<SectorLookupOption[]>>();
+  private readonly productsByMarket = new Map<string, Observable<ProductLookupOption[]>>();
+  private readonly languageId$ = this.http.get<ApiResponse<LanguageDto[]>>(`${this.base}/languages`).pipe(
+    map((response) => resolveLanguageId(response.body ?? [])),
+    catchError(() => of(DEFAULT_LANGUAGE_ID)),
+    shareReplay({ bufferSize: 1, refCount: false })
+  );
+  private readonly markets$ = this.languageId$.pipe(
+    switchMap((languageId) =>
+      this.http.get<ApiResponse<MarketDto[]>>(`${this.base}/markets`, { params: languageParams(languageId) })
+    ),
     map((response) => (response.body ?? []).map(mapMarket).filter((option): option is MarketLookupOption => option !== null)),
     catchError(() => of([] as MarketLookupOption[])),
-    shareReplay({ bufferSize: 1, refCount: true })
+    shareReplay({ bufferSize: 1, refCount: false })
   );
 
   getMarkets(): Observable<MarketLookupOption[]> {
     return this.markets$;
+  }
+
+  getLanguageId(): Observable<string> {
+    return this.languageId$;
   }
 
   getSectorsByMarket(marketCode: string): Observable<SectorLookupOption[]> {
@@ -68,10 +91,21 @@ export class ReferenceDataLookupsService {
       return of([]);
     }
 
-    return this.http.get<ApiResponse<SectorDto[]>>(`${this.base}/markets/${encodeURIComponent(code)}/sectors`).pipe(
-      map((response) => (response.body ?? []).map(mapSector).filter((option): option is SectorLookupOption => option !== null)),
-      catchError(() => of([] as SectorLookupOption[]))
-    );
+    if (!this.sectorsByMarket.has(code)) {
+      this.sectorsByMarket.set(
+        code,
+        this.languageId$.pipe(
+          switchMap((languageId) =>
+            this.http.get<ApiResponse<SectorDto[]>>(`${this.base}/markets/${encodeURIComponent(code)}/sectors`, { params: languageParams(languageId) })
+          ),
+          map((response) => (response.body ?? []).map(mapSector).filter((option): option is SectorLookupOption => option !== null)),
+          catchError(() => of([] as SectorLookupOption[])),
+          shareReplay({ bufferSize: 1, refCount: false })
+        )
+      );
+    }
+
+    return this.sectorsByMarket.get(code) ?? of([]);
   }
 
   getProductsByMarket(marketCode: string): Observable<ProductLookupOption[]> {
@@ -81,11 +115,31 @@ export class ReferenceDataLookupsService {
       return of([]);
     }
 
-    return this.http.get<ApiResponse<ProductDto[]>>(`${this.base}/markets/${encodeURIComponent(code)}/products`).pipe(
-      map((response) => (response.body ?? []).map((product) => mapProduct(product, code)).filter((option): option is ProductLookupOption => option !== null)),
-      catchError(() => of([] as ProductLookupOption[]))
-    );
+    if (!this.productsByMarket.has(code)) {
+      this.productsByMarket.set(
+        code,
+        this.languageId$.pipe(
+          switchMap((languageId) =>
+            this.http.get<ApiResponse<ProductDto[]>>(`${this.base}/markets/${encodeURIComponent(code)}/products`, { params: languageParams(languageId) })
+          ),
+          map((response) => (response.body ?? []).map((product) => mapProduct(product, code)).filter((option): option is ProductLookupOption => option !== null)),
+          catchError(() => of([] as ProductLookupOption[])),
+          shareReplay({ bufferSize: 1, refCount: false })
+        )
+      );
+    }
+
+    return this.productsByMarket.get(code) ?? of([]);
   }
+}
+
+function resolveLanguageId(languages: LanguageDto[]): string {
+  const language = languages.find((item) => item.isDefault || item.default) ?? languages[0];
+  return language?.languageId ?? language?.id ?? DEFAULT_LANGUAGE_ID;
+}
+
+function languageParams(languageId: string): HttpParams {
+  return languageId ? new HttpParams().set('languageId', languageId) : new HttpParams();
 }
 
 function mapMarket(market: MarketDto): MarketLookupOption | null {

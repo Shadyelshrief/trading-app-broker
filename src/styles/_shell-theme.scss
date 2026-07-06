@@ -14,3 +14,197 @@
   --danger: #c93636;
   --shadow-xl: 0 18px 60px rgba(15, 35, 70, 0.12);
 }
+
+:root[data-theme='light'] body {
+  background:
+    radial-gradient(circle at top left, rgba(61, 94, 230, 0.16), transparent 34%),
+    radial-gradient(circle at top right, rgba(13, 159, 132, 0.12), transparent 28%),
+    linear-gradient(180deg, #f8fbff 0%, var(--app-bg) 58%, #dbe6f4 100%);
+}
+
+:root[data-theme='light'] body::before {
+  background-image:
+    linear-gradient(rgba(12, 36, 64, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 36, 64, 0.05) 1px, transparent 1px);
+}
+
+:root[data-theme='light'] .trading-header {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(236, 242, 252, 0.94));
+  box-shadow: 0 8px 32px rgba(15, 35, 70, 0.08);
+}
+
+:root[data-theme='light'] .app-shell__workspace,
+:root[data-theme='light'] .trading-sidebar {
+  background: var(--surface-1);
+}
+
+:root[data-theme='light'] .workspace-shell__host,
+:root[data-theme='light'] .workspace-shell__toolbar,
+:root[data-theme='light'] .market-grid-shell,
+:root[data-theme='light'] .market-chart,
+:root[data-theme='light'] .market-depth-book,
+:root[data-theme='light'] .price-spectrum-book,
+:root[data-theme='light'] [class*='__header'],
+:root[data-theme='light'] [class*='__toolbar'],
+:root[data-theme='light'] [class*='__filters'],
+:root[data-theme='light'] [class*='__controls'],
+:root[data-theme='light'] [class*='__form'],
+:root[data-theme='light'] [class*='__summary'],
+:root[data-theme='light'] [class*='__stats'],
+:root[data-theme='light'] [class*='__hero'],
+:root[data-theme='light'] [class*='__tabs'],
+:root[data-theme='light'] [class*='__ticker'],
+:root[data-theme='light'] [class*='__footer'],
+:root[data-theme='light'] [class*='__board'],
+:root[data-theme='light'] [class*='__book'],
+:root[data-theme='light'] [class*='__empty'],
+:root[data-theme='light'] [class*='__card'],
+:root[data-theme='light'] [class*='__panel'],
+:root[data-theme='light'] [class*='__meta'],
+:root[data-theme='light'] [class*='__workspace'],
+:root[data-theme='light'] [class*='__chart-card'],
+:root[data-theme='light'] [class*='__grid-card'],
+:root[data-theme='light'] [class*='__nat-mid'] {
+  background: var(--surface-2) !important;
+  color: var(--text-primary);
+}
+
+:root[data-theme='light'] [class*='__warning'] {
+  background: rgba(199, 125, 18, 0.1) !important;
+  border-color: rgba(199, 125, 18, 0.28) !important;
+  color: var(--warning) !important;
+}
+
+:root[data-theme='light'] [class*='__error'],
+:root[data-theme='light'] [class*='__validation'] {
+  background: rgba(201, 54, 54, 0.08) !important;
+  border-color: rgba(201, 54, 54, 0.24) !important;
+  color: var(--danger) !important;
+}
+
+:root[data-theme='light'] .lm_goldenlayout,
+:root[data-theme='light'] .lm_root,
+:root[data-theme='light'] .lm_content {
+  color: var(--text-primary);
+}
+
+:root[data-theme='light'] .lm_root {
+  background: transparent;
+}
+
+:root[data-theme='light'] .lm_stack {
+  background: #f3f7fd;
+  border-color: rgba(12, 36, 64, 0.16);
+}
+
+:root[data-theme='light'] .lm_stack:focus-within {
+  border-color: rgba(61, 94, 230, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(61, 94, 230, 0.15);
+}
+
+:root[data-theme='light'] .lm_content {
+  background: linear-gradient(180deg, #f8fbff, #eef4fb);
+}
+
+:root[data-theme='light'] .lm_content > * {
+  border-color: rgba(12, 36, 64, 0.12);
+  background: var(--surface-2);
+}
+
+:root[data-theme='light'] .lm_header {
+  background: #edf3fb;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+:root[data-theme='light'] .lm_tab {
+  background: #dfe8f4;
+  color: var(--text-secondary);
+  box-shadow: inset 0 -1px 0 var(--border-subtle);
+}
+
+:root[data-theme='light'] .lm_tab.lm_active {
+  background: #ffffff;
+  color: var(--text-primary);
+}
+
+:root[data-theme='light'] .lm_splitter {
+  background: rgba(61, 94, 230, 0.12);
+}
+
+:root[data-theme='light'] .lm_header .lm_controls .lm_tabdropdown::before {
+  color: var(--text-primary);
+}
+
+:root[data-theme='light'] .lm_header .lm_controls {
+  top: 1px;
+  right: 5px;
+  align-items: center;
+  gap: 2px;
+}
+
+:root[data-theme='light'] .lm_controls > *,
+:root[data-theme='light'] .lm_header .lm_tab .lm_close_tab {
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  color: #172033;
+  opacity: 0.78;
+}
+
+:root[data-theme='light'] .lm_controls > * {
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 4px;
+  transition: background-color 160ms ease, opacity 160ms ease;
+}
+
+:root[data-theme='light'] .lm_controls > *:hover,
+:root[data-theme='light'] .lm_header .lm_tab .lm_close_tab:hover,
+:root[data-theme='light'] .lm_header .lm_tab.lm_active .lm_close_tab {
+  opacity: 1;
+}
+
+:root[data-theme='light'] .lm_controls > *:hover {
+  background: rgba(12, 36, 64, 0.08);
+}
+
+:root[data-theme='light'] .lm_controls .lm_close,
+:root[data-theme='light'] .lm_controls .lm_maximise,
+:root[data-theme='light'] .lm_controls .lm_popout {
+  position: relative;
+}
+
+:root[data-theme='light'] .lm_header .lm_tab .lm_close_tab {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 11px;
+  height: 11px;
+}
+
+:root[data-theme='light'] .lm_controls .lm_popout {
+  background-image: url("../../node_modules/golden-layout/dist/img/lm_popout_black.png") !important;
+}
+
+:root[data-theme='light'] .lm_controls .lm_maximise {
+  background-image: url("../../node_modules/golden-layout/dist/img/lm_maximise_black.png") !important;
+}
+
+:root[data-theme='light'] .lm_controls .lm_close,
+:root[data-theme='light'] .lm_header .lm_tab .lm_close_tab {
+  background-image: url("../../node_modules/golden-layout/dist/img/lm_close_black.png") !important;
+}
+
+:root[data-theme='light'] .lm_maximised .lm_controls .lm_maximise {
+  background-image: url("../../node_modules/golden-layout/dist/img/lm_minimize_black.png") !important;
+}
+
+:root[data-theme='light'] .lm_controls .lm_close::before,
+:root[data-theme='light'] .lm_controls .lm_close::after,
+:root[data-theme='light'] .lm_controls .lm_maximise::before,
+:root[data-theme='light'] .lm_controls .lm_maximise::after,
+:root[data-theme='light'] .lm_controls .lm_popout::before,
+:root[data-theme='light'] .lm_controls .lm_popout::after,
+:root[data-theme='light'] .lm_header .lm_tab .lm_close_tab::before,
+:root[data-theme='light'] .lm_header .lm_tab .lm_close_tab::after {
+  content: none !important;
+}

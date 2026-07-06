@@ -10,6 +10,18 @@ import { ReferenceDataLookupsService } from '../../lookups/reference-data-lookup
   standalone: true,
   imports: [AsyncPipe, MatFormFieldModule, MatSelectModule],
   templateUrl: './market-dropdown.component.html',
+  styles: [
+    `
+      :host {
+        display: block;
+        min-width: 180px;
+      }
+
+      mat-form-field {
+        width: 100%;
+      }
+    `
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MarketDropdownComponent {

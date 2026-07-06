@@ -18,7 +18,6 @@ export interface MarketDepthViewModel {
   loading: boolean;
   error?: string;
   connectionState: 'CONNECTED' | 'CONNECTING' | 'RECONNECTING' | 'DISCONNECTED';
-  connectionLabel: string;
   lastUpdated?: number;
   settings: MarketGridSettings;
   symbolOptions: readonly SymbolOption[];

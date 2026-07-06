@@ -1,12 +1,15 @@
 @if (vm$ | async; as vm) {
   <section class="time-sales">
-    <header class="time-sales__toolbar">
-      <div class="time-sales__heading">
-        <div>
-          <p class="time-sales__eyebrow">Pricing</p>
-          <h2>Time &amp; Sales</h2>
-        </div>
+    <header class="time-sales__toolbar screen-title-card">
+      <div>
+        <p class="time-sales__eyebrow">Pricing</p>
+        <h2>Time &amp; Sales</h2>
+      </div>
 
+    </header>
+
+    <section class="time-sales__filters screen-filter-panel">
+      <div class="time-sales__heading">
         <mat-checkbox [formControl]="allSymbolsControl">All Symbols</mat-checkbox>
 
         <mat-form-field appearance="outline" class="time-sales__symbol-field">
@@ -34,6 +37,7 @@
           [value]="marketControl.value"
           (valueChange)="marketControl.setValue($any($event))"
         />
+        <app-linked-filter-group-control [value]="linkedFilterGroup()" (valueChange)="setLinkedFilterGroup($event)" />
 
         <mat-form-field appearance="outline" class="time-sales__quantity-field">
           <mat-label>Quantity &gt;=</mat-label>
@@ -45,18 +49,9 @@
         <button mat-stroked-button>Export</button>
         <button mat-stroked-button>Layout</button>
 
-        <div
-          class="time-sales__status"
-          [class.time-sales__status--reconnecting]="vm.connectionState === 'RECONNECTING' || vm.connectionState === 'CONNECTING'"
-          [class.time-sales__status--disconnected]="vm.connectionState === 'DISCONNECTED'"
-        >
-          <span class="time-sales__status-dot"></span>
-          <span>{{ vm.connectionLabel }}</span>
-        </div>
-
         <div class="time-sales__counter">{{ vm.rowCount }} trades</div>
       </div>
-    </header>
+    </section>
 
     @if (vm.error) {
       <section class="time-sales__banner">

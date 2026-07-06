@@ -99,6 +99,33 @@
   width: min(100%, 12rem);
 }
 
+.trading-header__workspace-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.trading-header__workspace-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(255, 107, 107, 0.26);
+  border-radius: 0.6rem;
+  background: rgba(255, 107, 107, 0.08);
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.trading-header__workspace-delete:hover {
+  background: rgba(255, 107, 107, 0.16);
+}
+
 .trading-header__search-field,
 .trading-header__workspace-field {
   margin-bottom: -1.25em;
@@ -248,7 +275,7 @@
     display: inline-flex;
   }
 
-  .trading-header__workspace-field {
+  .trading-header__workspace-control {
     display: none;
   }
 }

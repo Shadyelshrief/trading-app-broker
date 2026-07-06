@@ -1,4 +1,4 @@
-<mat-form-field appearance="outline">
+<mat-form-field appearance="outline" subscriptSizing="dynamic">
   <mat-label>{{ label }}</mat-label>
   <mat-select [disabled]="disabled" [value]="value" (selectionChange)="valueChange.emit($event.value)">
     @if (includeAll) {

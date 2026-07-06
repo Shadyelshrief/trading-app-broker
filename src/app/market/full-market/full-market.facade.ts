@@ -80,14 +80,6 @@ export class FullMarketFacade {
         selectedSector: filters.sector,
         totalSymbols: filteredRows.length,
         loading: payload.rows.length === 0,
-        connectionLabel:
-          tone === 'connected'
-            ? 'Realtime connected'
-            : tone === 'reconnecting'
-              ? 'Reconnecting...'
-              : tone === 'connecting'
-                ? 'Connecting...'
-                : 'Disconnected',
         connectionTone: tone,
         lastUpdatedAt,
         settings

@@ -40,7 +40,6 @@ export interface MarketSummaryViewModel {
   error?: string;
   markets: readonly MarketSummaryMarketOption[];
   statusLabel: string;
-  connectionLabel: string;
   hasLiveSummary: boolean;
   hasStatistics: boolean;
 }
@@ -92,6 +91,15 @@ export const MARKET_SUMMARY_MARKETS: readonly MarketSummaryMarketOption[] = [
     primaryIndex: {
       id: 'dfmgi',
       label: 'DFM General'
+    }
+  },
+  {
+    id: 'tadawul',
+    label: 'TADAWUL',
+    timeZone: 'Asia/Riyadh',
+    primaryIndex: {
+      id: 'tasi',
+      label: 'TASI'
     }
   }
 ] as const;

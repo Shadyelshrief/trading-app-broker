@@ -21,7 +21,6 @@ import {
   buildMarketMapReferenceSymbols,
   buildMarketMapTopics,
   decorateMarketMapSymbols,
-  mapConnectionLabel,
   mapConnectionState
 } from './market-map.mapper';
 import { MarketMapFilters, MarketMapSettings, MarketMapViewModel } from './market-map.models';
@@ -98,7 +97,6 @@ export class MarketMapFacade {
       loading: feedState.loading,
       error: feedState.error,
       connectionState: feedState.connectionState,
-      connectionLabel: mapConnectionLabel(feedState.connectionState),
       lastUpdated: feedState.lastUpdated
     }) satisfies MarketMapViewModel),
     shareReplay({ bufferSize: 1, refCount: true })

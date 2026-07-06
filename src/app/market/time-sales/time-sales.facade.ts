@@ -25,7 +25,6 @@ import {
 import {
   applyTimeSalesFilters,
   buildTimeSalesTopics,
-  mapConnectionLabel,
   mapConnectionState,
   mapTradeMessageToTimeSalesRows,
   prependTradeRows,
@@ -180,7 +179,6 @@ export class TimeSalesFacade {
         loading: tradeState.loading,
         error: tradeState.error,
         connectionState,
-        connectionLabel: mapConnectionLabel(connectionState),
         lastUpdated: tradeState.lastUpdated,
         rowCount: visibleRows.length,
         settings

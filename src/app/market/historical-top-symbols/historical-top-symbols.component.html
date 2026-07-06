@@ -1,20 +1,20 @@
 @if (vm$ | async; as vm) {
   <section class="historical-top-symbols">
-    <header class="historical-top-symbols__toolbar">
-      <div class="historical-top-symbols__heading">
-        <div>
-          <p class="historical-top-symbols__eyebrow">Pricing</p>
-          <h2>Historical Top Symbols</h2>
-        </div>
+    <header class="historical-top-symbols__toolbar screen-title-card">
+      <div>
+        <p class="historical-top-symbols__eyebrow">Pricing</p>
+        <h2>Historical Top Symbols</h2>
+      </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Market</mat-label>
-          <mat-select [formControl]="marketControl">
-            @for (market of vm.marketOptions; track market.value) {
-              <mat-option [value]="market.value">{{ market.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+    </header>
+
+    <section class="historical-top-symbols__filters screen-filter-panel">
+      <div class="historical-top-symbols__heading">
+        <app-market-dropdown
+          [includeAll]="true"
+          [value]="marketControl.value"
+          (valueChange)="marketControl.setValue($any($event))"
+        />
 
         <mat-form-field appearance="outline" class="historical-top-symbols__view-field">
           <mat-label>Select View</mat-label>
@@ -52,7 +52,7 @@
         <button mat-stroked-button>Export</button>
         <button mat-stroked-button>Layout</button>
       </div>
-    </header>
+    </section>
 
     @if (vm.validationError) {
       <section class="historical-top-symbols__banner historical-top-symbols__banner--warning">

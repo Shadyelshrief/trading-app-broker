@@ -54,7 +54,6 @@ export interface FullMarketViewModel {
   selectedSector: string;
   totalSymbols: number;
   loading: boolean;
-  connectionLabel: string;
   connectionTone: 'connected' | 'connecting' | 'reconnecting' | 'disconnected';
   lastUpdatedAt: number | null;
 }

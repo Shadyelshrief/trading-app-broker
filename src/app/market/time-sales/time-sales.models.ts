@@ -49,7 +49,6 @@ export interface TimeSalesViewModel {
   loading: boolean;
   error?: string;
   connectionState: TimeSalesConnectionState;
-  connectionLabel: string;
   lastUpdated?: number;
   rowCount: number;
   settings: MarketGridSettings;

@@ -5,12 +5,26 @@
   overflow: hidden;
 }
 
+:host-context(body.gl-popout-window) {
+  height: 100vh;
+  min-height: 100vh;
+}
+
 .app-shell {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   background: transparent;
+}
+
+:host-context(body.gl-popout-window) .app-shell {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+:host-context(body.gl-popout-window) app-trading-header,
+:host-context(body.gl-popout-window) app-trading-sidebar {
+  display: none;
 }
 
 .app-shell__body {
@@ -24,6 +38,12 @@
   overflow: hidden;
   padding: 0 0.75rem 0.75rem;
   transition: grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:host-context(body.gl-popout-window) .app-shell__body {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
 }
 
 .app-shell__body > app-trading-sidebar,
@@ -46,6 +66,13 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+:host-context(body.gl-popout-window) .app-shell__workspace {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .app-shell__workspace > router-outlet + * {

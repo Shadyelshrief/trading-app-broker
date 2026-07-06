@@ -12,7 +12,7 @@
       [attr.title]="layout.sidebarCollapsed() ? 'Expand' : 'Collapse'"
       (click)="layout.toggleSidebarCollapsed()"
     >
-      <span class="trading-sidebar__collapse-icon" aria-hidden="true">⟨</span>
+      <span class="trading-sidebar__collapse-icon" aria-hidden="true"></span>
     </button>
   </div>
 
@@ -26,7 +26,7 @@
           (click)="toggleGroup(group.id)"
         >
           <span class="trading-sidebar__group-label">{{ group.label }}</span>
-          <span class="trading-sidebar__group-chevron" aria-hidden="true">▾</span>
+          <span class="trading-sidebar__group-chevron" aria-hidden="true"></span>
         </button>
 
         @if (isExpanded(group.id) || layout.sidebarCollapsed()) {
@@ -45,44 +45,44 @@
                       <app-trading-icon [name]="item.icon" />
                     </span>
                     <span class="trading-sidebar__text">{{ item.label }}</span>
-                    <span class="trading-sidebar__item-chevron" aria-hidden="true">â–¾</span>
+                    <span class="trading-sidebar__item-chevron" aria-hidden="true"></span>
                   </button>
 
                   @if (isItemExpanded(item.id) && !layout.sidebarCollapsed()) {
                     <ul class="trading-sidebar__sub-list">
                       @for (child of item.children; track trackByItemId($index, child)) {
                         <li>
-                          <a
+                          <button
+                            #workspaceMenuItem
+                            type="button"
                             class="trading-sidebar__link trading-sidebar__link--child"
-                            [routerLink]="child.routerLink ?? ['/']"
-                            routerLinkActive="trading-sidebar__link--active"
-                            [routerLinkActiveOptions]="linkMatch"
+                            [attr.data-route]="child.routerLink?.join('')"
                             [title]="child.label"
-                            (click)="collapseAndNavigate()"
+                            [attr.aria-label]="'Drag ' + child.label + ' into workspace'"
                           >
                             <span class="trading-sidebar__icon" aria-hidden="true">
                               <app-trading-icon [name]="child.icon" />
                             </span>
                             <span class="trading-sidebar__text">{{ child.label }}</span>
-                          </a>
+                          </button>
                         </li>
                       }
                     </ul>
                   }
                 } @else {
-                  <a
+                  <button
+                    #workspaceMenuItem
+                    type="button"
                     class="trading-sidebar__link"
-                    [routerLink]="item.routerLink ?? ['/']"
-                    routerLinkActive="trading-sidebar__link--active"
-                    [routerLinkActiveOptions]="linkMatch"
+                    [attr.data-route]="item.routerLink?.join('')"
                     [title]="layout.sidebarCollapsed() ? item.label : ''"
-                    (click)="collapseAndNavigate()"
+                    [attr.aria-label]="'Drag ' + item.label + ' into workspace'"
                   >
                     <span class="trading-sidebar__icon" aria-hidden="true">
                       <app-trading-icon [name]="item.icon" />
                     </span>
                     <span class="trading-sidebar__text">{{ item.label }}</span>
-                  </a>
+                  </button>
                 }
               </li>
             }

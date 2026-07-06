@@ -1,39 +1,17 @@
 @if (vm$ | async; as vm) {
   <section class="market-summary">
-    <header class="market-summary__toolbar">
+    <header class="market-summary__toolbar screen-title-card">
       <div>
         <p class="market-summary__eyebrow">Pricing</p>
         <h2>Market Summary</h2>
       </div>
 
-      <button
-        type="button"
-        mat-icon-button
-        class="market-summary__filter-button"
-        (click)="toggleFilters()"
-        [attr.aria-expanded]="filtersExpanded()"
-        aria-label="Toggle screen filters"
-      >
-        <span class="market-summary__filter-glyph" aria-hidden="true">
-          <span></span>
-          <span></span>
-          <span></span>
-        </span>
-      </button>
     </header>
 
-    @if (filtersExpanded()) {
-      <section class="market-summary__filters">
-        <mat-form-field appearance="outline">
-          <mat-label>Market</mat-label>
-          <mat-select [value]="vm.selectedMarket" (valueChange)="selectMarket($event)">
-            @for (market of vm.markets; track market.id) {
-              <mat-option [value]="market.id">{{ market.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </section>
-    }
+    <section class="market-summary__filters screen-filter-panel">
+      <app-market-dropdown [value]="vm.selectedMarket" (valueChange)="selectMarket($event)" />
+      <app-linked-filter-group-control [value]="linkedFilterGroup()" (valueChange)="setLinkedFilterGroup($event)" />
+    </section>
 
     @if (vm.error) {
       <section class="market-summary__banner market-summary__banner--error">
@@ -109,17 +87,6 @@
         <strong>{{ vm.hasLiveSummary ? (vm.turnover | number: '1.0-0') : '--' }}</strong>
       </article>
 
-      <article
-        class="market-summary__stat-card market-summary__stat-card--connection"
-        [ngClass]="{
-          'market-summary__stat-card--connected': vm.connectionState === 'CONNECTED',
-          'market-summary__stat-card--connecting': vm.connectionState === 'CONNECTING' || vm.connectionState === 'RECONNECTING',
-          'market-summary__stat-card--disconnected': vm.connectionState === 'DISCONNECTED'
-        }"
-      >
-        <span>Connection</span>
-        <strong>{{ vm.connectionLabel }}</strong>
-      </article>
     </section>
 
     <section class="market-summary__meta">

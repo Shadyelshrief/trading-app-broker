@@ -1,14 +1,14 @@
 @if (vm$ | async; as vm) {
   <section class="news-announcements">
-    <header class="news-announcements__toolbar">
-      <div class="news-announcements__heading">
-        <div>
-          <p class="news-announcements__eyebrow">Pricing</p>
-          <h2>News & Announcements</h2>
-        </div>
+    <header class="news-announcements__toolbar screen-title-card">
+      <div>
+        <p class="news-announcements__eyebrow">Pricing</p>
+        <h2>News & Announcements</h2>
       </div>
 
-      <div class="news-announcements__controls">
+    </header>
+
+    <section class="news-announcements__controls screen-filter-panel">
         <mat-checkbox [formControl]="showProductNewsControl">Show Product News</mat-checkbox>
 
         <mat-form-field appearance="outline" class="news-announcements__symbol-field">
@@ -34,14 +34,12 @@
         <mat-checkbox [formControl]="showBrokerNewsControl">Show Broker News</mat-checkbox>
         <mat-checkbox [formControl]="showMarketNewsControl">Show Market News</mat-checkbox>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Market</mat-label>
-          <mat-select [formControl]="marketControl">
-            @for (option of vm.marketOptions; track option.value) {
-              <mat-option [value]="option.value">{{ option.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <app-market-dropdown
+          [includeAll]="true"
+          [value]="marketControl.value"
+          [disabled]="marketControl.disabled"
+          (valueChange)="marketControl.setValue(normalizeNewsMarket($event))"
+        />
 
         <mat-form-field appearance="outline">
           <mat-label>From Date</mat-label>
@@ -56,8 +54,7 @@
           <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
           <mat-datepicker #toPicker />
         </mat-form-field>
-      </div>
-    </header>
+    </section>
 
     @if (vm.validationError) {
       <section class="news-announcements__banner news-announcements__banner--warning">

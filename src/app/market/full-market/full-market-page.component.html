@@ -1,12 +1,7 @@
 @if (vm$ | async; as vm) {
   <section class="full-market-page">
-    <header class="full-market-page__toolbar">
-      <div class="full-market-page__toolbar-main">
-        <div>
-          <p class="full-market-page__eyebrow">Pricing</p>
-          <h2>Full Market</h2>
-        </div>
-
+    <section class="full-market-page__toolbar">
+      <div class="full-market-page__filters">
         <app-market-dropdown [value]="vm.selectedExchange" (valueChange)="selectExchange($event)" />
 
         <app-sector-dropdown
@@ -15,13 +10,13 @@
           (valueChange)="selectSector($event)"
         />
 
-        <mat-form-field appearance="outline" class="full-market-page__search">
+        <app-linked-filter-group-control [value]="linkedFilterGroup()" (valueChange)="setLinkedFilterGroup($event)" />
+
+        <mat-form-field appearance="outline" class="full-market-page__search" floatLabel="always" subscriptSizing="dynamic">
           <mat-label>Symbol Search</mat-label>
           <input matInput [formControl]="searchControl" placeholder="Search symbol, company, sector" />
         </mat-form-field>
-      </div>
 
-      <div class="full-market-page__toolbar-side">
         <button mat-stroked-button [matMenuTriggerFor]="directionMenu">Direction Filter</button>
         <mat-menu #directionMenu="matMenu">
           <button mat-menu-item (click)="selectDirection('ALL')">All</button>
@@ -34,19 +29,10 @@
         <button mat-stroked-button>Layout</button>
 
         <mat-slide-toggle (change)="toggleAutoScroll($event.checked)">Auto Scroll</mat-slide-toggle>
-
-        <div class="full-market-page__status" [class.full-market-page__status--reconnecting]="vm.connectionTone === 'reconnecting'" [class.full-market-page__status--disconnected]="vm.connectionTone === 'disconnected'">
-          <span class="full-market-page__status-dot"></span>
-          <span>{{ vm.connectionLabel }}</span>
-        </div>
-
-        <div class="full-market-page__counter">{{ vm.totalSymbols }} symbols</div>
       </div>
-    </header>
 
-    <section class="full-market-page__meta">
-      <p>Primary market monitoring workspace for realtime pricing, depth launch, quote launch, and order flow actions.</p>
-      <p>Last update: {{ vm.lastUpdatedAt ? (vm.lastUpdatedAt | date: 'HH:mm:ss') : '--' }}</p>
+      <div class="full-market-page__counter">{{ vm.totalSymbols }} symbols</div>
+      <span class="full-market-page__last-update">Last update: {{ vm.lastUpdatedAt ? (vm.lastUpdatedAt | date: 'HH:mm:ss') : '--' }}</span>
     </section>
 
     <app-market-grid

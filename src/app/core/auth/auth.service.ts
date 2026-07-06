@@ -18,6 +18,9 @@ import {
 
 export const AUTH_ACCESS_TOKEN_STORAGE_KEY = 'broker_auth_v1_access_token';
 export const AUTH_LOGIN_TIME_STORAGE_KEY = 'broker_auth_v1_login_time';
+export const AUTH_TOKEN_EXPIRES_AT_STORAGE_KEY = 'broker_auth_v1_token_expires_at';
+
+const TOKEN_EXPIRY_SKEW_MS = 10_000;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -25,12 +28,13 @@ export class AuthService {
   private readonly router = inject(Router);
 
   private readonly accessToken = signal<string | null>(this.readStoredToken());
+  private readonly expiresAt = signal<number | null>(this.readStoredExpiresAt());
   private publicKey$?: Observable<ApiResponseWrapper<PublicKeyBody>>;
 
   readonly isAuthenticated = computed(() => {
     const token = this.accessToken();
 
-    return typeof token === 'string' && token.length > 0;
+    return typeof token === 'string' && token.length > 0 && !this.isExpired(this.expiresAt());
   });
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
@@ -42,7 +46,7 @@ export class AuthService {
         deviceName: 'Admin Workstation'
       })),
       map((response) => this.unwrapLoginResponse(response, credentials.username)),
-      tap((response) => this.persistSession(response.accessToken)),
+      tap((response) => this.persistSession(response.accessToken, response.expiresIn)),
       catchError((error) => throwError(() => error))
     );
   }
@@ -60,29 +64,60 @@ export class AuthService {
   }
 
   logout(navigate: boolean = true): void {
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
-      window.localStorage.removeItem(AUTH_LOGIN_TIME_STORAGE_KEY);
-    }
-
+    this.clearSessionStorage();
     this.accessToken.set(null);
+    this.expiresAt.set(null);
 
     if (navigate) {
       void this.router.navigateByUrl('/login');
     }
   }
 
-  getBearerToken(): string | null {
-    return this.accessToken();
+  handleSessionExpired(): void {
+    const returnUrl = this.router.url;
+
+    this.clearSessionStorage();
+    this.accessToken.set(null);
+    this.expiresAt.set(null);
+
+    if (!returnUrl.startsWith('/login')) {
+      void this.router.navigate(['/login'], {
+        queryParams: returnUrl.startsWith('/app') ? { returnUrl } : undefined
+      });
+    }
   }
 
-  persistSession(token: string): void {
+  getBearerToken(): string | null {
+    const token = this.accessToken();
+
+    if (!token) {
+      return null;
+    }
+
+    if (this.isExpired(this.expiresAt())) {
+      this.handleSessionExpired();
+      return null;
+    }
+
+    return token;
+  }
+
+  persistSession(token: string, expiresInSeconds?: number): void {
+    const expiresAt = this.resolveExpiresAt(token, expiresInSeconds);
+
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(AUTH_ACCESS_TOKEN_STORAGE_KEY, token);
       window.localStorage.setItem(AUTH_LOGIN_TIME_STORAGE_KEY, `${Date.now()}`);
+
+      if (expiresAt) {
+        window.localStorage.setItem(AUTH_TOKEN_EXPIRES_AT_STORAGE_KEY, `${expiresAt}`);
+      } else {
+        window.localStorage.removeItem(AUTH_TOKEN_EXPIRES_AT_STORAGE_KEY);
+      }
     }
 
     this.accessToken.set(token);
+    this.expiresAt.set(expiresAt);
   }
 
   private readStoredToken(): string | null {
@@ -91,6 +126,39 @@ export class AuthService {
     }
 
     return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+  }
+
+  private readStoredExpiresAt(): number | null {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const raw = window.localStorage.getItem(AUTH_TOKEN_EXPIRES_AT_STORAGE_KEY);
+    const value = raw ? Number(raw) : NaN;
+
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  private clearSessionStorage(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.removeItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+    window.localStorage.removeItem(AUTH_LOGIN_TIME_STORAGE_KEY);
+    window.localStorage.removeItem(AUTH_TOKEN_EXPIRES_AT_STORAGE_KEY);
+  }
+
+  private resolveExpiresAt(token: string, expiresInSeconds?: number): number | null {
+    if (typeof expiresInSeconds === 'number' && expiresInSeconds > 0) {
+      return Date.now() + expiresInSeconds * 1_000;
+    }
+
+    return readJwtExpiresAt(token);
+  }
+
+  private isExpired(expiresAt: number | null): boolean {
+    return typeof expiresAt === 'number' && expiresAt - TOKEN_EXPIRY_SKEW_MS <= Date.now();
   }
 
   private encryptPassword(password: string): Observable<string> {
@@ -134,6 +202,8 @@ export class AuthService {
 
     return {
       accessToken: body.accessToken,
+      refreshToken: body.refreshToken,
+      expiresIn: body.expiresIn,
       user: { username },
       warningMessage: wrapped.status === 'WARN_POPUP' ? wrapped.messageLocale || wrapped.message : undefined
     };
@@ -171,6 +241,24 @@ function decodeBase64Key(value: string): ArrayBuffer {
   }
 
   return Uint8Array.from(atob(normalized), (char) => char.charCodeAt(0)).buffer;
+}
+
+function readJwtExpiresAt(token: string): number | null {
+  const [, payload] = token.split('.');
+
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const parsed = JSON.parse(atob(padded)) as { exp?: unknown };
+
+    return typeof parsed.exp === 'number' ? parsed.exp * 1_000 : null;
+  } catch {
+    return null;
+  }
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {

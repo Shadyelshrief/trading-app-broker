@@ -7,13 +7,6 @@
   [style.--spectrum-font-family]="settings().fontFamily"
   [style.--spectrum-font-size.px]="settings().fontSize"
 >
-  <header class="price-spectrum-book__header">
-    <div>
-      <p class="price-spectrum-book__eyebrow">Price Spectrum</p>
-      <h3>{{ selectedSymbol() }}</h3>
-    </div>
-  </header>
-
   @if (loading()) {
     <div class="price-spectrum-book__state">Waiting for price spectrum updates...</div>
   } @else {

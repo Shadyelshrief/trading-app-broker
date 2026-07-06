@@ -5,8 +5,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { MarketDropdownComponent } from '../../shared/components';
 import { MarketTickerComponent, MarketTickerItem } from '../../shared/components/market-ticker/market-ticker.component';
-import { TICKER_MARKET_OPTIONS, TickerMode } from '../ticker-settings.models';
+import { TickerMode } from '../ticker-settings.models';
 import { PricingTickerFacade } from './pricing-ticker.facade';
 import { mapPricingTickerItemToMarketTicker } from './pricing-ticker.mapper';
 import { PricingTickerItem } from './pricing-ticker.models';
@@ -14,7 +15,7 @@ import { PricingTickerItem } from './pricing-ticker.models';
 @Component({
   selector: 'app-pricing-ticker',
   standalone: true,
-  imports: [AsyncPipe, DatePipe, MatFormFieldModule, MatInputModule, MatSelectModule, MarketTickerComponent],
+  imports: [AsyncPipe, DatePipe, MatFormFieldModule, MatInputModule, MatSelectModule, MarketDropdownComponent, MarketTickerComponent],
   templateUrl: './pricing-ticker.component.html',
   styleUrl: './pricing-ticker.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,7 +27,6 @@ export class PricingTickerComponent {
   protected readonly facade = inject(PricingTickerFacade);
   private readonly workspace = inject(WorkspaceLayoutService);
   protected readonly vm$ = this.facade.vm$;
-  protected readonly marketOptions = TICKER_MARKET_OPTIONS;
   protected readonly modes: readonly { label: string; value: TickerMode }[] = [
     { label: 'Actual Market Feed', value: 'MARKET_FEED' },
     { label: 'Latest Price', value: 'LATEST_PRICE' },

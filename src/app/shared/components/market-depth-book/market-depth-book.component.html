@@ -4,14 +4,6 @@
   [style.--depth-bid-color]="bidColor()"
   [style.--depth-offer-color]="offerColor()"
 >
-  <header class="market-depth-book__header">
-    <div>
-      <p class="market-depth-book__eyebrow">Order Book</p>
-      <h3>{{ selectedSymbol() }}</h3>
-    </div>
-    <span class="market-depth-book__mode">{{ mode() === 'PRICE' ? 'By Price' : 'By Order' }}</span>
-  </header>
-
   @if (loading()) {
     <div class="market-depth-book__state market-depth-book__state--loading">
       Waiting for depth updates...

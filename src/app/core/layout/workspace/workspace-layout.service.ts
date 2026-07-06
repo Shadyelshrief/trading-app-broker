@@ -11,13 +11,14 @@ import {
 import {
   ComponentContainer,
   ComponentItemConfig,
+  DragSource,
   GoldenLayout,
   LayoutConfig,
   ResolvedLayoutConfig,
   ResolvedComponentItemConfig,
   VirtualLayout
 } from 'golden-layout';
-import { catchError, debounceTime, EMPTY, finalize, Subject, switchMap, take, tap } from 'rxjs';
+import { catchError, EMPTY, finalize, of, switchMap, take, tap, timeout } from 'rxjs';
 
 import { ClientInformationComponent } from '../../../clients/client-information/client-information.component';
 import { ClientSearchComponent } from '../../../clients/client-search/client-search.component';
@@ -47,12 +48,20 @@ import { TradingTickerComponent } from '../../../tickers/trading-ticker/trading-
 import { ExecutionTickerComponent } from '../../../trading/execution-ticker/execution-ticker.component';
 import { SavedWatchListComponent } from '../../../watchlists/saved-watch-list/saved-watch-list.component';
 import { WatchlistsPageComponent } from '../../../watchlists/pages/watchlists-page.component';
+import { ReferenceDataLookupsService } from '../../../shared/lookups/reference-data-lookups.service';
 import { DashboardWidgetComponent } from '../widgets/dashboard-widget.component';
+import { HeaderMarketStatusComponent } from '../trading-header/header-market-status.component';
 import { PlaceholderWidgetComponent } from '../widgets/placeholder-widget.component';
-import { WorkspacePreferencesService, WorkspaceThemePreference } from './workspace-preferences.service';
+import {
+  SaveWorkspacePreferences,
+  WorkspacePreferences,
+  WorkspacePreferencesService,
+  WorkspaceThemePreference
+} from './workspace-preferences.service';
 
 type WorkspacePanelType =
   | 'dashboard'
+  | 'market-status'
   | 'full-market'
   | 'market-indices'
   | 'market-summary'
@@ -84,6 +93,7 @@ type WorkspacePanelType =
 
 const WORKSPACE_PANEL_TYPES = [
   'dashboard',
+  'market-status',
   'full-market',
   'market-indices',
   'market-summary',
@@ -131,14 +141,23 @@ interface WorkspacePanelDescriptor {
   state: WorkspacePanelState;
 }
 
+const DEFAULT_WORKSPACE_PANELS = [
+  createWorkspacePanel('full-market', 'Full Market', '/app/pricing/full-market'),
+  createWorkspacePanel('market-indices', 'Market Indices', '/app/pricing/market-indices'),
+  createWorkspacePanel('price-spectrum', 'Price Spectrum', '/app/pricing/price-spectrum'),
+  createWorkspacePanel('market-depth-by-order', 'Market Depth By Order', '/app/pricing/market-depth-by-order')
+] satisfies WorkspacePanelDescriptor[];
+
 @Injectable({ providedIn: 'root' })
 export class WorkspaceLayoutService {
   private readonly applicationRef = inject(ApplicationRef);
   private readonly environmentInjector = inject(EnvironmentInjector);
   private readonly preferences = inject(WorkspacePreferencesService);
+  private readonly referenceData = inject(ReferenceDataLookupsService);
 
   private readonly panelRegistry = {
     dashboard: DashboardWidgetComponent,
+    'market-status': HeaderMarketStatusComponent,
     'full-market': FullMarketPageComponent,
     'market-indices': MarketIndicesComponent,
     'market-summary': MarketSummaryComponent,
@@ -171,30 +190,26 @@ export class WorkspaceLayoutService {
 
   private readonly componentRefs = new Map<ComponentContainer, ComponentRef<WorkspaceWidgetInstance>>();
   private readonly openPanels = new Map<string, WorkspacePanelDescriptor>();
+  private readonly dragSources = new Map<HTMLElement, DragSource>();
+  private readonly dragSourceConfigs = new Map<HTMLElement, () => ComponentItemConfig>();
 
   private layout?: GoldenLayout;
   private hostElement?: HTMLElement;
-  private resizeObserver?: ResizeObserver;
   private activeRoute = '/app';
   private languageId = '00000000-0000-0000-0000-000000000000';
   private theme: WorkspaceThemePreference = 'DARK';
   private loadingRemoteLayout = false;
   private suppressNextSave = false;
+  private ignoreLayoutChangesUntil = 0;
   private workspaceLoaded = false;
-  private readonly saveRequests = new Subject<void>();
+  private isPopoutWindow = false;
 
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
-
-  constructor() {
-    this.saveRequests
-      .pipe(
-        debounceTime(500),
-        switchMap(() => this.saveWorkspace())
-      )
-      .subscribe();
-  }
+  readonly workspaces = signal<WorkspacePreferences[]>([]);
+  readonly selectedWorkspaceId = signal<string | null>(null);
+  readonly launcherPanels = DEFAULT_WORKSPACE_PANELS;
 
   init(hostElement: HTMLElement): void {
     if (typeof window === 'undefined') {
@@ -202,7 +217,9 @@ export class WorkspaceLayoutService {
     }
 
     if (this.layout && this.hostElement === hostElement) {
-      this.loadCurrentLayout();
+      if (!this.isPopoutWindow) {
+        this.loadCurrentLayout();
+      }
       this.syncSize();
       return;
     }
@@ -211,66 +228,213 @@ export class WorkspaceLayoutService {
 
     this.hostElement = hostElement;
     this.layout = new GoldenLayout(hostElement, this.bindComponent, this.unbindComponent);
+    this.layout.resizeWithContainerAutomatically = true;
     this.layout.on('stateChanged', this.onLayoutStateChanged);
+    this.isPopoutWindow = this.layout.isSubWindow;
     this.workspaceLoaded = false;
-    this.loadWorkspace();
 
-    this.resizeObserver = new ResizeObserver(() => this.syncSize());
-    this.resizeObserver.observe(hostElement);
+    if (this.isPopoutWindow) {
+      this.workspaceLoaded = true;
+      this.loading.set(false);
+      this.error.set(null);
+      this.setPopoutBodyClass(true);
+      queueMicrotask(() => this.syncSize());
+      return;
+    }
+
+    this.loadWorkspace();
+    this.refreshDragSources();
     queueMicrotask(() => this.syncSize());
   }
 
   openRoute(route: string): void {
-    const normalizedRoute = this.normalizeRoute(route);
-    this.activeRoute = normalizedRoute;
-
-    if (!this.openPanels.has(normalizedRoute)) {
-      this.openPanels.set(normalizedRoute, this.routeToPanel(normalizedRoute));
+    if (this.isPopoutWindow) {
+      return;
     }
+
+    const normalizedRoute = this.normalizeRoute(route);
+
+    if (normalizedRoute === '/app') {
+      this.activeRoute = normalizedRoute;
+      return;
+    }
+
+    this.activeRoute = normalizedRoute;
 
     if (!this.workspaceLoaded) {
       return;
     }
 
-    this.loadCurrentLayout();
-    this.syncSize();
+    this.addPanelToLayout(this.routeToPanel(normalizedRoute));
   }
 
   openPanel(panel: WorkspacePanelDescriptor): void {
+    if (this.isPopoutWindow) {
+      return;
+    }
+
     const normalizedRoute = this.normalizeRoute(panel.state.route);
     this.activeRoute = normalizedRoute;
-    this.openPanels.set(normalizedRoute, {
+    const normalizedPanel = {
       ...panel,
       state: {
         ...panel.state,
         route: normalizedRoute
       }
-    });
+    };
 
     if (!this.workspaceLoaded) {
       return;
     }
 
-    this.loadCurrentLayout();
-    this.syncSize();
+    this.addPanelToLayout(normalizedPanel);
+  }
+
+  registerDragSource(element: HTMLElement, panel: WorkspacePanelDescriptor): void {
+    if (this.isPopoutWindow) {
+      return;
+    }
+
+    this.dragSourceConfigs.set(element, () => this.createPanelConfig(panel));
+    this.attachDragSource(element);
+  }
+
+  registerRouteDragSource(element: HTMLElement, route: string): void {
+    const normalizedRoute = this.normalizeRoute(route);
+
+    if (normalizedRoute === '/app') {
+      return;
+    }
+
+    this.registerDragSource(element, this.routeToPanel(normalizedRoute));
+  }
+
+  unregisterDragSource(element: HTMLElement): void {
+    const source = this.dragSources.get(element);
+
+    if (source && this.layout) {
+      this.layout.removeDragSource(source);
+    }
+
+    this.dragSources.delete(element);
+    this.dragSourceConfigs.delete(element);
+  }
+
+  clearDragSources(): void {
+    this.detachDragSources();
+    this.dragSourceConfigs.clear();
+  }
+
+  private detachDragSources(): void {
+    if (this.layout) {
+      for (const source of this.dragSources.values()) {
+        this.layout.removeDragSource(source);
+      }
+    }
+
+    this.dragSources.clear();
+  }
+
+  private attachDragSource(element: HTMLElement): void {
+    if (!this.layout) {
+      return;
+    }
+
+    const config = this.dragSourceConfigs.get(element);
+
+    if (!config || this.dragSources.has(element)) {
+      return;
+    }
+
+    this.dragSources.set(element, this.layout.newDragSource(element, config));
+  }
+
+  private refreshDragSources(): void {
+    if (!this.layout) {
+      return;
+    }
+
+    this.detachDragSources();
+
+    for (const element of this.dragSourceConfigs.keys()) {
+      this.attachDragSource(element);
+    }
   }
 
   resetLayout(): void {
-    const activeDescriptor = this.openPanels.get(this.activeRoute) ?? this.routeToPanel(this.activeRoute);
+    this.error.set(null);
+    this.selectedWorkspaceId.set(null);
     this.openPanels.clear();
-    this.openPanels.set(activeDescriptor.state.route, activeDescriptor);
-    this.loadCurrentLayout();
+    this.loadDefaultWorkspaceLayout();
     this.syncSize();
-    this.queueSave();
+  }
+
+  saveCurrentWorkspace(): void {
+    this.saveWorkspace({ promptForName: true }).pipe(take(1)).subscribe();
+  }
+
+  restoreSavedWorkspace(): void {
+    this.restoreWorkspace(this.selectedWorkspaceId());
+  }
+
+  restoreWorkspace(workspaceId?: string | null): void {
+    if (!this.layout) {
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.preferences
+      .getPreferences(true)
+      .pipe(
+        take(1),
+        tap((preferences) => {
+          this.workspaces.set(preferences);
+          const selected = workspaceId
+            ? preferences.find((preference) => preference.id === workspaceId)
+            : this.pickDefaultWorkspace(preferences);
+
+          if (selected && isLayoutConfig(selected.layoutJson)) {
+            this.applyWorkspacePreference(selected);
+            this.selectedWorkspaceId.set(selected.id ?? null);
+          } else {
+            this.error.set('No saved workspace preference found.');
+          }
+
+          this.syncSize();
+        }),
+        catchError(() => {
+          this.error.set('Workspace preferences could not be restored.');
+          return EMPTY;
+        }),
+        finalize(() => this.loading.set(false))
+      )
+      .subscribe();
+  }
+
+  deleteWorkspace(workspaceId = this.selectedWorkspaceId()): void {
+    if (!workspaceId) {
+      return;
+    }
+
+    const target = this.workspaces().find((workspace) => workspace.id === workspaceId);
+
+    if (!target || !this.confirmDeleteWorkspace(target.name ?? 'Workspace')) {
+      return;
+    }
+
+    this.error.set('Workspace delete is not supported by the current preferences API.');
   }
 
   destroy(): void {
-    this.resizeObserver?.disconnect();
-    this.resizeObserver = undefined;
+    this.detachDragSources();
 
     this.layout?.off('stateChanged', this.onLayoutStateChanged);
     this.layout?.destroy();
     this.layout = undefined;
+    this.isPopoutWindow = false;
+    this.setPopoutBodyClass(false);
 
     for (const componentRef of this.componentRefs.values()) {
       this.applicationRef.detachView(componentRef.hostView);
@@ -320,22 +484,89 @@ export class WorkspaceLayoutService {
       return;
     }
 
-    if (this.openPanels.size === 0) {
-      this.openPanels.set('/app', this.routeToPanel('/app'));
+    if (this.shouldLoadDefaultWorkspace()) {
+      this.loadDefaultWorkspaceLayout();
+      return;
     }
 
     const panels = Array.from(this.openPanels.values());
-    const activeItemIndex = Math.max(
-      0,
-      panels.findIndex((panel) => panel.state.route === this.activeRoute)
-    );
 
-    const layoutConfig: LayoutConfig = {
-      root: {
-        type: 'stack',
-        activeItemIndex,
+    this.beginProgrammaticLayoutChange();
+    try {
+      this.layout.loadLayout(this.createLayoutConfig({
+        type: 'row',
         content: panels.map((panel) => this.createPanelConfig(panel))
-      },
+      }));
+    } finally {
+      this.loadingRemoteLayout = false;
+    }
+  }
+
+  private addPanelToLayout(panel: WorkspacePanelDescriptor): void {
+    if (!this.layout || this.openPanels.has(panel.state.route)) {
+      return;
+    }
+
+    this.openPanels.set(panel.state.route, panel);
+    this.layout.addItem(this.createPanelConfig(panel));
+    this.syncSize();
+  }
+
+  private loadDefaultWorkspaceLayout(): void {
+    if (!this.layout) {
+      return;
+    }
+
+    this.openPanels.clear();
+    for (const panel of DEFAULT_WORKSPACE_PANELS) {
+      this.openPanels.set(panel.state.route, panel);
+    }
+
+    this.beginProgrammaticLayoutChange();
+    try {
+      this.layout.clear();
+      this.layout.loadLayout(this.createLayoutConfig({
+        type: 'row',
+        content: [
+          {
+            ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[0]),
+            size: '46%',
+          },
+          {
+            type: 'column',
+            size: '54%',
+            content: [
+              {
+                ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[1]),
+                size: '52%',
+              },
+              {
+                type: 'row',
+                size: '48%',
+                content: [
+                  {
+                    ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[2]),
+                    size: '50%',
+                  },
+                  {
+                    ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[3]),
+                    size: '50%',
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }));
+      queueMicrotask(() => this.syncSize());
+    } finally {
+      this.loadingRemoteLayout = false;
+    }
+  }
+
+  private createLayoutConfig(root: NonNullable<LayoutConfig['root']>): LayoutConfig {
+    return {
+      root,
       settings: {
         reorderEnabled: true,
         popoutWholeStack: false,
@@ -347,11 +578,11 @@ export class WorkspaceLayoutService {
         popInOnClose: true
       },
       dimensions: {
-        borderWidth: 6,
+        borderWidth: 8,
         borderGrabWidth: 10,
-        headerHeight: 34,
-        defaultMinItemHeight: '180px',
-        defaultMinItemWidth: '280px',
+        headerHeight: 26,
+        defaultMinItemHeight: '120px',
+        defaultMinItemWidth: '120px',
         dragProxyWidth: 360,
         dragProxyHeight: 240
       },
@@ -365,8 +596,15 @@ export class WorkspaceLayoutService {
         tabDropdown: 'More tabs'
       }
     };
+  }
 
-    this.layout.loadLayout(layoutConfig);
+  private shouldLoadDefaultWorkspace(): boolean {
+    if (this.openPanels.size === 0) {
+      return true;
+    }
+
+    const panels = Array.from(this.openPanels.values());
+    return panels.length === 1 && panels[0].state.route === '/app';
   }
 
   private loadSavedLayout(layoutConfig: LayoutConfig): void {
@@ -374,52 +612,68 @@ export class WorkspaceLayoutService {
       return;
     }
 
-    this.loadingRemoteLayout = true;
+    this.beginProgrammaticLayoutChange();
     this.suppressNextSave = true;
-    this.layout.loadLayout(layoutConfig);
-    this.loadingRemoteLayout = false;
+    try {
+      this.layout.loadLayout(layoutConfig);
+    } finally {
+      this.loadingRemoteLayout = false;
+    }
     this.rebuildOpenPanelsFromLayout();
   }
 
   private loadWorkspace(): void {
     this.loading.set(true);
     this.error.set(null);
+    this.workspaceLoaded = true;
+    this.loadCurrentLayout();
+    this.syncSize();
 
-    this.preferences
-      .getPreferences()
+    const preferences$ = this.preferences.getPreferences();
+
+    preferences$
       .pipe(
         take(1),
+        timeout({ first: 1500, with: () => of<WorkspacePreferences[] | null>(null) }),
         tap((preferences) => {
-          this.languageId = preferences.languageId || this.languageId;
-          this.theme = preferences.theme || this.theme;
-          this.workspaceLoaded = true;
+          if (!preferences) {
+            return;
+          }
 
-          if (isLayoutConfig(preferences.layoutJson)) {
-            this.loadSavedLayout(preferences.layoutJson);
-            if (!this.openPanels.has(this.activeRoute)) {
-              this.openPanels.set(this.activeRoute, this.routeToPanel(this.activeRoute));
-              this.loadCurrentLayout();
-            }
-          } else {
-            this.loadCurrentLayout();
+          this.workspaces.set(preferences);
+          const selected = this.pickDefaultWorkspace(preferences);
+
+          this.selectedWorkspaceId.set(selected?.id ?? null);
+          this.languageId = selected?.languageId || this.languageId;
+          this.theme = selected?.theme || this.theme;
+
+          if (selected && isLayoutConfig(selected.layoutJson)) {
+            this.loadSavedLayout(selected.layoutJson);
           }
 
           this.syncSize();
         }),
         catchError(() => {
           this.error.set('Workspace preferences could not be loaded.');
-          this.workspaceLoaded = true;
-          this.loadCurrentLayout();
-          this.syncSize();
           return EMPTY;
         }),
         finalize(() => this.loading.set(false))
       )
       .subscribe();
+
+    preferences$
+      .pipe(
+        take(1),
+        tap((preferences) => {
+          this.workspaces.set(preferences);
+        }),
+        catchError(() => EMPTY)
+      )
+      .subscribe();
   }
 
   private readonly onLayoutStateChanged = (): void => {
-    if (this.loadingRemoteLayout) {
+    if (this.loadingRemoteLayout || Date.now() < this.ignoreLayoutChangesUntil) {
       return;
     }
 
@@ -429,32 +683,69 @@ export class WorkspaceLayoutService {
     }
 
     this.rebuildOpenPanelsFromLayout();
-    this.queueSave();
   };
 
-  private queueSave(): void {
-    if (this.layout) {
-      this.saveRequests.next();
-    }
+  private beginProgrammaticLayoutChange(): void {
+    this.loadingRemoteLayout = true;
+    this.ignoreLayoutChangesUntil = Date.now() + 750;
   }
 
-  private saveWorkspace() {
+  private saveWorkspace(options: { promptForName: boolean }) {
     if (!this.layout) {
+      return EMPTY;
+    }
+
+    const workspaces = this.workspaces();
+    const selected = this.getSelectedWorkspace();
+    const defaultName = selected?.name ?? `Workspace ${Math.min(workspaces.length + 1, 3)}`;
+    const workspaceName = options.promptForName ? this.promptWorkspaceName(defaultName) : selected?.name;
+
+    if (!workspaceName) {
+      return EMPTY;
+    }
+
+    const normalizedWorkspaceName = workspaceName.trim().toLowerCase();
+    const matchingByName = workspaces.find((workspace) => workspace.name?.trim().toLowerCase() === normalizedWorkspaceName);
+    const target = matchingByName ?? selected;
+
+    if (workspaces.length > 0 && (!target || target.name?.trim().toLowerCase() !== normalizedWorkspaceName)) {
+      this.error.set('Creating or renaming named workspaces is not supported by the current preferences API.');
       return EMPTY;
     }
 
     this.saving.set(true);
 
-    return this.preferences
-      .savePreferences({
-        theme: this.theme,
-        languageId: this.languageId,
-        layoutJson: this.layout.saveLayout()
-      })
+    return this.referenceData
+      .getLanguageId()
       .pipe(
+        take(1),
+        switchMap((languageId) => {
+          if (!languageId) {
+            this.error.set('Workspace language could not be loaded.');
+            return EMPTY;
+          }
+
+          this.languageId = languageId;
+
+          const savedWorkspace: SaveWorkspacePreferences = {
+            theme: this.theme,
+            languageId,
+            layoutJson: this.layout?.saveLayout() ?? null
+          };
+
+          return this.preferences.savePreferences(savedWorkspace).pipe(
+            switchMap(() => this.preferences.getPreferences(true))
+          );
+        }),
         tap((preferences) => {
-          this.languageId = preferences.languageId || this.languageId;
-          this.theme = preferences.theme || this.theme;
+          this.workspaces.set(preferences);
+          const selectedWorkspace = preferences.find(
+            (workspace) => workspace.name?.trim().toLowerCase() === normalizedWorkspaceName
+          );
+
+          this.selectedWorkspaceId.set(selectedWorkspace?.id ?? target?.id ?? null);
+          this.languageId = selectedWorkspace?.languageId || this.languageId;
+          this.theme = selectedWorkspace?.theme || this.theme;
           this.error.set(null);
         }),
         catchError(() => {
@@ -463,6 +754,47 @@ export class WorkspaceLayoutService {
         }),
         finalize(() => this.saving.set(false))
       );
+  }
+
+  private getSelectedWorkspace(): WorkspacePreferences | undefined {
+    const workspaceId = this.selectedWorkspaceId();
+    return workspaceId ? this.workspaces().find((workspace) => workspace.id === workspaceId) : undefined;
+  }
+
+  private pickDefaultWorkspace(workspaces: WorkspacePreferences[]): WorkspacePreferences | undefined {
+    return workspaces.find((workspace) => workspace.isDefault);
+  }
+
+  private applyWorkspacePreference(preference: WorkspacePreferences): void {
+    this.languageId = preference.languageId || this.languageId;
+    this.theme = preference.theme || this.theme;
+
+    if (isLayoutConfig(preference.layoutJson)) {
+      this.loadSavedLayout(preference.layoutJson);
+    }
+  }
+
+  private promptWorkspaceName(defaultName: string): string | null {
+    const name = typeof window === 'undefined'
+      ? defaultName
+      : window.prompt('Workspace name', defaultName);
+
+    if (name === null) {
+      return null;
+    }
+
+    const trimmed = name.trim();
+
+    if (!trimmed) {
+      this.error.set('Workspace name is required.');
+      return null;
+    }
+
+    return trimmed.slice(0, 80);
+  }
+
+  private confirmDeleteWorkspace(name: string): boolean {
+    return typeof window === 'undefined' || window.confirm(`Delete workspace "${name}"?`);
   }
 
   private rebuildOpenPanelsFromLayout(): void {
@@ -492,6 +824,7 @@ export class WorkspaceLayoutService {
       type: 'component',
       componentType: panel.type,
       title: panel.state.title,
+      minSize: '120px',
       isClosable: panel.state.route !== '/app',
       componentState: panel.state
     };
@@ -900,11 +1233,20 @@ export class WorkspaceLayoutService {
       return;
     }
 
-    const { width, height } = this.hostElement.getBoundingClientRect();
+    const width = this.hostElement.offsetWidth;
+    const height = this.hostElement.offsetHeight;
 
     if (width > 0 && height > 0) {
       this.layout.setSize(width, height);
     }
+  }
+
+  private setPopoutBodyClass(enabled: boolean): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    document.body.classList.toggle('gl-popout-window', enabled);
   }
 }
 
@@ -914,6 +1256,16 @@ function isWorkspacePanelType(value: string): value is WorkspacePanelType {
 
 function isLayoutConfig(value: unknown): value is LayoutConfig {
   return !!value && typeof value === 'object' && 'root' in value;
+}
+
+function createWorkspacePanel(type: WorkspacePanelType, title: string, route: string): WorkspacePanelDescriptor {
+  return {
+    type,
+    state: {
+      title,
+      route
+    }
+  };
 }
 
 function collectPanels(item: NonNullable<ResolvedLayoutConfig['root']>): WorkspacePanelDescriptor[] {

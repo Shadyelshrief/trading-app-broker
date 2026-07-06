@@ -19,7 +19,6 @@ import {
   buildInitialWatchListRows,
   buildWatchListTickTopics,
   evaluateWatchListConditions,
-  mapConnectionLabel,
   mapConnectionTone,
   resolveSymbolsForWatchList
 } from './saved-watch-list.mapper';
@@ -65,7 +64,6 @@ export class SavedWatchListFacade {
           rows: [],
           loading: false,
           error: 'No saved watch list is available.',
-          connectionLabel: 'Disconnected',
           connectionTone: 'disconnected',
           lastUpdatedAt: null,
           settings
@@ -100,7 +98,6 @@ export class SavedWatchListFacade {
             rows,
             loading: allRows.every((row) => row.updatedAt === 0) && connectionTone !== 'disconnected',
             error: typeof payloads['__error'] === 'string' ? payloads['__error'] : undefined,
-            connectionLabel: mapConnectionLabel(connectionTone),
             connectionTone,
             lastUpdatedAt: allRows.reduce<number | null>(
               (latest, row) => (!latest || row.updatedAt > latest ? row.updatedAt : latest),

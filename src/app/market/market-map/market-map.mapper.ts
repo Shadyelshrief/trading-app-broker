@@ -214,19 +214,6 @@ export function mapConnectionState(state: WebSocketState | null): MarketMapConne
   return 'DISCONNECTED';
 }
 
-export function mapConnectionLabel(state: MarketMapConnectionState): string {
-  switch (state) {
-    case 'CONNECTED':
-      return 'Feed live';
-    case 'RECONNECTING':
-      return 'Reconnecting...';
-    case 'CONNECTING':
-      return 'Connecting...';
-    default:
-      return 'Disconnected';
-  }
-}
-
 function compareSymbols(
   left: MarketMapSymbol,
   right: MarketMapSymbol,

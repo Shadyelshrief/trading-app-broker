@@ -8,7 +8,6 @@ import {
   TickerMarketFilter,
   TickerMode,
   TickerSettings,
-  mapTickerConnectionLabel,
   mapTickerConnectionState
 } from '../ticker-settings.models';
 import {
@@ -45,8 +44,7 @@ export class PricingTickerFacade {
           settings,
           sectorOptions: getPricingTickerSectors(settings),
           loading: false,
-          connectionState,
-          connectionLabel: mapTickerConnectionLabel(connectionState)
+          connectionState
         } satisfies PricingTickerViewModel);
       }
 
@@ -65,7 +63,6 @@ export class PricingTickerFacade {
             sectorOptions: getPricingTickerSectors(settings),
             loading: items.length === 0 && connectionState !== 'DISCONNECTED',
             connectionState,
-            connectionLabel: mapTickerConnectionLabel(connectionState),
             lastUpdated: latest
           } satisfies PricingTickerViewModel;
         }),
@@ -76,8 +73,7 @@ export class PricingTickerFacade {
             sectorOptions: getPricingTickerSectors(settings),
             loading: false,
             error: error instanceof Error ? error.message : 'Unable to load pricing ticker feed.',
-            connectionState,
-            connectionLabel: mapTickerConnectionLabel(connectionState)
+            connectionState
           } satisfies PricingTickerViewModel)
         )
       );

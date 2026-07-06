@@ -1,0 +1,15 @@
+<mat-form-field appearance="outline" class="linked-filter-group" subscriptSizing="dynamic">
+  <mat-label>Link</mat-label>
+  <mat-select [value]="value" (selectionChange)="select($event.value)">
+    <mat-option [value]="null">Independent</mat-option>
+
+    @for (group of groups; track group.id) {
+      <mat-option [value]="group.id">
+        <span class="linked-filter-group__option">
+          <span class="linked-filter-group__dot" [style.background]="group.color"></span>
+          {{ group.label }}
+        </span>
+      </mat-option>
+    }
+  </mat-select>
+</mat-form-field>

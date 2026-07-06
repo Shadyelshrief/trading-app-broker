@@ -20,7 +20,6 @@ import {
   applyIndexPayload,
   buildIndexTopic,
   createReferenceIndexRow,
-  mapConnectionLabel,
   mapConnectionState
 } from './market-indices.mapper';
 import { MarketIndicesConnectionState, MarketIndicesViewModel, MarketIndexRow } from './market-indices.models';
@@ -118,7 +117,6 @@ export class MarketIndicesFacade {
             error: state.error,
             connectionState: state.connectionState,
             lastUpdated,
-            connectionLabel: mapConnectionLabel(state.connectionState),
             settings
           } satisfies MarketIndicesViewModel & { settings: MarketGridSettings };
         })

@@ -18,7 +18,6 @@ import {
   appendIndexPoint,
   createDefaultParticipantStatistics,
   formatStatusLabel,
-  mapConnectionLabel,
   mapConnectionState,
   mapMarketSummarySnapshot
 } from './market-summary.mapper';
@@ -90,7 +89,6 @@ export class MarketSummaryFacade {
               },
               statistics: snapshot.statistics.length > 0 ? snapshot.statistics : createDefaultParticipantStatistics(),
               connectionState: connection,
-              connectionLabel: mapConnectionLabel(connection),
               lastUpdated: snapshot.lastUpdated ?? previousVm.lastUpdated,
               loading: !hasPayload && connection !== 'DISCONNECTED',
               hasLiveSummary: hasPayload,
@@ -144,7 +142,6 @@ function createInitialVm(
     },
     statistics: createDefaultParticipantStatistics(),
     connectionState: 'CONNECTING',
-    connectionLabel: 'Connecting',
     lastUpdated: 0,
     loading: true,
     hasLiveSummary: false,

@@ -5,8 +5,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { MarketDropdownComponent } from '../../shared/components';
 import { MarketTickerComponent, MarketTickerItem } from '../../shared/components/market-ticker/market-ticker.component';
-import { TICKER_MARKET_OPTIONS } from '../ticker-settings.models';
 import { AnnouncementsTickerFacade } from './announcements-ticker.facade';
 import { mapAnnouncementTickerItemToMarketTicker } from './announcements-ticker.mapper';
 import { AnnouncementTickerItem } from './announcements-ticker.models';
@@ -14,7 +14,7 @@ import { AnnouncementTickerItem } from './announcements-ticker.models';
 @Component({
   selector: 'app-announcements-ticker',
   standalone: true,
-  imports: [AsyncPipe, DatePipe, MatFormFieldModule, MatInputModule, MatSelectModule, MarketTickerComponent],
+  imports: [AsyncPipe, DatePipe, MatFormFieldModule, MatInputModule, MatSelectModule, MarketDropdownComponent, MarketTickerComponent],
   templateUrl: './announcements-ticker.component.html',
   styleUrl: './announcements-ticker.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,7 +26,6 @@ export class AnnouncementsTickerComponent {
   protected readonly facade = inject(AnnouncementsTickerFacade);
   private readonly workspace = inject(WorkspaceLayoutService);
   protected readonly vm$ = this.facade.vm$;
-  protected readonly marketOptions = TICKER_MARKET_OPTIONS;
 
   protected toTickerItems(items: readonly AnnouncementTickerItem[]): MarketTickerItem[] {
     return items.map((item) => mapAnnouncementTickerItemToMarketTicker(item));

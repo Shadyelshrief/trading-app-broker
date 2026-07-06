@@ -34,7 +34,6 @@ export interface PriceSpectrumViewModel {
   loading: boolean;
   error?: string;
   connectionState: 'CONNECTED' | 'CONNECTING' | 'RECONNECTING' | 'DISCONNECTED';
-  connectionLabel: string;
   lastUpdated?: number;
   settings: PriceSpectrumSettings;
   symbolOptions: readonly SymbolOption[];

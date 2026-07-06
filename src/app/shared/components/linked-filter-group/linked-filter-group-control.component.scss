@@ -1,0 +1,22 @@
+:host {
+  display: inline-flex;
+  flex: 0 0 8.5rem;
+  min-width: 7.5rem;
+  max-width: 9rem;
+}
+
+.linked-filter-group {
+  width: 100%;
+}
+
+.linked-filter-group__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.linked-filter-group__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+}

@@ -7,24 +7,14 @@
         <p>Realtime symbol prices from the shared K-Feeder market data connection.</p>
       </div>
 
-      <span
-        class="ticker-page__status"
-        [class.ticker-page__status--warn]="vm.connectionState === 'CONNECTING' || vm.connectionState === 'RECONNECTING'"
-        [class.ticker-page__status--down]="vm.connectionState === 'DISCONNECTED'"
-      >
-        {{ vm.connectionLabel }}
-      </span>
     </header>
 
     <section class="ticker-page__filters">
-      <mat-form-field appearance="outline">
-        <mat-label>Market</mat-label>
-        <mat-select [value]="vm.settings.market" (selectionChange)="facade.updateMarket($event.value)">
-          @for (market of marketOptions; track market.value) {
-            <mat-option [value]="market.value">{{ market.label }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <app-market-dropdown
+        [includeAll]="true"
+        [value]="vm.settings.market ?? 'all'"
+        (valueChange)="facade.updateMarket($any($event))"
+      />
 
       <mat-form-field appearance="outline">
         <mat-label>Sector</mat-label>

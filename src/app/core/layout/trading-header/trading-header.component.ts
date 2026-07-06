@@ -19,6 +19,7 @@ import { AuthService } from '../../auth/auth.service';
 import { HeaderMarketStatusComponent } from './header-market-status.component';
 import { ShellLayoutService } from '../shell-layout.service';
 import { TradingIconComponent } from '../trading-icon/trading-icon.component';
+import { WorkspaceLayoutService } from '../workspace/workspace-layout.service';
 
 @Component({
   selector: 'app-trading-header',
@@ -38,6 +39,7 @@ import { TradingIconComponent } from '../trading-icon/trading-icon.component';
 export class TradingHeaderComponent {
   private readonly auth = inject(AuthService);
   protected readonly layout = inject(ShellLayoutService);
+  protected readonly workspace = inject(WorkspaceLayoutService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly document = inject(DOCUMENT);
@@ -45,12 +47,6 @@ export class TradingHeaderComponent {
   protected readonly routePath = signal(this.router.url);
   protected readonly profileOpen = signal(false);
   protected readonly commandSearch = signal('');
-
-  protected readonly workspaces = [
-    { id: 'default', label: 'Default workspace' },
-    { id: 'scalper', label: 'Scalper layout' },
-    { id: 'research', label: 'Research layout' }
-  ];
 
   constructor() {
     this.router.events
@@ -82,8 +78,31 @@ export class TradingHeaderComponent {
     this.layout.toggleMobileNav();
   }
 
-  protected onWorkspaceSelect(workspaceId: string): void {
-    this.layout.setWorkspaceId(workspaceId);
+  protected onWorkspaceAction(action: string): void {
+    if (action.startsWith('workspace:')) {
+      this.workspace.restoreWorkspace(action.replace('workspace:', ''));
+    } else if (action === 'save') {
+      this.workspace.saveCurrentWorkspace();
+    } else if (action === 'restore') {
+      this.workspace.restoreSavedWorkspace();
+    } else if (action === 'reset') {
+      this.workspace.resetLayout();
+    }
+
+  }
+
+  protected selectedWorkspaceValue(): string | null {
+    const workspaceId = this.workspace.selectedWorkspaceId();
+    return workspaceId ? `workspace:${workspaceId}` : null;
+  }
+
+  protected trackWorkspace(item: { id?: string; name?: string }): string {
+    return item.id || item.name || 'workspace';
+  }
+
+  protected deleteSelectedWorkspace(event: MouseEvent): void {
+    event.stopPropagation();
+    this.workspace.deleteWorkspace();
   }
 
   @HostListener('document:click', ['$event'])

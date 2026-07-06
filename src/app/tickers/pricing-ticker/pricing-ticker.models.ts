@@ -20,6 +20,5 @@ export interface PricingTickerViewModel {
   loading: boolean;
   error?: string;
   connectionState: TickerConnectionState;
-  connectionLabel: string;
   lastUpdated?: number;
 }

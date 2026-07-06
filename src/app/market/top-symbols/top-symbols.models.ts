@@ -51,7 +51,6 @@ export interface TopSymbolsViewModel {
   loading: boolean;
   error?: string;
   connectionState: TopSymbolsConnectionState;
-  connectionLabel: string;
   lastUpdated?: number;
   settings: MarketGridSettings;
 }

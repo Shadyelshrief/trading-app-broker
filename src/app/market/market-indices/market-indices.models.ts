@@ -28,7 +28,6 @@ export interface MarketIndicesViewModel {
   error?: string;
   connectionState: MarketIndicesConnectionState;
   lastUpdated?: number;
-  connectionLabel: string;
 }
 
 export interface MarketOption {

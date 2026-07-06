@@ -27,7 +27,6 @@ export interface ExecutionTickerViewModel {
   loading: boolean;
   error?: string;
   connectionState: ExecutionConnectionState;
-  connectionLabel: string;
   lastUpdated?: number;
   settings: MarketGridSettings;
 }

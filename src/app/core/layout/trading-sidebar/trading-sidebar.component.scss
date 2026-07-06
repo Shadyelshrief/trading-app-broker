@@ -49,9 +49,18 @@
   color: var(--text-primary);
 }
 
-.trading-sidebar--collapsed .trading-sidebar__collapse-icon {
+.trading-sidebar__collapse-icon {
   display: inline-block;
-  transform: rotate(180deg);
+  width: 0.48rem;
+  height: 0.48rem;
+  border: solid currentColor;
+  border-width: 0 0 2px 2px;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.trading-sidebar--collapsed .trading-sidebar__collapse-icon {
+  transform: rotate(-135deg);
 }
 
 .trading-sidebar__nav {
@@ -92,12 +101,17 @@
 }
 
 .trading-sidebar__group-chevron {
-  font-size: 0.6rem;
+  display: inline-block;
+  width: 0.42rem;
+  height: 0.42rem;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
   transition: transform 0.2s ease;
 }
 
 .trading-sidebar__group-header[aria-expanded='false'] .trading-sidebar__group-chevron {
-  transform: rotate(-90deg);
+  transform: rotate(-45deg);
 }
 
 .trading-sidebar__list {
@@ -148,14 +162,27 @@
   font-size: 0.8rem;
 }
 
+.trading-sidebar__link:not(.trading-sidebar__link--parent) {
+  cursor: grab;
+}
+
+.trading-sidebar__link:not(.trading-sidebar__link--parent):active {
+  cursor: grabbing;
+}
+
 .trading-sidebar__item-chevron {
+  display: inline-block;
   margin-left: auto;
-  font-size: 0.58rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
   transition: transform 0.2s ease;
 }
 
 .trading-sidebar__link--parent[aria-expanded='false'] .trading-sidebar__item-chevron {
-  transform: rotate(-90deg);
+  transform: rotate(-45deg);
 }
 
 .trading-sidebar__link:hover {
@@ -216,7 +243,9 @@
 @media (prefers-reduced-motion: reduce) {
   .trading-sidebar,
   .trading-sidebar__text,
-  .trading-sidebar__group-chevron {
+  .trading-sidebar__collapse-icon,
+  .trading-sidebar__group-chevron,
+  .trading-sidebar__item-chevron {
     transition: none;
   }
 }

@@ -7,15 +7,6 @@
       </div>
 
       <div class="saved-watch-list__actions">
-        <span
-          class="saved-watch-list__status"
-          [class.saved-watch-list__status--connecting]="vm.connectionTone === 'connecting' || vm.connectionTone === 'reconnecting'"
-          [class.saved-watch-list__status--disconnected]="vm.connectionTone === 'disconnected'"
-        >
-          <span class="saved-watch-list__status-dot"></span>
-          {{ vm.connectionLabel }}
-        </span>
-
         @if (vm.config) {
           <button mat-stroked-button type="button" (click)="editWatchList(vm.config)">Edit</button>
           <button mat-stroked-button type="button" (click)="deleteWatchList(vm.config)">Delete</button>

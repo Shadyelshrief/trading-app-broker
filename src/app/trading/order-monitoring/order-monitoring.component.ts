@@ -12,6 +12,7 @@ import type { GridOptions } from 'ag-grid-community';
 import { debounceTime } from 'rxjs';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { MarketDropdownComponent } from '../../shared/components';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import type { MarketGridContextAction } from '../../shared/models/market-grid.model';
 import { OrderConfirmationDialogComponent } from '../order-confirmation/order-confirmation-dialog.component';
@@ -32,6 +33,7 @@ import { OrderMonitoringFacade } from './order-monitoring.facade';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MarketDropdownComponent,
     MarketGridComponent,
     ReactiveFormsModule
   ],

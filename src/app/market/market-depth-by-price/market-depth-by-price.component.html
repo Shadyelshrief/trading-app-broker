@@ -1,51 +1,38 @@
 @if (vm$ | async; as vm) {
   <section class="market-depth-page">
-    <header class="market-depth-page__toolbar">
-      <div>
-        <p class="market-depth-page__eyebrow">Pricing</p>
-        <h2>Market Depth By Price</h2>
+    <section class="market-depth-page__toolbar">
+      <div class="market-depth-page__filters">
+        <mat-form-field appearance="outline" class="market-depth-page__symbol-field">
+          <mat-label>Symbol</mat-label>
+          <input
+            matInput
+            type="text"
+            [formControl]="symbolControl"
+            [matAutocomplete]="symbolAuto"
+            placeholder="Search symbol ID or symbol name"
+          />
+          <mat-autocomplete #symbolAuto="matAutocomplete" [displayWith]="displaySymbol">
+            @for (option of vm.filteredSymbolOptions; track option.market + '-' + option.symbolId) {
+              <mat-option [value]="option">
+                <span class="market-depth-page__option-symbol">{{ option.symbolId }}</span>
+                <span class="market-depth-page__option-name">{{ option.symbolName }}</span>
+                <span class="market-depth-page__option-market">{{ option.market }}</span>
+              </mat-option>
+            }
+          </mat-autocomplete>
+        </mat-form-field>
+        <app-linked-filter-group-control [value]="linkedFilterGroup()" (valueChange)="setLinkedFilterGroup($event)" />
       </div>
 
-      <mat-form-field appearance="outline" class="market-depth-page__symbol-field">
-        <mat-label>Symbol</mat-label>
-        <input
-          matInput
-          type="text"
-          [formControl]="symbolControl"
-          [matAutocomplete]="symbolAuto"
-          placeholder="Search symbol ID or symbol name"
-        />
-        <mat-autocomplete #symbolAuto="matAutocomplete" [displayWith]="displaySymbol">
-          @for (option of vm.filteredSymbolOptions; track option.market + '-' + option.symbolId) {
-            <mat-option [value]="option">
-              <span class="market-depth-page__option-symbol">{{ option.symbolId }}</span>
-              <span class="market-depth-page__option-name">{{ option.symbolName }}</span>
-              <span class="market-depth-page__option-market">{{ option.market }}</span>
-            </mat-option>
-          }
-        </mat-autocomplete>
-      </mat-form-field>
-
-      <div
-        class="market-depth-page__status"
-        [class.market-depth-page__status--reconnecting]="vm.connectionState === 'RECONNECTING' || vm.connectionState === 'CONNECTING'"
-        [class.market-depth-page__status--disconnected]="vm.connectionState === 'DISCONNECTED'"
-      >
-        <span class="market-depth-page__status-dot"></span>
-        <span>{{ vm.connectionLabel }}</span>
-      </div>
-    </header>
+      <span class="market-depth-page__symbol-meta">{{ vm.symbolId }} - {{ vm.symbolName }} - {{ vm.market }}</span>
+      <span class="market-depth-page__last-update">Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</span>
+    </section>
 
     @if (vm.error) {
       <section class="market-depth-page__banner">
         <span>{{ vm.error }}</span>
       </section>
     }
-
-    <section class="market-depth-page__meta">
-      <p>{{ vm.symbolId }} · {{ vm.symbolName }} · {{ vm.market }}</p>
-      <p>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</p>
-    </section>
 
     <app-market-depth-book
       class="market-depth-page__book"

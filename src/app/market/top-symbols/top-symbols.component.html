@@ -1,17 +1,21 @@
 @if (vm$ | async; as vm) {
   <section class="top-symbols">
-    <header class="top-symbols__toolbar">
-      <div class="top-symbols__heading">
-        <div>
-          <p class="top-symbols__eyebrow">Pricing</p>
-          <h2>Top Symbols</h2>
-        </div>
+    <header class="top-symbols__toolbar screen-title-card">
+      <div>
+        <p class="top-symbols__eyebrow">Pricing</p>
+        <h2>Top Symbols</h2>
+      </div>
 
+    </header>
+
+    <section class="top-symbols__filters screen-filter-panel">
+      <div class="top-symbols__heading">
         <app-market-dropdown
           [includeAll]="true"
           [value]="marketControl.value"
           (valueChange)="marketControl.setValue($any($event))"
         />
+        <app-linked-filter-group-control [value]="linkedFilterGroup()" (valueChange)="setLinkedFilterGroup($event)" />
 
         <mat-form-field appearance="outline" class="top-symbols__view-field">
           <mat-label>Select View</mat-label>
@@ -35,16 +39,8 @@
         <button mat-stroked-button>Export</button>
         <button mat-stroked-button>Layout</button>
 
-        <div
-          class="top-symbols__status"
-          [class.top-symbols__status--reconnecting]="vm.connectionState === 'RECONNECTING' || vm.connectionState === 'CONNECTING'"
-          [class.top-symbols__status--disconnected]="vm.connectionState === 'DISCONNECTED'"
-        >
-          <span class="top-symbols__status-dot"></span>
-          <span>{{ vm.connectionLabel }}</span>
-        </div>
       </div>
-    </header>
+    </section>
 
     @if (vm.error) {
       <section class="top-symbols__banner">

@@ -8,7 +8,6 @@ import {
   TickerMarketFilter,
   TickerMode,
   TickerSettings,
-  mapTickerConnectionLabel,
   mapTickerConnectionState
 } from '../ticker-settings.models';
 import {
@@ -105,7 +104,6 @@ export class TradingTickerFacade {
         loading: stream.loading,
         error: stream.error,
         connectionState,
-        connectionLabel: mapTickerConnectionLabel(connectionState),
         lastUpdated: stream.lastUpdated
       } satisfies TradingTickerViewModel;
     }),

@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -12,6 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { MarketDropdownComponent } from '../../shared/components';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import { MarketGridContextAction } from '../../shared/models/market-grid.model';
 import {
@@ -34,12 +36,14 @@ import {
     DatePipe,
     ReactiveFormsModule,
     MatAutocompleteModule,
+    MatButtonModule,
     MatCheckboxModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MarketDropdownComponent,
     MarketGridComponent
   ],
   templateUrl: './news-announcements.component.html',
@@ -79,6 +83,7 @@ export class NewsAnnouncementsComponent {
     { id: 'depth-order', label: 'Market Depth By Order', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
     { id: 'time-sales', label: 'Time & Sales', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) }
   ];
+  protected readonly normalizeNewsMarket = normalizeNewsMarket;
 
   constructor() {
     this.showProductNewsControl.valueChanges

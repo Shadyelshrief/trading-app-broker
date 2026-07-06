@@ -9,6 +9,24 @@
   gap: 0.55rem;
 }
 
+.auth-options {
+  margin-top: -0.15rem;
+  color: #334155;
+}
+
+.auth-options .mat-mdc-checkbox {
+  --mdc-checkbox-selected-checkmark-color: #07111f;
+  --mdc-checkbox-selected-focus-icon-color: #00c2a8;
+  --mdc-checkbox-selected-hover-icon-color: #00c2a8;
+  --mdc-checkbox-selected-icon-color: #00c2a8;
+  --mdc-checkbox-selected-pressed-icon-color: #00a991;
+  --mdc-checkbox-unselected-focus-icon-color: #64748b;
+  --mdc-checkbox-unselected-hover-icon-color: #64748b;
+  --mdc-checkbox-unselected-icon-color: #94a3b8;
+  --mdc-checkbox-unselected-pressed-icon-color: #64748b;
+  --mdc-form-field-label-text-color: #334155;
+}
+
 .auth-submit-caption {
   margin: 0;
   text-align: center;

@@ -29,21 +29,6 @@ export function mapConnectionState(state: WebSocketState | null): 'CONNECTED' | 
   return 'DISCONNECTED';
 }
 
-export function mapConnectionLabel(
-  state: 'CONNECTED' | 'CONNECTING' | 'RECONNECTING' | 'DISCONNECTED'
-): string {
-  switch (state) {
-    case 'CONNECTED':
-      return 'Feed live';
-    case 'RECONNECTING':
-      return 'Reconnecting...';
-    case 'CONNECTING':
-      return 'Connecting...';
-    default:
-      return 'Disconnected';
-  }
-}
-
 export function displayDepthSymbol(option: string | SymbolOption | null): string {
   if (!option) {
     return '';

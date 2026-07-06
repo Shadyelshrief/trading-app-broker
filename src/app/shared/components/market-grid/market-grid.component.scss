@@ -77,8 +77,34 @@
   --ag-data-color: var(--text-primary);
   --ag-header-background-color: rgba(255, 255, 255, 0.04);
   --ag-header-foreground-color: var(--text-secondary);
+  --ag-odd-row-background-color: rgba(255, 255, 255, 0.018);
   --ag-row-hover-color: rgba(96, 135, 255, 0.08);
   --ag-border-color: rgba(153, 181, 214, 0.12);
+  --ag-row-border-color: rgba(153, 181, 214, 0.08);
+  --ag-selected-row-background-color: rgba(96, 135, 255, 0.12);
+  --ag-value-change-value-highlight-background-color: rgba(96, 135, 255, 0.14);
+}
+
+:host-context([data-theme='light']) .market-grid-shell {
+  background: var(--surface-2);
+}
+
+:host-context([data-theme='light']) ::ng-deep .market-grid-shell__viewport.ag-theme-quartz {
+  --ag-background-color: #f7faff;
+  --ag-foreground-color: var(--text-primary);
+  --ag-data-color: var(--text-primary);
+  --ag-header-background-color: #eef4fb;
+  --ag-header-foreground-color: #344761;
+  --ag-odd-row-background-color: rgba(12, 36, 64, 0.025);
+  --ag-row-hover-color: rgba(61, 94, 230, 0.06);
+  --ag-border-color: rgba(12, 36, 64, 0.1);
+  --ag-row-border-color: rgba(12, 36, 64, 0.075);
+  --ag-selected-row-background-color: rgba(61, 94, 230, 0.09);
+  --ag-value-change-value-highlight-background-color: rgba(61, 94, 230, 0.1);
+}
+
+:host ::ng-deep .market-grid-shell__viewport.ag-theme-quartz .ag-cell-data-changed {
+  background-color: var(--ag-value-change-value-highlight-background-color) !important;
 }
 
 :host ::ng-deep .market-cell--bid {

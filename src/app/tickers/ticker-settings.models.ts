@@ -62,16 +62,3 @@ export function mapTickerConnectionState(state: WebSocketState | null): TickerCo
 
   return 'DISCONNECTED';
 }
-
-export function mapTickerConnectionLabel(state: TickerConnectionState): string {
-  switch (state) {
-    case 'CONNECTED':
-      return 'Feed live';
-    case 'CONNECTING':
-      return 'Connecting...';
-    case 'RECONNECTING':
-      return 'Reconnecting...';
-    default:
-      return 'Disconnected';
-  }
-}

@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { debounceTime } from 'rxjs';
 
+import { MarketDropdownComponent } from '../../shared/components';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import type { ClientOption, SymbolOption } from '../services/order.models';
 import { createOrderStatisticsColumns } from './order-statistics.columns';
@@ -24,6 +25,7 @@ import { OrderStatisticsFacade } from './order-statistics.facade';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MarketDropdownComponent,
     MarketGridComponent,
     ReactiveFormsModule
   ],

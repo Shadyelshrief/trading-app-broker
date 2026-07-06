@@ -1,26 +1,16 @@
 @if (vm$ | async; as vm) {
   <section class="market-indices">
-    <header class="market-indices__toolbar">
-      <div>
-        <p class="market-indices__eyebrow">Pricing</p>
-        <h2>Market Indices</h2>
+    <section class="market-indices__toolbar">
+      <div class="market-indices__filters">
+        <app-market-dropdown
+          [includeAll]="true"
+          [value]="vm.selectedMarket"
+          (valueChange)="selectMarket($event)"
+        />
+        <app-linked-filter-group-control [value]="linkedFilterGroup()" (valueChange)="setLinkedFilterGroup($event)" />
       </div>
 
-      <div class="market-indices__status" [class.market-indices__status--reconnecting]="isReconnecting(vm.connectionState)" [class.market-indices__status--disconnected]="isDisconnected(vm.connectionState)">
-        <span class="market-indices__status-dot"></span>
-        <span>{{ vm.connectionLabel }}</span>
-      </div>
-    </header>
-
-    <section class="market-indices__filters">
-      <mat-form-field appearance="outline">
-        <mat-label>Market</mat-label>
-        <mat-select [value]="vm.selectedMarket" (valueChange)="selectMarket($event)">
-          @for (option of vm.marketOptions; track option.value) {
-            <mat-option [value]="option.value">{{ option.label }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <span class="market-indices__last-update">Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</span>
     </section>
 
     @if (vm.error) {
@@ -28,11 +18,6 @@
         <span>Unable to fully load index data: {{ vm.error }}</span>
       </section>
     }
-
-    <section class="market-indices__meta">
-      <p>Realtime monitoring workspace for market index movement, turnover, and breadth across supported markets.</p>
-      <p>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</p>
-    </section>
 
     <app-market-grid
       class="market-indices__grid"

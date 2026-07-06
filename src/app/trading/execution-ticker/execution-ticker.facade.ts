@@ -5,10 +5,7 @@ import { MarketDataService, WebSocketState } from '../../core/market-data';
 import { MarketGridSettings } from '../../shared/models/market-grid.model';
 import { createExecutionTickerColumns } from './execution-ticker.columns';
 import { ExecutionTickerFeedService } from './execution-ticker-feed.service';
-import {
-  mapExecutionConnectionLabel,
-  mapExecutionConnectionState
-} from './execution-ticker.mapper';
+import { mapExecutionConnectionState } from './execution-ticker.mapper';
 import { ExecutionTickerStore } from './execution-ticker.store';
 import { ExecutionTickerViewModel } from './execution-ticker.models';
 
@@ -44,7 +41,6 @@ export class ExecutionTickerFacade {
         loading: state.loading,
         error: state.error ?? (missingFeedConfig ? 'No authorized private execution feed topic is configured for this session.' : undefined),
         connectionState,
-        connectionLabel: mapExecutionConnectionLabel(connectionState),
         lastUpdated: state.lastUpdated,
         settings: EXECUTION_TICKER_SETTINGS
       } satisfies ExecutionTickerViewModel;

@@ -29,19 +29,6 @@ export function mapExecutionConnectionState(state: WebSocketState | null): Execu
   return 'DISCONNECTED';
 }
 
-export function mapExecutionConnectionLabel(state: ExecutionConnectionState): string {
-  switch (state) {
-    case 'CONNECTED':
-      return 'Private feed live';
-    case 'CONNECTING':
-      return 'Connecting...';
-    case 'RECONNECTING':
-      return 'Reconnecting...';
-    default:
-      return 'Disconnected';
-  }
-}
-
 function mapExecutionRecordToRow(value: unknown, topic: string, index: number): ExecutionTickerRow | null {
   const record = toRecord(value);
 

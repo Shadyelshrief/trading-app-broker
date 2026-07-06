@@ -22,7 +22,6 @@ import {
   buildTopSymbolsTickTopics,
   buildTopSymbolsReferenceLookup,
   buildTopSymbolsTopic,
-  mapConnectionLabel,
   mapConnectionState,
   mapTopSymbolsPayload,
   mapTopSymbolsTickPayloads,
@@ -120,7 +119,6 @@ export class TopSymbolsFacade {
       loading: feedState.loading,
       error: feedState.error,
       connectionState: feedState.connectionState,
-      connectionLabel: mapConnectionLabel(feedState.connectionState),
       lastUpdated: feedState.lastUpdated,
       settings
     }) satisfies TopSymbolsViewModel),
