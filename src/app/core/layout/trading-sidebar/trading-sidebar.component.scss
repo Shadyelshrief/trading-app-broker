@@ -200,6 +200,7 @@
   display: inline-flex;
   flex-shrink: 0;
   opacity: 0.9;
+  pointer-events: none;
 }
 
 .trading-sidebar__text {
@@ -210,6 +211,7 @@
     opacity 0.2s ease,
     max-width 0.28s ease;
   max-width: 14rem;
+  pointer-events: none;
 }
 
 .trading-sidebar--collapsed .trading-sidebar__group-header {

@@ -14,6 +14,7 @@ import {
   DragSource,
   GoldenLayout,
   LayoutConfig,
+  LayoutManager,
   ResolvedLayoutConfig,
   ResolvedComponentItemConfig,
   VirtualLayout
@@ -147,6 +148,8 @@ const DEFAULT_WORKSPACE_PANELS = [
   createWorkspacePanel('price-spectrum', 'Price Spectrum', '/app/pricing/price-spectrum'),
   createWorkspacePanel('market-depth-by-order', 'Market Depth By Order', '/app/pricing/market-depth-by-order')
 ] satisfies WorkspacePanelDescriptor[];
+
+const MAX_VISIBLE_WORKSPACE_PANELS = 4;
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceLayoutService {
@@ -514,7 +517,18 @@ export class WorkspaceLayoutService {
     }
 
     this.openPanels.set(panel.state.route, panel);
-    this.layout.addItem(this.createPanelConfig(panel));
+    this.applyQuarterSizeLimits();
+
+    if (this.openPanels.size > MAX_VISIBLE_WORKSPACE_PANELS) {
+      this.layout.addItemAtLocation(this.createPanelConfig(panel), [
+        { typeId: LayoutManager.LocationSelector.TypeId.FocusedStack },
+        { typeId: LayoutManager.LocationSelector.TypeId.FirstStack },
+        { typeId: LayoutManager.LocationSelector.TypeId.Root }
+      ]);
+    } else {
+      this.layout.addItem(this.createPanelConfig(panel));
+    }
+
     this.syncSize();
   }
 
@@ -536,19 +550,19 @@ export class WorkspaceLayoutService {
         content: [
           {
             ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[0]),
-            size: '46%',
+            size: '50%',
           },
           {
             type: 'column',
-            size: '54%',
+            size: '50%',
             content: [
               {
                 ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[1]),
-                size: '52%',
+                size: '50%',
               },
               {
                 type: 'row',
-                size: '48%',
+                size: '50%',
                 content: [
                   {
                     ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[2]),
@@ -571,6 +585,8 @@ export class WorkspaceLayoutService {
   }
 
   private createLayoutConfig(root: NonNullable<LayoutConfig['root']>): LayoutConfig {
+    const minSize = this.getQuarterMinSize();
+
     return {
       root,
       settings: {
@@ -579,6 +595,7 @@ export class WorkspaceLayoutService {
         constrainDragToContainer: true,
         blockedPopoutsThrowError: false,
         closePopoutsOnUnload: true,
+        showMaximiseIcon: false,
         tabOverlapAllowance: 0,
         reorderOnTabMenuClick: true,
         popInOnClose: true
@@ -587,8 +604,8 @@ export class WorkspaceLayoutService {
         borderWidth: 8,
         borderGrabWidth: 10,
         headerHeight: 26,
-        defaultMinItemHeight: '120px',
-        defaultMinItemWidth: '120px',
+        defaultMinItemHeight: `${minSize.height}px`,
+        defaultMinItemWidth: `${minSize.width}px`,
         dragProxyWidth: 360,
         dragProxyHeight: 240
       },
@@ -596,7 +613,7 @@ export class WorkspaceLayoutService {
         show: 'top',
         popout: 'Open in window',
         popin: 'Dock panel',
-        maximise: 'Maximise',
+        maximise: false,
         close: 'Close',
         minimise: 'Minimise',
         tabDropdown: 'More tabs'
@@ -621,11 +638,12 @@ export class WorkspaceLayoutService {
     const config = LayoutConfig.isResolved(layoutConfig)
       ? LayoutConfig.fromResolved(layoutConfig)
       : layoutConfig;
+    const sanitizedConfig = this.sanitizeLayoutConfig(config);
 
     this.beginProgrammaticLayoutChange();
     this.suppressNextSave = true;
     try {
-      this.layout.loadLayout(config);
+      this.layout.loadLayout(sanitizedConfig);
     } finally {
       this.loadingRemoteLayout = false;
     }
@@ -705,7 +723,6 @@ export class WorkspaceLayoutService {
       return EMPTY;
     }
 
-    const workspace = this.currentWorkspace();
     this.saving.set(true);
 
     return this.referenceData
@@ -720,8 +737,11 @@ export class WorkspaceLayoutService {
 
           this.languageId = languageId;
 
+          const existingWorkspace = this.workspaces().find(
+            (workspace) => workspace.name?.trim().toLowerCase() === workspaceName.toLowerCase()
+          );
           const savedWorkspace: SaveWorkspacePreferences = {
-            id: workspace?.id,
+            id: existingWorkspace?.id,
             name: workspaceName,
             theme: this.theme,
             languageId,
@@ -830,7 +850,6 @@ export class WorkspaceLayoutService {
       type: 'component',
       componentType: panel.type,
       title: panel.state.title,
-      minSize: '120px',
       isClosable: panel.state.route !== '/app',
       componentState: panel.state
     };
@@ -1243,8 +1262,42 @@ export class WorkspaceLayoutService {
     const height = this.hostElement.offsetHeight;
 
     if (width > 0 && height > 0) {
-      this.layout.setSize(width, height);
+      this.applyQuarterSizeLimits(width, height);
+      const minSize = this.getQuarterMinSize(width, height);
+      this.layout.setSize(Math.max(width, minSize.width * 2), Math.max(height, minSize.height * 2));
     }
+  }
+
+  private applyQuarterSizeLimits(width = this.hostElement?.offsetWidth ?? 0, height = this.hostElement?.offsetHeight ?? 0): void {
+    if (!this.layout || width <= 0 || height <= 0) {
+      return;
+    }
+
+    const minSize = this.getQuarterMinSize(width, height);
+
+    this.layout.layoutConfig = {
+      ...this.layout.layoutConfig,
+      dimensions: {
+        ...this.layout.layoutConfig.dimensions,
+        defaultMinItemWidth: minSize.width,
+        defaultMinItemHeight: minSize.height
+      }
+    };
+  }
+
+  private getQuarterMinSize(width = this.hostElement?.offsetWidth ?? 0, height = this.hostElement?.offsetHeight ?? 0): { width: number; height: number } {
+    return {
+      width: Math.max(160, Math.floor(width / 2)),
+      height: Math.max(120, Math.floor(height / 2))
+    };
+  }
+
+  private sanitizeLayoutConfig(config: LayoutConfig): LayoutConfig {
+    const next = structuredClone(config) as LayoutConfig;
+
+    stripItemMinSize(next.root);
+
+    return next;
   }
 
   private setPopoutBodyClass(enabled: boolean): void {
@@ -1274,7 +1327,7 @@ function createWorkspacePanel(type: WorkspacePanelType, title: string, route: st
   };
 }
 
-function collectPanels(item: NonNullable<ResolvedLayoutConfig['root']>): WorkspacePanelDescriptor[] {
+function collectPanels(item: unknown): WorkspacePanelDescriptor[] {
   const itemRecord = item as unknown as Record<string, unknown>;
 
   if (itemRecord['type'] === 'component') {
@@ -1296,7 +1349,26 @@ function collectPanels(item: NonNullable<ResolvedLayoutConfig['root']>): Workspa
     return [];
   }
 
-  return content.flatMap((child) => collectPanels(child as NonNullable<ResolvedLayoutConfig['root']>));
+  return content.flatMap((child) => collectPanels(child));
+}
+
+function stripItemMinSize(item: unknown): void {
+  if (!item || typeof item !== 'object') {
+    return;
+  }
+
+  const itemRecord = item as Record<string, unknown>;
+  delete itemRecord['minSize'];
+  delete itemRecord['minWidth'];
+  delete itemRecord['minHeight'];
+
+  const content = itemRecord['content'];
+
+  if (Array.isArray(content)) {
+    for (const child of content) {
+      stripItemMinSize(child);
+    }
+  }
 }
 
 function resolvePanelState(itemRecord: Record<string, unknown>): WorkspacePanelState {
