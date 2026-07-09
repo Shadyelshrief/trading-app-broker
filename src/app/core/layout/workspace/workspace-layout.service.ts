@@ -370,7 +370,13 @@ export class WorkspaceLayoutService {
   }
 
   saveCurrentWorkspace(): void {
-    this.saveWorkspace({ promptForName: true }).pipe(take(1)).subscribe();
+    const workspaceName = this.promptWorkspaceName(this.currentWorkspaceName());
+
+    if (!workspaceName) {
+      return;
+    }
+
+    this.saveWorkspace(workspaceName).pipe(take(1)).subscribe();
   }
 
   restoreSavedWorkspace(): void {
@@ -392,12 +398,12 @@ export class WorkspaceLayoutService {
         tap((preferences) => {
           this.workspaces.set(preferences);
           const selected = workspaceId
-            ? preferences.find((preference) => preference.id === workspaceId)
-            : this.pickDefaultWorkspace(preferences);
+            ? preferences.find((preference) => this.workspaceKey(preference) === workspaceId)
+            : this.pickDefaultWorkspace(preferences) ?? preferences[0];
 
           if (selected && isLayoutConfig(selected.layoutJson)) {
             this.applyWorkspacePreference(selected);
-            this.selectedWorkspaceId.set(selected.id ?? null);
+            this.selectedWorkspaceId.set(this.workspaceKey(selected));
           } else {
             this.error.set('No saved workspace preference found.');
           }
@@ -418,7 +424,7 @@ export class WorkspaceLayoutService {
       return;
     }
 
-    const target = this.workspaces().find((workspace) => workspace.id === workspaceId);
+    const target = this.workspaces().find((workspace) => this.workspaceKey(workspace) === workspaceId);
 
     if (!target || !this.confirmDeleteWorkspace(target.name ?? 'Workspace')) {
       return;
@@ -612,10 +618,14 @@ export class WorkspaceLayoutService {
       return;
     }
 
+    const config = LayoutConfig.isResolved(layoutConfig)
+      ? LayoutConfig.fromResolved(layoutConfig)
+      : layoutConfig;
+
     this.beginProgrammaticLayoutChange();
     this.suppressNextSave = true;
     try {
-      this.layout.loadLayout(layoutConfig);
+      this.layout.loadLayout(config);
     } finally {
       this.loadingRemoteLayout = false;
     }
@@ -641,9 +651,9 @@ export class WorkspaceLayoutService {
           }
 
           this.workspaces.set(preferences);
-          const selected = this.pickDefaultWorkspace(preferences);
+          const selected = this.pickDefaultWorkspace(preferences) ?? preferences[0];
 
-          this.selectedWorkspaceId.set(selected?.id ?? null);
+          this.selectedWorkspaceId.set(selected ? this.workspaceKey(selected) : null);
           this.languageId = selected?.languageId || this.languageId;
           this.theme = selected?.theme || this.theme;
 
@@ -690,29 +700,12 @@ export class WorkspaceLayoutService {
     this.ignoreLayoutChangesUntil = Date.now() + 750;
   }
 
-  private saveWorkspace(options: { promptForName: boolean }) {
+  private saveWorkspace(workspaceName: string) {
     if (!this.layout) {
       return EMPTY;
     }
 
-    const workspaces = this.workspaces();
-    const selected = this.getSelectedWorkspace();
-    const defaultName = selected?.name ?? `Workspace ${Math.min(workspaces.length + 1, 3)}`;
-    const workspaceName = options.promptForName ? this.promptWorkspaceName(defaultName) : selected?.name;
-
-    if (!workspaceName) {
-      return EMPTY;
-    }
-
-    const normalizedWorkspaceName = workspaceName.trim().toLowerCase();
-    const matchingByName = workspaces.find((workspace) => workspace.name?.trim().toLowerCase() === normalizedWorkspaceName);
-    const target = matchingByName ?? selected;
-
-    if (workspaces.length > 0 && (!target || target.name?.trim().toLowerCase() !== normalizedWorkspaceName)) {
-      this.error.set('Creating or renaming named workspaces is not supported by the current preferences API.');
-      return EMPTY;
-    }
-
+    const workspace = this.currentWorkspace();
     this.saving.set(true);
 
     return this.referenceData
@@ -728,9 +721,11 @@ export class WorkspaceLayoutService {
           this.languageId = languageId;
 
           const savedWorkspace: SaveWorkspacePreferences = {
+            id: workspace?.id,
+            name: workspaceName,
             theme: this.theme,
             languageId,
-            layoutJson: this.layout?.saveLayout() ?? null
+            layoutJson: this.layout ? LayoutConfig.fromResolved(this.layout.saveLayout()) : null
           };
 
           return this.preferences.savePreferences(savedWorkspace).pipe(
@@ -739,11 +734,12 @@ export class WorkspaceLayoutService {
         }),
         tap((preferences) => {
           this.workspaces.set(preferences);
-          const selectedWorkspace = preferences.find(
-            (workspace) => workspace.name?.trim().toLowerCase() === normalizedWorkspaceName
-          );
+          const selectedWorkspace =
+            preferences.find((workspace) => workspace.name?.trim().toLowerCase() === workspaceName.toLowerCase()) ??
+            this.pickDefaultWorkspace(preferences) ??
+            preferences[0];
 
-          this.selectedWorkspaceId.set(selectedWorkspace?.id ?? target?.id ?? null);
+          this.selectedWorkspaceId.set(selectedWorkspace ? this.workspaceKey(selectedWorkspace) : null);
           this.languageId = selectedWorkspace?.languageId || this.languageId;
           this.theme = selectedWorkspace?.theme || this.theme;
           this.error.set(null);
@@ -756,13 +752,42 @@ export class WorkspaceLayoutService {
       );
   }
 
-  private getSelectedWorkspace(): WorkspacePreferences | undefined {
-    const workspaceId = this.selectedWorkspaceId();
-    return workspaceId ? this.workspaces().find((workspace) => workspace.id === workspaceId) : undefined;
-  }
-
   private pickDefaultWorkspace(workspaces: WorkspacePreferences[]): WorkspacePreferences | undefined {
     return workspaces.find((workspace) => workspace.isDefault);
+  }
+
+  private currentWorkspaceName(): string {
+    return this.currentWorkspace()?.name ?? 'Workspace';
+  }
+
+  private currentWorkspace(): WorkspacePreferences | undefined {
+    const selectedKey = this.selectedWorkspaceId();
+
+    return (
+      this.workspaces().find((workspace) => selectedKey && this.workspaceKey(workspace) === selectedKey) ??
+      this.pickDefaultWorkspace(this.workspaces()) ??
+      this.workspaces()[0]
+    );
+  }
+
+  private promptWorkspaceName(defaultName: string): string | null {
+    const name = typeof window === 'undefined' ? defaultName : window.prompt('Workspace name', defaultName);
+    const trimmed = name?.trim();
+
+    if (name === null) {
+      return null;
+    }
+
+    if (!trimmed) {
+      this.error.set('Workspace name is required.');
+      return null;
+    }
+
+    return trimmed.slice(0, 80);
+  }
+
+  private workspaceKey(workspace: WorkspacePreferences): string | null {
+    return workspace.id ?? workspace.name ?? null;
   }
 
   private applyWorkspacePreference(preference: WorkspacePreferences): void {
@@ -772,25 +797,6 @@ export class WorkspaceLayoutService {
     if (isLayoutConfig(preference.layoutJson)) {
       this.loadSavedLayout(preference.layoutJson);
     }
-  }
-
-  private promptWorkspaceName(defaultName: string): string | null {
-    const name = typeof window === 'undefined'
-      ? defaultName
-      : window.prompt('Workspace name', defaultName);
-
-    if (name === null) {
-      return null;
-    }
-
-    const trimmed = name.trim();
-
-    if (!trimmed) {
-      this.error.set('Workspace name is required.');
-      return null;
-    }
-
-    return trimmed.slice(0, 80);
   }
 
   private confirmDeleteWorkspace(name: string): boolean {

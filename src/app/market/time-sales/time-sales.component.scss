@@ -32,17 +32,17 @@
 }
 
 .time-sales__filters {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 0.35rem;
   padding: 0.35rem;
 }
 
 .time-sales__heading {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(10rem, 1fr) minmax(7.5rem, 8.5rem);
   align-items: center;
-  flex-wrap: wrap;
   gap: 0.35rem;
   min-width: 0;
 }
@@ -54,6 +54,7 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.35rem;
+  min-width: max-content;
 }
 
 .time-sales__eyebrow {
@@ -70,7 +71,8 @@
 }
 
 .time-sales__filters .mat-mdc-form-field {
-  min-width: 8.5rem;
+  width: 100%;
+  min-width: 0;
   margin-bottom: 0;
 }
 
@@ -79,11 +81,22 @@
 }
 
 .time-sales__symbol-field {
-  width: min(18rem, 100%);
+  width: 100%;
 }
 
 .time-sales__quantity-field {
-  width: 7rem;
+  width: 100%;
+}
+
+:host ::ng-deep .time-sales__symbol-field .mat-mdc-form-field-infix {
+  display: flex;
+  align-items: center;
+}
+
+:host ::ng-deep .time-sales__symbol-field .mat-mdc-input-element {
+  line-height: 1;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .time-sales__option-symbol {
@@ -164,14 +177,23 @@
 
 @media (max-width: 1080px) {
   .time-sales__toolbar,
-  .time-sales__filters,
   .time-sales__meta {
     flex-direction: column;
     align-items: stretch;
   }
 
+  .time-sales__filters {
+    grid-template-columns: 1fr;
+  }
+
   .time-sales__toolbar-side {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 900px) {
+  .time-sales__heading {
+    grid-template-columns: auto minmax(10rem, 1fr);
   }
 }
 
@@ -180,8 +202,7 @@
     padding: 0.35rem;
   }
 
-  .time-sales__symbol-field,
-  .time-sales__quantity-field {
-    width: 100%;
+  .time-sales__heading {
+    grid-template-columns: 1fr;
   }
 }

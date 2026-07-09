@@ -1,6 +1,5 @@
 <mat-form-field appearance="outline" class="linked-filter-group" subscriptSizing="dynamic">
-  <mat-label>Link</mat-label>
-  <mat-select [value]="value" (selectionChange)="select($event.value)">
+  <mat-select aria-label="Link" placeholder="Link" [value]="value" (selectionChange)="select($event.value)">
     <mat-option [value]="null">Independent</mat-option>
 
     @for (group of groups; track group.id) {

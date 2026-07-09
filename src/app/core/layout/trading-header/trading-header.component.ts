@@ -78,17 +78,18 @@ export class TradingHeaderComponent {
     this.layout.toggleMobileNav();
   }
 
-  protected onWorkspaceAction(action: string): void {
-    if (action.startsWith('workspace:')) {
-      this.workspace.restoreWorkspace(action.replace('workspace:', ''));
-    } else if (action === 'save') {
-      this.workspace.saveCurrentWorkspace();
-    } else if (action === 'restore') {
-      this.workspace.restoreSavedWorkspace();
-    } else if (action === 'reset') {
-      this.workspace.resetLayout();
+  protected selectWorkspace(value: string): void {
+    if (value.startsWith('workspace:')) {
+      this.workspace.restoreWorkspace(value.replace('workspace:', ''));
     }
+  }
 
+  protected saveWorkspace(): void {
+    this.workspace.saveCurrentWorkspace();
+  }
+
+  protected resetWorkspace(): void {
+    this.workspace.resetLayout();
   }
 
   protected selectedWorkspaceValue(): string | null {
@@ -98,6 +99,11 @@ export class TradingHeaderComponent {
 
   protected trackWorkspace(item: { id?: string; name?: string }): string {
     return item.id || item.name || 'workspace';
+  }
+
+  protected workspaceOptionValue(item: { id?: string; name?: string }): string | null {
+    const key = item.id || item.name;
+    return key ? `workspace:${key}` : null;
   }
 
   protected deleteSelectedWorkspace(event: MouseEvent): void {

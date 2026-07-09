@@ -38,20 +38,21 @@
       <div class="trading-header__workspace-control">
         <mat-form-field appearance="outline" class="trading-header__workspace-field">
           <mat-label>Workspace</mat-label>
-          <mat-select [value]="selectedWorkspaceValue()" (valueChange)="onWorkspaceAction($event)">
-            <mat-option value="save">Save current...</mat-option>
-            <mat-option value="restore">Restore selected</mat-option>
-            <mat-option value="reset">Restore default</mat-option>
-            @if (workspace.workspaces().length) {
-              <mat-option disabled>Saved workspaces</mat-option>
+          <mat-select [value]="selectedWorkspaceValue()" (valueChange)="selectWorkspace($event)">
+            @if (workspace.workspaces().length === 0) {
+              <mat-option disabled>No saved workspaces</mat-option>
+            } @else {
               @for (item of workspace.workspaces(); track trackWorkspace(item)) {
-                @if (item.id) {
-                  <mat-option [value]="'workspace:' + item.id">{{ item.name || 'Workspace' }}</mat-option>
+                @if (workspaceOptionValue(item); as value) {
+                  <mat-option [value]="value">{{ item.name || 'Workspace' }}</mat-option>
                 }
               }
             }
           </mat-select>
         </mat-form-field>
+
+        <button type="button" class="trading-header__workspace-action" (click)="saveWorkspace()">Save</button>
+        <button type="button" class="trading-header__workspace-action" (click)="resetWorkspace()">Reset</button>
 
         @if (workspace.selectedWorkspaceId()) {
           <button

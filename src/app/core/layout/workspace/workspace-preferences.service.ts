@@ -16,8 +16,8 @@ export interface WorkspacePreferences {
   layoutJson?: object | null;
 }
 
-export type SaveWorkspacePreferences = Required<Pick<WorkspacePreferences, 'theme' | 'languageId'>> &
-  Pick<WorkspacePreferences, 'layoutJson'>;
+export type SaveWorkspacePreferences = Required<Pick<WorkspacePreferences, 'name' | 'theme' | 'languageId'>> &
+  Pick<WorkspacePreferences, 'id' | 'layoutJson'>;
 
 interface WorkspacePreferencesResponse {
   status?: 'SUCCESS' | 'WARN_POPUP' | 'ERROR_POPUP' | 'VALIDATION_FAIL' | 'FATAL_CRASH';

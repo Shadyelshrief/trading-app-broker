@@ -122,6 +122,23 @@
   line-height: 1;
 }
 
+.trading-header__workspace-action {
+  height: 2rem;
+  padding: 0 0.65rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.6rem;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.trading-header__workspace-action:hover {
+  background: rgba(96, 135, 255, 0.12);
+}
+
 .trading-header__workspace-delete:hover {
   background: rgba(255, 107, 107, 0.16);
 }
