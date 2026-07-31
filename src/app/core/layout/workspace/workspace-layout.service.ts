@@ -14,7 +14,6 @@ import {
   DragSource,
   GoldenLayout,
   LayoutConfig,
-  LayoutManager,
   ResolvedLayoutConfig,
   ResolvedComponentItemConfig,
   VirtualLayout
@@ -149,8 +148,11 @@ const DEFAULT_WORKSPACE_PANELS = [
   createWorkspacePanel('market-depth-by-order', 'Market Depth By Order', '/app/pricing/market-depth-by-order')
 ] satisfies WorkspacePanelDescriptor[];
 
-const MAX_VISIBLE_WORKSPACE_PANELS = 4;
-const MIN_WORKSPACE_PANEL_HEIGHT = 320;
+const WORKSPACE_GRID_COLUMNS = 2;
+const VISIBLE_WORKSPACE_ROWS = 2;
+const WORKSPACE_GRID_GAP = 8;
+const WORKSPACE_MIN_PANEL_RATIO = 0.25;
+const MIN_WORKSPACE_PANEL_HEIGHT = 180;
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceLayoutService {
@@ -199,6 +201,7 @@ export class WorkspaceLayoutService {
 
   private layout?: GoldenLayout;
   private hostElement?: HTMLElement;
+  private resizeObserver?: ResizeObserver;
   private activeRoute = '/app';
   private languageId = '00000000-0000-0000-0000-000000000000';
   private theme: WorkspaceThemePreference = 'DARK';
@@ -232,8 +235,10 @@ export class WorkspaceLayoutService {
 
     this.hostElement = hostElement;
     this.layout = new GoldenLayout(hostElement, this.bindComponent, this.unbindComponent);
-    this.layout.resizeWithContainerAutomatically = true;
+    this.layout.resizeWithContainerAutomatically = false;
     this.layout.on('stateChanged', this.onLayoutStateChanged);
+    this.resizeObserver = new ResizeObserver(() => this.syncSize());
+    this.resizeObserver.observe(hostElement);
     this.isPopoutWindow = this.layout.isSubWindow;
     this.workspaceLoaded = false;
 
@@ -442,7 +447,9 @@ export class WorkspaceLayoutService {
 
     this.layout?.off('stateChanged', this.onLayoutStateChanged);
     this.layout?.destroy();
+    this.resizeObserver?.disconnect();
     this.layout = undefined;
+    this.resizeObserver = undefined;
     this.isPopoutWindow = false;
     this.setPopoutBodyClass(false);
 
@@ -501,15 +508,7 @@ export class WorkspaceLayoutService {
 
     const panels = Array.from(this.openPanels.values());
 
-    this.beginProgrammaticLayoutChange();
-    try {
-      this.layout.loadLayout(this.createLayoutConfig({
-        type: 'row',
-        content: panels.map((panel) => this.createPanelConfig(panel))
-      }));
-    } finally {
-      this.loadingRemoteLayout = false;
-    }
+    this.loadGridLayout(panels.map((panel) => this.createPanelConfig(panel)));
   }
 
   private addPanelToLayout(panel: WorkspacePanelDescriptor): void {
@@ -520,12 +519,10 @@ export class WorkspaceLayoutService {
     this.openPanels.set(panel.state.route, panel);
     this.applyQuarterSizeLimits();
 
-    if (this.openPanels.size > MAX_VISIBLE_WORKSPACE_PANELS) {
-      this.layout.addItemAtLocation(this.createPanelConfig(panel), [
-        { typeId: LayoutManager.LocationSelector.TypeId.FocusedStack },
-        { typeId: LayoutManager.LocationSelector.TypeId.FirstStack },
-        { typeId: LayoutManager.LocationSelector.TypeId.Root }
-      ]);
+    if (this.openPanels.size > WORKSPACE_GRID_COLUMNS * VISIBLE_WORKSPACE_ROWS) {
+      const saved = this.layout.saveLayout();
+      const items = saved.root ? collectComponentConfigs(saved.root) : [];
+      this.loadGridLayout([...items, this.createPanelConfig(panel)]);
     } else {
       this.layout.addItem(this.createPanelConfig(panel));
     }
@@ -543,42 +540,17 @@ export class WorkspaceLayoutService {
       this.openPanels.set(panel.state.route, panel);
     }
 
+    this.loadGridLayout(DEFAULT_WORKSPACE_PANELS.map((panel) => this.createPanelConfig(panel)));
+  }
+
+  private loadGridLayout(items: ComponentItemConfig[]): void {
+    if (!this.layout) {
+      return;
+    }
+
     this.beginProgrammaticLayoutChange();
     try {
-      this.layout.clear();
-      this.layout.loadLayout(this.createLayoutConfig({
-        type: 'row',
-        content: [
-          {
-            type: 'column',
-            size: '50%',
-            content: [
-              {
-                ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[0]),
-                size: '50%'
-              },
-              {
-                ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[2]),
-                size: '50%'
-              }
-            ]
-          },
-          {
-            type: 'column',
-            size: '50%',
-            content: [
-              {
-                ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[1]),
-                size: '50%'
-              },
-              {
-                ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[3]),
-                size: '50%'
-              }
-            ]
-          }
-        ]
-      }));
+      this.layout.loadLayout(this.createLayoutConfig(buildWorkspaceGridRoot(items)));
       queueMicrotask(() => this.syncSize());
     } finally {
       this.loadingRemoteLayout = false;
@@ -603,7 +575,7 @@ export class WorkspaceLayoutService {
       },
       dimensions: {
         borderWidth: 8,
-        borderGrabWidth: 10,
+        borderGrabWidth: 16,
         headerHeight: 26,
         defaultMinItemHeight: `${minSize.height}px`,
         defaultMinItemWidth: `${minSize.width}px`,
@@ -712,7 +684,7 @@ export class WorkspaceLayoutService {
     }
 
     this.rebuildOpenPanelsFromLayout();
-    this.enforceVisiblePanelLimit();
+    this.enforceScrollableGrid();
   };
 
   private beginProgrammaticLayoutChange(): void {
@@ -1260,17 +1232,22 @@ export class WorkspaceLayoutService {
       return;
     }
 
-    const width = this.hostElement.offsetWidth;
-    const height = this.hostElement.offsetHeight;
+    const width = this.hostElement.clientWidth;
+    const height = this.hostElement.clientHeight;
 
     if (width > 0 && height > 0) {
       this.applyQuarterSizeLimits(width, height);
       const minSize = this.getQuarterMinSize(width, height);
-      this.layout.setSize(Math.max(width, minSize.width * 2), Math.max(height, minSize.height * 2));
+      const saved = this.layout.saveLayout();
+      const rowCount = Math.max(1, getWorkspaceGridSize(saved.root).rows);
+      const rowHeight = Math.max(minSize.height, Math.floor((height - WORKSPACE_GRID_GAP) / VISIBLE_WORKSPACE_ROWS));
+      const contentHeight = rowCount * rowHeight + Math.max(0, rowCount - 1) * WORKSPACE_GRID_GAP;
+
+      this.layout.setSize(Math.max(width, minSize.width * WORKSPACE_GRID_COLUMNS), Math.max(height, contentHeight));
     }
   }
 
-  private applyQuarterSizeLimits(width = this.hostElement?.offsetWidth ?? 0, height = this.hostElement?.offsetHeight ?? 0): void {
+  private applyQuarterSizeLimits(width = this.hostElement?.clientWidth ?? 0, height = this.hostElement?.clientHeight ?? 0): void {
     if (!this.layout || width <= 0 || height <= 0) {
       return;
     }
@@ -1287,32 +1264,40 @@ export class WorkspaceLayoutService {
     };
   }
 
-  private getQuarterMinSize(width = this.hostElement?.offsetWidth ?? 0, height = this.hostElement?.offsetHeight ?? 0): { width: number; height: number } {
+  private getQuarterMinSize(width = this.hostElement?.clientWidth ?? 0, height = this.hostElement?.clientHeight ?? 0): { width: number; height: number } {
     return {
-      width: Math.max(160, Math.floor(width / 2)),
-      height: Math.max(MIN_WORKSPACE_PANEL_HEIGHT, Math.floor(height / 2))
+      width: Math.max(160, Math.floor((width - WORKSPACE_GRID_GAP) * WORKSPACE_MIN_PANEL_RATIO)),
+      height: Math.max(MIN_WORKSPACE_PANEL_HEIGHT, Math.floor((height - WORKSPACE_GRID_GAP) * WORKSPACE_MIN_PANEL_RATIO))
     };
   }
 
   private sanitizeLayoutConfig(config: LayoutConfig): LayoutConfig {
     const next = structuredClone(config) as LayoutConfig;
+    const items = collectComponentConfigs(next.root);
 
     stripItemMinSize(next.root);
-    limitVisibleStacks(next.root);
+
+    if (items.length > 0) {
+      next.root = buildWorkspaceGridRoot(items);
+    }
 
     return next;
   }
 
-  private enforceVisiblePanelLimit(): void {
+  private enforceScrollableGrid(): void {
     if (!this.layout) {
       return;
     }
 
     const config = LayoutConfig.fromResolved(this.layout.saveLayout());
+    const items = collectComponentConfigs(config.root);
 
-    if (!limitVisibleStacks(config.root)) {
+    if (items.length <= WORKSPACE_GRID_COLUMNS * VISIBLE_WORKSPACE_ROWS || isScrollableWorkspaceGrid(config.root)) {
+      this.syncSize();
       return;
     }
+
+    config.root = buildWorkspaceGridRoot(items);
 
     this.beginProgrammaticLayoutChange();
     this.suppressNextSave = true;
@@ -1396,90 +1381,112 @@ function stripItemMinSize(item: unknown): void {
   }
 }
 
-function limitVisibleStacks(root: unknown): boolean {
-  const stacks: Array<{ item: Record<string, unknown>; parentContent?: unknown[]; index?: number }> = [];
-  collectStackRefs(root, stacks);
-
-  if (stacks.length <= MAX_VISIBLE_WORKSPACE_PANELS) {
-    return false;
-  }
-
-  const target = stacks[MAX_VISIBLE_WORKSPACE_PANELS - 1]?.item;
-  const targetContent = target?.['content'];
-
-  if (!target || !Array.isArray(targetContent)) {
-    return false;
-  }
-
-  const removals = new Map<unknown[], number[]>();
-
-  for (const stack of stacks.slice(MAX_VISIBLE_WORKSPACE_PANELS)) {
-    const content = stack.item['content'];
-
-    if (Array.isArray(content)) {
-      targetContent.push(...content);
-    }
-
-    if (stack.parentContent && stack.index !== undefined) {
-      const indexes = removals.get(stack.parentContent) ?? [];
-      indexes.push(stack.index);
-      removals.set(stack.parentContent, indexes);
-    }
-  }
-
-  for (const [content, indexes] of removals) {
-    for (const index of indexes.sort((a, b) => b - a)) {
-      content.splice(index, 1);
-    }
-  }
-
-  pruneEmptyContainers(root);
-  return true;
-}
-
-function collectStackRefs(
-  item: unknown,
-  stacks: Array<{ item: Record<string, unknown>; parentContent?: unknown[]; index?: number }>,
-  parentContent?: unknown[],
-  index?: number
-): void {
+function collectComponentConfigs(item: unknown): ComponentItemConfig[] {
   if (!item || typeof item !== 'object') {
-    return;
+    return [];
   }
 
   const itemRecord = item as Record<string, unknown>;
 
-  if (itemRecord['type'] === 'stack') {
-    stacks.push({ item: itemRecord, parentContent, index });
-    return;
+  if (itemRecord['type'] === 'component') {
+    const component = structuredClone(itemRecord);
+    delete component['size'];
+    delete component['minSize'];
+    delete component['minWidth'];
+    delete component['minHeight'];
+    return [component as unknown as ComponentItemConfig];
   }
 
   const content = itemRecord['content'];
 
-  if (Array.isArray(content)) {
-    content.forEach((child, childIndex) => collectStackRefs(child, stacks, content, childIndex));
-  }
+  return Array.isArray(content) ? content.flatMap((child) => collectComponentConfigs(child)) : [];
 }
 
-function pruneEmptyContainers(item: unknown): boolean {
+function buildWorkspaceGridRoot(items: ComponentItemConfig[]): NonNullable<LayoutConfig['root']> {
+  const rowCount = Math.ceil(items.length / WORKSPACE_GRID_COLUMNS);
+  const rows = Array.from({ length: rowCount }, (_, rowIndex) => {
+    const rowItems = items.slice(rowIndex * WORKSPACE_GRID_COLUMNS, (rowIndex + 1) * WORKSPACE_GRID_COLUMNS);
+    const content: NonNullable<LayoutConfig['root']>[] = rowItems.map((item) => ({
+      ...item,
+      size: `${100 / WORKSPACE_GRID_COLUMNS}%`
+    }));
+
+    if (content.length < WORKSPACE_GRID_COLUMNS) {
+      content.push({
+        type: 'row',
+        size: `${100 / WORKSPACE_GRID_COLUMNS}%`,
+        content: [],
+        isClosable: false
+      });
+    }
+
+    return {
+      type: 'row' as const,
+      size: `${100 / rowCount}%`,
+      content
+    };
+  });
+
+  return {
+    type: 'column',
+    content: rows
+  };
+}
+
+function isScrollableWorkspaceGrid(root: unknown): boolean {
+  if (!root || typeof root !== 'object') {
+    return false;
+  }
+
+  const rootRecord = root as Record<string, unknown>;
+  const rows = rootRecord['content'];
+
+  return rootRecord['type'] === 'column' && Array.isArray(rows) && rows.every((row) => {
+    if (!row || typeof row !== 'object') {
+      return false;
+    }
+
+    const rowRecord = row as Record<string, unknown>;
+    const content = rowRecord['content'];
+
+    if (rowRecord['type'] !== 'row' || !Array.isArray(content) || content.length !== WORKSPACE_GRID_COLUMNS) {
+      return false;
+    }
+
+    const componentCounts = content.map((item) => collectComponentConfigs(item).length);
+    return componentCounts.some((count) => count === 1) && componentCounts.every((count) => count <= 1);
+  });
+}
+
+function getWorkspaceGridSize(item: unknown): { columns: number; rows: number } {
   if (!item || typeof item !== 'object') {
-    return true;
+    return { columns: 0, rows: 0 };
   }
 
   const itemRecord = item as Record<string, unknown>;
+  const type = itemRecord['type'];
+
+  if (type === 'component' || type === 'stack') {
+    return { columns: 1, rows: 1 };
+  }
+
   const content = itemRecord['content'];
 
-  if (!Array.isArray(content)) {
-    return itemRecord['type'] !== 'stack';
+  if (!Array.isArray(content) || content.length === 0) {
+    return { columns: 0, rows: 0 };
   }
 
-  for (let index = content.length - 1; index >= 0; index -= 1) {
-    if (!pruneEmptyContainers(content[index])) {
-      content.splice(index, 1);
-    }
-  }
+  const childSizes = content.map((child) => getWorkspaceGridSize(child));
 
-  return itemRecord['type'] === 'component' || content.length > 0;
+  return type === 'row'
+    ? {
+        columns: childSizes.reduce((total, size) => total + size.columns, 0),
+        rows: Math.max(...childSizes.map((size) => size.rows))
+      }
+    : {
+        columns: Math.max(...childSizes.map((size) => size.columns)),
+        rows: childSizes.reduce((total, size) => total + size.rows, 0)
+      };
 }
 
 function resolvePanelState(itemRecord: Record<string, unknown>): WorkspacePanelState {

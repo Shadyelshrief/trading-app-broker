@@ -34,4 +34,20 @@ describe('LinkedFilterGroupService', () => {
     expect(state['market']).toBe('DFM');
     expect(service.joinGroup('group-1', targetId, {})['sector']).toBe('Banks');
   });
+
+  it('syncs current group state across window service instances', async () => {
+    const sourceService = new LinkedFilterGroupService();
+    const targetService = new LinkedFilterGroupService();
+    const sourceId = sourceService.createSourceId('source-window');
+    const targetId = targetService.createSourceId('target-window');
+    const targetGroup = targetService.createGroupSubject('group-1');
+
+    sourceService.publish('group-1', sourceId, 'market', 'DFM');
+    const received = firstValueFrom(targetService.observe<string>(targetGroup, targetId, 'market').pipe(take(1)));
+    targetService.joinGroup('group-1', targetId, { market: 'ADX' });
+
+    await expectAsync(received).toBeResolvedTo('DFM');
+    sourceService.ngOnDestroy();
+    targetService.ngOnDestroy();
+  });
 });
