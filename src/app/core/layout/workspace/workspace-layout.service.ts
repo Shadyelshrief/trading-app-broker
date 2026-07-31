@@ -150,6 +150,7 @@ const DEFAULT_WORKSPACE_PANELS = [
 ] satisfies WorkspacePanelDescriptor[];
 
 const MAX_VISIBLE_WORKSPACE_PANELS = 4;
+const MIN_WORKSPACE_PANEL_HEIGHT = 320;
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceLayoutService {
@@ -549,8 +550,18 @@ export class WorkspaceLayoutService {
         type: 'row',
         content: [
           {
-            ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[0]),
+            type: 'column',
             size: '50%',
+            content: [
+              {
+                ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[0]),
+                size: '50%'
+              },
+              {
+                ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[2]),
+                size: '50%'
+              }
+            ]
           },
           {
             type: 'column',
@@ -558,21 +569,11 @@ export class WorkspaceLayoutService {
             content: [
               {
                 ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[1]),
-                size: '50%',
+                size: '50%'
               },
               {
-                type: 'row',
-                size: '50%',
-                content: [
-                  {
-                    ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[2]),
-                    size: '50%',
-                  },
-                  {
-                    ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[3]),
-                    size: '50%',
-                  }
-                ]
+                ...this.createPanelConfig(DEFAULT_WORKSPACE_PANELS[3]),
+                size: '50%'
               }
             ]
           }
@@ -711,6 +712,7 @@ export class WorkspaceLayoutService {
     }
 
     this.rebuildOpenPanelsFromLayout();
+    this.enforceVisiblePanelLimit();
   };
 
   private beginProgrammaticLayoutChange(): void {
@@ -1288,7 +1290,7 @@ export class WorkspaceLayoutService {
   private getQuarterMinSize(width = this.hostElement?.offsetWidth ?? 0, height = this.hostElement?.offsetHeight ?? 0): { width: number; height: number } {
     return {
       width: Math.max(160, Math.floor(width / 2)),
-      height: Math.max(120, Math.floor(height / 2))
+      height: Math.max(MIN_WORKSPACE_PANEL_HEIGHT, Math.floor(height / 2))
     };
   }
 
@@ -1296,8 +1298,31 @@ export class WorkspaceLayoutService {
     const next = structuredClone(config) as LayoutConfig;
 
     stripItemMinSize(next.root);
+    limitVisibleStacks(next.root);
 
     return next;
+  }
+
+  private enforceVisiblePanelLimit(): void {
+    if (!this.layout) {
+      return;
+    }
+
+    const config = LayoutConfig.fromResolved(this.layout.saveLayout());
+
+    if (!limitVisibleStacks(config.root)) {
+      return;
+    }
+
+    this.beginProgrammaticLayoutChange();
+    this.suppressNextSave = true;
+    try {
+      this.layout.loadLayout(config);
+    } finally {
+      this.loadingRemoteLayout = false;
+    }
+    this.rebuildOpenPanelsFromLayout();
+    this.syncSize();
   }
 
   private setPopoutBodyClass(enabled: boolean): void {
@@ -1369,6 +1394,92 @@ function stripItemMinSize(item: unknown): void {
       stripItemMinSize(child);
     }
   }
+}
+
+function limitVisibleStacks(root: unknown): boolean {
+  const stacks: Array<{ item: Record<string, unknown>; parentContent?: unknown[]; index?: number }> = [];
+  collectStackRefs(root, stacks);
+
+  if (stacks.length <= MAX_VISIBLE_WORKSPACE_PANELS) {
+    return false;
+  }
+
+  const target = stacks[MAX_VISIBLE_WORKSPACE_PANELS - 1]?.item;
+  const targetContent = target?.['content'];
+
+  if (!target || !Array.isArray(targetContent)) {
+    return false;
+  }
+
+  const removals = new Map<unknown[], number[]>();
+
+  for (const stack of stacks.slice(MAX_VISIBLE_WORKSPACE_PANELS)) {
+    const content = stack.item['content'];
+
+    if (Array.isArray(content)) {
+      targetContent.push(...content);
+    }
+
+    if (stack.parentContent && stack.index !== undefined) {
+      const indexes = removals.get(stack.parentContent) ?? [];
+      indexes.push(stack.index);
+      removals.set(stack.parentContent, indexes);
+    }
+  }
+
+  for (const [content, indexes] of removals) {
+    for (const index of indexes.sort((a, b) => b - a)) {
+      content.splice(index, 1);
+    }
+  }
+
+  pruneEmptyContainers(root);
+  return true;
+}
+
+function collectStackRefs(
+  item: unknown,
+  stacks: Array<{ item: Record<string, unknown>; parentContent?: unknown[]; index?: number }>,
+  parentContent?: unknown[],
+  index?: number
+): void {
+  if (!item || typeof item !== 'object') {
+    return;
+  }
+
+  const itemRecord = item as Record<string, unknown>;
+
+  if (itemRecord['type'] === 'stack') {
+    stacks.push({ item: itemRecord, parentContent, index });
+    return;
+  }
+
+  const content = itemRecord['content'];
+
+  if (Array.isArray(content)) {
+    content.forEach((child, childIndex) => collectStackRefs(child, stacks, content, childIndex));
+  }
+}
+
+function pruneEmptyContainers(item: unknown): boolean {
+  if (!item || typeof item !== 'object') {
+    return true;
+  }
+
+  const itemRecord = item as Record<string, unknown>;
+  const content = itemRecord['content'];
+
+  if (!Array.isArray(content)) {
+    return itemRecord['type'] !== 'stack';
+  }
+
+  for (let index = content.length - 1; index >= 0; index -= 1) {
+    if (!pruneEmptyContainers(content[index])) {
+      content.splice(index, 1);
+    }
+  }
+
+  return itemRecord['type'] === 'component' || content.length > 0;
 }
 
 function resolvePanelState(itemRecord: Record<string, unknown>): WorkspacePanelState {

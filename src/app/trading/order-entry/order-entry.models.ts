@@ -35,6 +35,7 @@ export interface OrderConfirmationData {
   orderAmount: number;
   expiresOn: string;
   portfolioLabel: string;
+  sessionLabel: string;
   requirePassword: boolean;
 }
 

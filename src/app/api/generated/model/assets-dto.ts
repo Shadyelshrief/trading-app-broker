@@ -9,7 +9,7 @@
  */
 
 
-export interface ProductDto { 
+export interface AssetsDto { 
     id?: string;
     name?: string;
     nameLocal?: string | null;

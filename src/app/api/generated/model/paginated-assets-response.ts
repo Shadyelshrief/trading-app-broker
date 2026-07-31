@@ -7,17 +7,17 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { ProductDto } from './product-dto';
+import { PaginatedAssetsResponseAllOfBody } from './paginated-assets-response-all-of-body';
 
 
-export interface ProductListResponse { 
-    status?: ProductListResponseStatusEnum;
+export interface PaginatedAssetsResponse { 
+    status?: PaginatedAssetsResponseStatusEnum;
     messageCode?: string;
     message?: string;
     messageLocale?: string;
-    body?: Array<ProductDto>;
+    body?: PaginatedAssetsResponseAllOfBody;
 }
-export enum ProductListResponseStatusEnum {
+export enum PaginatedAssetsResponseStatusEnum {
     Success = 'SUCCESS',
     WarnPopup = 'WARN_POPUP',
     ErrorPopup = 'ERROR_POPUP',

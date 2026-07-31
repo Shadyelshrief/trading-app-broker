@@ -14,7 +14,7 @@ export interface OrderTransactionDetails {
     company: string;
     fillTerm: string;
     orderDate: string;
-    custodian: string;
+    session: string;
     minimumQuantity: number;
     period: string;
     disclosedVolume: number;
@@ -52,5 +52,5 @@ export interface OrderTransactionHistoryRow {
   averagePrice: number | string;
   status: string;
   delivered: number | string;
-  custodian: string;
+  session: string;
 }

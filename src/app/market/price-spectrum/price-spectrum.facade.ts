@@ -11,12 +11,13 @@ import {
 } from 'rxjs';
 
 import { MarketDataService, WebSocketState } from '../../core/market-data';
+import { ReferenceDataLookupsService } from '../../shared/lookups/reference-data-lookups.service';
 import { buildMbpTopic } from '../../shared/utils/market-depth-topic.util';
 import { mapMbpMessageToDepthBook } from '../../shared/utils/market-depth.mapper';
 import {
-  filterSharedSymbolOptions,
   findSharedSymbolOption,
-  getSharedSymbolOptions
+  getSharedSymbolOptions,
+  mapAssetsToSharedSymbolOptions
 } from '../../shared/utils/symbol-reference.util';
 import {
   mapConnectionState,
@@ -39,19 +40,23 @@ const DEFAULT_SETTINGS: PriceSpectrumSettings = {
 
 const SETTINGS_STORAGE_KEY = 'price-spectrum-settings-v1';
 const DEFAULT_SYMBOL = findSharedSymbolOption('IHC', 'ADX') ?? getSharedSymbolOptions()[0];
-const DEFAULT_SYMBOL_LABEL = `${DEFAULT_SYMBOL.symbolId} - ${DEFAULT_SYMBOL.symbolName}`;
 
 @Injectable()
 export class PriceSpectrumFacade {
   private readonly marketData = inject(MarketDataService);
+  private readonly reference = inject(ReferenceDataLookupsService);
   private readonly symbolSubject = new BehaviorSubject<SymbolOption>(DEFAULT_SYMBOL);
-  private readonly symbolQuerySubject = new BehaviorSubject<string>(DEFAULT_SYMBOL_LABEL);
+  private readonly symbolQuerySubject = new BehaviorSubject<string>('');
   private readonly settingsSubject = new BehaviorSubject<PriceSpectrumSettings>(this.readStoredSettings());
+  private readonly symbolOptions$ = this.symbolQuerySubject.pipe(
+    switchMap((query) => this.reference.searchAssets(query)),
+    map((assets) => mapAssetsToSharedSymbolOptions(assets) as SymbolOption[])
+  );
 
   readonly vm$ = combineLatest([
     this.symbolSubject,
-    this.symbolQuerySubject,
     this.settingsSubject,
+    this.symbolOptions$,
     this.symbolSubject.pipe(
       switchMap((symbol) => {
         const topic = buildMbpTopic(symbol.market, symbol.symbolId);
@@ -90,7 +95,7 @@ export class PriceSpectrumFacade {
       })
     )
   ]).pipe(
-    map(([symbol, query, settings, feedState]) => ({
+    map(([symbol, settings, symbolOptions, feedState]) => ({
       symbolId: symbol.symbolId,
       symbolName: symbol.symbolName,
       market: symbol.market,
@@ -105,8 +110,8 @@ export class PriceSpectrumFacade {
       connectionState: feedState.connectionState,
       lastUpdated: feedState.book?.lastUpdated,
       settings,
-      symbolOptions: getSharedSymbolOptions(),
-      filteredSymbolOptions: filterSharedSymbolOptions(query)
+      symbolOptions,
+      filteredSymbolOptions: symbolOptions
     }) satisfies PriceSpectrumViewModel),
     shareReplay({ bufferSize: 1, refCount: true })
   );
@@ -117,7 +122,7 @@ export class PriceSpectrumFacade {
     }
 
     this.symbolSubject.next(symbol);
-    this.symbolQuerySubject.next(`${symbol.symbolId} - ${symbol.symbolName}`);
+    this.symbolQuerySubject.next('');
   }
 
   updateSymbolQuery(query: string): void {

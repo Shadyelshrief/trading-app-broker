@@ -5,6 +5,12 @@ export interface SharedSymbolOption {
   currency: string;
 }
 
+export interface AssetSymbolSource {
+  symbol: string;
+  label: string;
+  marketCode: string;
+}
+
 const SHARED_SYMBOL_OPTIONS: readonly SharedSymbolOption[] = [
   { symbolId: 'IHC', symbolName: 'International Holding Company', market: 'ADX', currency: 'AED' },
   { symbolId: 'FAB', symbolName: 'First Abu Dhabi Bank', market: 'ADX', currency: 'AED' },
@@ -29,14 +35,23 @@ export function getSharedSymbolOptions(): SharedSymbolOption[] {
   return [...SHARED_SYMBOL_OPTIONS];
 }
 
-export function filterSharedSymbolOptions(query: string): SharedSymbolOption[] {
+export function mapAssetsToSharedSymbolOptions(assets: readonly AssetSymbolSource[]): SharedSymbolOption[] {
+  return assets.map((asset) => ({
+    symbolId: asset.symbol,
+    symbolName: asset.label.replace(`${asset.symbol} - `, ''),
+    market: asset.marketCode,
+    currency: asset.marketCode.toUpperCase() === 'TADAWUL' ? 'SAR' : 'AED'
+  }));
+}
+
+export function filterSharedSymbolOptions(query: string, options = getSharedSymbolOptions()): SharedSymbolOption[] {
   const normalized = query.trim().toLowerCase();
 
   if (!normalized) {
-    return getSharedSymbolOptions().slice(0, 12);
+    return options.slice(0, 12);
   }
 
-  return SHARED_SYMBOL_OPTIONS
+  return options
     .filter((option) =>
       `${option.symbolId} ${option.symbolName} ${option.market}`.toLowerCase().includes(normalized)
     )

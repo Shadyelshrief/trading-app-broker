@@ -1,6 +1,7 @@
 server {
   listen 80;
   server_name _;
+  resolver 127.0.0.11 ipv6=off valid=30s;
 
   root /usr/share/nginx/html;
   index index.html;
@@ -36,7 +37,9 @@ server {
   }
 
   location /feeder-api/ {
-    proxy_pass http://${FEEDER_HOST}:${FEEDER_PORT}/api/;
+    set $feeder_upstream ${FEEDER_HOST}:${FEEDER_PORT};
+    rewrite ^/feeder-api/(.*)$ /api/$1 break;
+    proxy_pass http://$feeder_upstream;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -45,7 +48,9 @@ server {
   }
 
   location /feeder-ws/ {
-    proxy_pass http://${FEEDER_HOST}:${FEEDER_PORT}/ws/;
+    set $feeder_upstream ${FEEDER_HOST}:${FEEDER_PORT};
+    rewrite ^/feeder-ws/(.*)$ /ws/$1 break;
+    proxy_pass http://$feeder_upstream;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";

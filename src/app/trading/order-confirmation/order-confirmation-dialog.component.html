@@ -9,6 +9,7 @@
       <div><dt>{{ data.order.orderSide }} Quantity</dt><dd>{{ data.order.quantity || '--' }}</dd></div>
       <div><dt>Symbol</dt><dd>{{ data.order.symbolId }}</dd></div>
       <div><dt>Order Type</dt><dd>{{ data.order.orderType }}</dd></div>
+      <div><dt>Session</dt><dd>{{ data.sessionLabel || '--' }}</dd></div>
       <div><dt>Price</dt><dd>{{ data.order.orderPrice || 'Market' }}</dd></div>
       <div><dt>Fees</dt><dd>{{ data.fees | number: '1.2-2' }}</dd></div>
       <div><dt>Order Amount</dt><dd>{{ data.orderAmount | number: '1.2-2' }}</dd></div>

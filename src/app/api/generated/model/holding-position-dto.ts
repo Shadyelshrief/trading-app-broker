@@ -11,7 +11,7 @@
 
 export interface HoldingPositionDto { 
     marketName?: string;
-    productName?: string;
+    assetsName?: string;
     symbol?: string;
     currencyId?: string;
     totalQty?: number;

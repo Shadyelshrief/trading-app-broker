@@ -3,6 +3,7 @@ import {
   BehaviorSubject,
   Observable,
   catchError,
+  combineLatest,
   debounceTime,
   distinctUntilChanged,
   map,
@@ -25,6 +26,7 @@ import type { OrderEntryViewModel } from './order-entry.models';
 
 interface OrderEntryState {
   selectedClient: ClientOption | null;
+  selectedMarket: string | null;
   selectedPortfolioId: string | null;
   selectedSymbol: SymbolOption | null;
   calculation: OrderEntryViewModel['calculation'];
@@ -38,6 +40,7 @@ export class OrderEntryFacade {
   private readonly service = inject(OrderService);
   private readonly stateSubject = new BehaviorSubject<OrderEntryState>({
     selectedClient: null,
+    selectedMarket: null,
     selectedPortfolioId: null,
     selectedSymbol: null,
     calculation: null,
@@ -53,10 +56,18 @@ export class OrderEntryFacade {
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
-  readonly symbolOptions$ = this.symbolQuerySubject.pipe(
-    debounceTime(220),
-    distinctUntilChanged(),
-    switchMap((query) => this.service.searchSymbols(query).pipe(catchError(() => of([])))),
+  readonly symbolOptions$ = combineLatest([
+    this.symbolQuerySubject.pipe(debounceTime(160), distinctUntilChanged()),
+    this.stateSubject.pipe(
+      map((state) => state.selectedMarket ?? ''),
+      distinctUntilChanged()
+    )
+  ]).pipe(
+    switchMap(([query, market]) =>
+      query.trim() && market
+        ? this.service.searchSymbols(query, market).pipe(catchError(() => of([])))
+        : of([])
+    ),
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
@@ -93,7 +104,7 @@ export class OrderEntryFacade {
     distinctUntilChanged((a, b) => a?.symbolId === b?.symbolId && a?.market === b?.market),
     switchMap((symbol) =>
       symbol
-        ? this.service.getSymbolOrderOptions(symbol.symbolId, symbol.market).pipe(
+        ? this.service.getSymbolOrderOptions(symbol).pipe(
             tap((options) => this.patch({ warning: options.warning })),
             catchError(() => of(null))
           )
@@ -153,8 +164,12 @@ export class OrderEntryFacade {
     this.symbolQuerySubject.next(query);
   }
 
-  selectClient(client: ClientOption): void {
-    this.patch({ selectedClient: client, selectedPortfolioId: null, lastResult: null, error: undefined });
+  selectClient(client: ClientOption | null): void {
+    this.patch({ selectedClient: client, selectedMarket: null, selectedPortfolioId: null, selectedSymbol: null, lastResult: null, error: undefined });
+  }
+
+  selectMarket(market: string): void {
+    this.patch({ selectedMarket: market || null, selectedSymbol: null, warning: undefined, lastResult: null, error: undefined });
   }
 
   selectPortfolio(portfolioId: string): void {

@@ -43,7 +43,7 @@ $broker-light-theme: mat.define-light-theme((
   }
 
   .mdc-text-field--outlined {
-    --mdc-outlined-text-field-container-shape: 0.85rem;
+    --mdc-outlined-text-field-container-shape: 0.25rem !important;
     --mdc-outlined-text-field-container-color: rgba(13, 24, 36, 0.82);
     --mdc-outlined-text-field-hover-outline-color: rgba(126, 158, 197, 0.38);
     --mdc-outlined-text-field-outline-color: rgba(126, 158, 197, 0.2);

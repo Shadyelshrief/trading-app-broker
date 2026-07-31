@@ -11,12 +11,13 @@ import {
 } from 'rxjs';
 
 import { MarketDataService, WebSocketState } from '../../core/market-data';
+import { ReferenceDataLookupsService } from '../../shared/lookups/reference-data-lookups.service';
 import { MarketGridSettings } from '../../shared/models/market-grid.model';
 import { MarketDepthOrderType, buildMboTopic } from '../../shared/utils/market-depth-topic.util';
 import {
-  filterSharedSymbolOptions,
   findSharedSymbolOption,
-  getSharedSymbolOptions
+  getSharedSymbolOptions,
+  mapAssetsToSharedSymbolOptions
 } from '../../shared/utils/symbol-reference.util';
 import {
   mapConnectionState,
@@ -36,21 +37,25 @@ const DEFAULT_SETTINGS: MarketGridSettings = {
 
 const SETTINGS_STORAGE_KEY = 'market-depth-by-order-settings-v1';
 const DEFAULT_SYMBOL = findSharedSymbolOption('IHC', 'ADX') ?? getSharedSymbolOptions()[0];
-const DEFAULT_SYMBOL_LABEL = `${DEFAULT_SYMBOL.symbolId} - ${DEFAULT_SYMBOL.symbolName}`;
 
 @Injectable()
 export class MarketDepthByOrderFacade {
   private readonly marketData = inject(MarketDataService);
+  private readonly reference = inject(ReferenceDataLookupsService);
   private readonly symbolSubject = new BehaviorSubject<SymbolOption>(DEFAULT_SYMBOL);
-  private readonly symbolQuerySubject = new BehaviorSubject<string>(DEFAULT_SYMBOL_LABEL);
+  private readonly symbolQuerySubject = new BehaviorSubject<string>('');
   private readonly orderTypeSubject = new BehaviorSubject<MarketDepthOrderType>('REGULAR');
   private readonly settingsSubject = new BehaviorSubject<MarketGridSettings>(this.readStoredSettings());
+  private readonly symbolOptions$ = this.symbolQuerySubject.pipe(
+    switchMap((query) => this.reference.searchAssets(query)),
+    map((assets) => mapAssetsToSharedSymbolOptions(assets) as SymbolOption[])
+  );
 
   readonly vm$ = combineLatest([
     this.symbolSubject,
-    this.symbolQuerySubject,
     this.orderTypeSubject,
     this.settingsSubject,
+    this.symbolOptions$,
     combineLatest([this.symbolSubject, this.orderTypeSubject]).pipe(
       switchMap(([symbol, orderType]) => {
         const topic = buildMboTopic(symbol.market, symbol.symbolId, orderType);
@@ -93,7 +98,7 @@ export class MarketDepthByOrderFacade {
       })
     )
   ]).pipe(
-    map(([symbol, query, orderType, settings, feedState]) => ({
+    map(([symbol, orderType, settings, symbolOptions, feedState]) => ({
       symbolId: symbol.symbolId,
       symbolName: symbol.symbolName,
       market: symbol.market,
@@ -109,8 +114,8 @@ export class MarketDepthByOrderFacade {
       connectionState: feedState.connectionState,
       lastUpdated: feedState.book?.lastUpdated,
       settings,
-      symbolOptions: getSharedSymbolOptions(),
-      filteredSymbolOptions: filterSharedSymbolOptions(query),
+      symbolOptions,
+      filteredSymbolOptions: symbolOptions,
       orderType
     }) satisfies MarketDepthViewModel),
     shareReplay({ bufferSize: 1, refCount: true })
@@ -122,7 +127,7 @@ export class MarketDepthByOrderFacade {
     }
 
     this.symbolSubject.next(symbol);
-    this.symbolQuerySubject.next(`${symbol.symbolId} - ${symbol.symbolName}`);
+    this.symbolQuerySubject.next('');
   }
 
   updateSymbolQuery(query: string): void {

@@ -148,15 +148,25 @@ export class WatchListService {
 
   private resolveAssetSymbols(symbols: readonly SymbolOption[]): Observable<SymbolOption[]> {
     const unresolved = symbols.filter((symbol) => !symbol.assetId);
-    const markets = [...new Set(unresolved.map((symbol) => symbol.marketShortName).filter(Boolean))];
 
-    if (markets.length === 0) {
+    if (unresolved.length === 0) {
       return of([...symbols]);
     }
 
-    return forkJoin(markets.map((market) => this.reference.getProductsByMarket(market).pipe(catchError(() => of([]))))).pipe(
-      map((groups) => {
-        const lookup = new Map(groups.flat().map((product) => [`${product.marketCode}:${product.symbol}`.toUpperCase(), product.id]));
+    return forkJoin(
+      unresolved.map((symbol) => {
+        const key = `${symbol.marketShortName}:${symbol.symbolId}`.toUpperCase();
+        return this.reference.searchAssets(symbol.symbolId, symbol.marketShortName).pipe(
+          map((assets) => ({
+            key,
+            assetId: assets.find((asset) => asset.symbol.toUpperCase() === symbol.symbolId.toUpperCase())?.id
+          })),
+          catchError(() => of({ key, assetId: undefined }))
+        );
+      })
+    ).pipe(
+      map((results) => {
+        const lookup = new Map(results.map((result) => [result.key, result.assetId]));
         return symbols.map((symbol) => ({
           ...symbol,
           assetId: symbol.assetId ?? lookup.get(`${symbol.marketShortName}:${symbol.symbolId}`.toUpperCase())

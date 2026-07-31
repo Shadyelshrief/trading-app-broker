@@ -1,6 +1,6 @@
 import { HttpParams } from '@angular/common/http';
 
-import { getSharedSymbolOptions } from '../../shared/utils/symbol-reference.util';
+import type { SharedSymbolOption } from '../../shared/utils/symbol-reference.util';
 import type {
   ChartComparisonDataRequest,
   ChartDataRequest,
@@ -108,8 +108,8 @@ export function mapTickToChartPoint(payload: unknown, previous?: ChartPoint): Ch
   };
 }
 
-export function getReferenceChartInstruments(): ChartInstrument[] {
-  const symbolInstruments = getSharedSymbolOptions().map<ChartInstrument>((symbol) => ({
+export function getReferenceChartInstruments(symbols: readonly SharedSymbolOption[] = []): ChartInstrument[] {
+  const symbolInstruments = symbols.map<ChartInstrument>((symbol) => ({
     id: symbol.symbolId,
     name: symbol.symbolName,
     type: 'SYMBOL',
@@ -126,9 +126,8 @@ export function getReferenceChartInstruments(): ChartInstrument[] {
   return [...indexInstruments, ...symbolInstruments];
 }
 
-export function filterChartInstruments(query: string): ChartInstrument[] {
+export function filterChartInstruments(query: string, instruments: readonly ChartInstrument[]): ChartInstrument[] {
   const normalized = query.trim().toLowerCase();
-  const instruments = getReferenceChartInstruments();
 
   if (!normalized) {
     return instruments.slice(0, 18);

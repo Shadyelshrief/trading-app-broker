@@ -5,15 +5,11 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { BrokerLookupsService } from '../../shared/lookups/broker-lookups.service';
 import type { CashDetailsRow, CashPositionSummary } from '../cash-details/cash-details.models';
-import type { CustodianDetailsRow } from '../custodian-details/custodian-details.models';
 import {
   buildCashDetailsParams,
   buildCashPositionParams,
-  buildPositioningParams,
-  buildSymbolParams,
   mapCashDetailsResponse,
   mapCashPositionSummaryResponse,
-  mapCustodianDetailsResponse,
   mapPortfolioPositioningResponse
 } from './portfolio-positioning.mapper';
 import type {
@@ -22,8 +18,7 @@ import type {
   ClientOption,
   PortfolioOption,
   PortfolioPositionRow,
-  PortfolioPositioningRequest,
-  PortfolioSymbolRequest
+  PortfolioPositioningRequest
 } from './portfolio-positioning.models';
 
 @Injectable({ providedIn: 'root' })
@@ -50,12 +45,6 @@ export class PortfolioPositioningService {
     return this.http
       .get<unknown>(`${environment.apiUrl}/clients/${encodeURIComponent(request.clientId)}/positions`, { params })
       .pipe(map((response) => mapPortfolioPositioningResponse(response)));
-  }
-
-  getCustodianDetails(request: PortfolioSymbolRequest): Observable<CustodianDetailsRow[]> {
-    return this.http
-      .get<unknown>(`${this.base}/custodian-details`, { params: buildSymbolParams(request) })
-      .pipe(map((response) => mapCustodianDetailsResponse(response)));
   }
 
   getCashDetails(request: CashDetailsRequest): Observable<CashDetailsRow[]> {

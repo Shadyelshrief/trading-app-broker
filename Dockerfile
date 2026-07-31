@@ -10,7 +10,7 @@ RUN npm run build -- --configuration production
 FROM nginx:alpine
 ENV ADMIN_API_HOST=host.docker.internal
 ENV ADMIN_API_PORT=9090
-ENV FEEDER_HOST=feeder
+ENV FEEDER_HOST=host.docker.internal
 ENV FEEDER_PORT=7070
 COPY ./nginx/default.conf.template /etc/nginx/templates/default.conf.template
 

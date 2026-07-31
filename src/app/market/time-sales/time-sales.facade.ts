@@ -10,18 +10,16 @@ import {
   scan,
   shareReplay,
   startWith,
-  switchMap
+  switchMap,
+  tap
 } from 'rxjs';
 
 import { MarketDataService, WebSocketState } from '../../core/market-data';
+import { ReferenceDataLookupsService } from '../../shared/lookups/reference-data-lookups.service';
 import { MarketGridSettings } from '../../shared/models/market-grid.model';
+import { mapAssetsToSharedSymbolOptions } from '../../shared/utils/symbol-reference.util';
 import { createTimeSalesColumns } from './time-sales.columns';
-import {
-  filterSymbolOptions,
-  getSymbolOptionsForMarket,
-  TIME_SALES_MARKET_OPTIONS,
-  TIME_SALES_SYMBOL_OPTIONS
-} from './time-sales.filters';
+import { TIME_SALES_MARKET_OPTIONS } from './time-sales.filters';
 import {
   applyTimeSalesFilters,
   buildTimeSalesTopics,
@@ -76,13 +74,35 @@ interface SubscriptionUniverse {
 @Injectable()
 export class TimeSalesFacade {
   private readonly marketData = inject(MarketDataService);
+  private readonly reference = inject(ReferenceDataLookupsService);
   private readonly filtersSubject = new BehaviorSubject<TimeSalesFilters>(DEFAULT_FILTERS);
   private readonly settingsSubject = new BehaviorSubject<MarketGridSettings>(this.readStoredSettings());
-  private readonly symbolLookup = new Map<string, SymbolOption>(
-    TIME_SALES_SYMBOL_OPTIONS.map((option) => [
-      `${option.marketShortName === 'TADAWUL' ? 'tadawul' : option.marketShortName.toLowerCase()}:${option.symbolId}`,
-      option
-    ])
+  private readonly symbolLookup = new Map<string, SymbolOption>();
+  private readonly symbolOptions$ = this.filtersSubject.pipe(
+    map((filters) => ({ market: filters.market, query: filters.symbolQuery })),
+    distinctUntilChanged(
+      (left, right) => left.market === right.market && left.query === right.query
+    ),
+    switchMap(({ market, query }) =>
+      this.reference.searchAssets(query, market === 'all' ? undefined : market)
+    ),
+    map((assets) =>
+      mapAssetsToSharedSymbolOptions(assets).map((symbol) => ({
+        symbolId: symbol.symbolId,
+        symbolName: symbol.symbolName,
+        marketShortName: symbol.market,
+        marketName: marketNameFor(symbol.market),
+        currency: symbol.currency
+      }))
+    ),
+    tap((options) => {
+      this.symbolLookup.clear();
+      for (const option of options) {
+        this.symbolLookup.set(`${option.marketShortName.toLowerCase()}:${option.symbolId}`, option);
+      }
+    }),
+    startWith([] as SymbolOption[]),
+    shareReplay({ bufferSize: 1, refCount: true })
   );
 
   readonly columns = createTimeSalesColumns();
@@ -164,17 +184,15 @@ export class TimeSalesFacade {
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
-  readonly vm$ = combineLatest([this.filters$, this.settings$, this.tradeStreamState$, this.connectionState$]).pipe(
-    map(([filters, settings, tradeState, connectionState]) => {
-      const symbolOptions = getSymbolOptionsForMarket(filters.market);
-      const filteredSymbolOptions = filterSymbolOptions(filters.market, filters.symbolQuery);
+  readonly vm$ = combineLatest([this.filters$, this.settings$, this.tradeStreamState$, this.connectionState$, this.symbolOptions$]).pipe(
+    map(([filters, settings, tradeState, connectionState, allSymbolOptions]) => {
       const visibleRows = applyTimeSalesFilters(tradeState.rows, filters);
 
       return {
         filters,
         marketOptions: TIME_SALES_MARKET_OPTIONS,
-        symbolOptions,
-        filteredSymbolOptions,
+        symbolOptions: allSymbolOptions,
+        filteredSymbolOptions: allSymbolOptions,
         rows: visibleRows,
         loading: tradeState.loading,
         error: tradeState.error,
@@ -236,7 +254,7 @@ export class TimeSalesFacade {
       ...current,
       allSymbols: false,
       symbol,
-      symbolQuery: symbolDisplayValue(symbol)
+      symbolQuery: symbol?.symbolId ?? ''
     });
   }
 
@@ -279,4 +297,8 @@ function isSymbolCompatibleWithMarket(symbol: SymbolOption, market: TimeSalesMar
   }
 
   return symbol.marketShortName.toLowerCase() === market;
+}
+
+function marketNameFor(market: string): string {
+  return TIME_SALES_MARKET_OPTIONS.find((option) => option.value === market.toLowerCase())?.label ?? `${market} Market`;
 }

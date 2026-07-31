@@ -10,10 +10,16 @@
 import { WorkspaceTheme } from './workspace-theme';
 
 
-export interface UpdateWorkspaceRequest { 
+export interface UpsertWorkspaceRequest { 
+    /**
+     * Pass if editing known profile, omit to register fresh
+     */
+    id?: string | null;
+    name: string;
     theme: WorkspaceTheme;
     languageId: string;
     layoutJson?: object | null;
+    isDefault?: boolean;
 }
 
 

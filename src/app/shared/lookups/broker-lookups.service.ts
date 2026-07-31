@@ -34,7 +34,7 @@ export class BrokerLookupsService {
   searchClients(query: string): Observable<BrokerClientOption[]> {
     const q = query.trim();
 
-    if (q.length < 2) {
+    if (!q) {
       return of([]);
     }
 

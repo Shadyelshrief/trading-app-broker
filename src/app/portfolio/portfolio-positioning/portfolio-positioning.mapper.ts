@@ -2,7 +2,6 @@ import { HttpParams } from '@angular/common/http';
 
 import { buildTickTopic } from '../../core/market-data';
 import type { CashDetailsRow, CashPositionSummary } from '../cash-details/cash-details.models';
-import type { CustodianDetailsRow } from '../custodian-details/custodian-details.models';
 import type {
   CashDetailsRequest,
   CashPositionRequest,
@@ -10,7 +9,6 @@ import type {
   PortfolioOption,
   PortfolioPositionRow,
   PortfolioPositioningRequest,
-  PortfolioSymbolRequest,
   PortfolioTotals
 } from './portfolio-positioning.models';
 
@@ -30,10 +28,6 @@ export function mapPortfolioPositioningResponse(response: unknown): PortfolioPos
   return mapArray(source)
     .map(mapPortfolioPositionRow)
     .filter((row): row is PortfolioPositionRow => row !== null);
-}
-
-export function mapCustodianDetailsResponse(response: unknown): CustodianDetailsRow[] {
-  return mapArray(response).map(mapCustodianDetailsRow).filter((row): row is CustodianDetailsRow => row !== null);
 }
 
 export function mapCashDetailsResponse(response: unknown): CashDetailsRow[] {
@@ -58,18 +52,6 @@ export function mapCashPositionSummaryResponse(response: unknown, currency: stri
 
 export function buildPositioningParams(request: PortfolioPositioningRequest): HttpParams {
   return new HttpParams().set('clientId', request.clientId).set('portfolioId', request.portfolioId);
-}
-
-export function buildSymbolParams(request: PortfolioSymbolRequest): HttpParams {
-  let params = buildPositioningParams(request)
-    .set('exchange', request.exchange)
-    .set('symbolId', request.symbolId);
-
-  if (request.currency) {
-    params = params.set('currency', request.currency);
-  }
-
-  return params;
 }
 
 export function buildCashDetailsParams(request: CashDetailsRequest): HttpParams {
@@ -251,28 +233,6 @@ function mapPortfolioPositionRow(value: unknown): PortfolioPositionRow | null {
     updatedAt: resolveTimestamp(record['updatedAt'] ?? record['updated_at']),
     priceDirection: 'UNCHANGED'
   };
-}
-
-function mapCustodianDetailsRow(value: unknown): CustodianDetailsRow | null {
-  const record = toRecord(value);
-
-  return record
-    ? {
-        custodian: toString(record['custodian'] ?? record['custodianName'] ?? record['name']) ?? '--',
-        quantity: toNumber(record['quantity']) ?? 0,
-        pledged: toNumber(record['pledged']) ?? 0,
-        available: toNumber(record['available']) ?? 0,
-        cost: toNumber(record['cost']) ?? 0,
-        marketValue: toNumber(record['marketValue'] ?? record['market_value']) ?? 0,
-        unrealizedGainLoss: toNumber(record['unrealizedGainLoss'] ?? record['unrealized_gain_loss']) ?? 0,
-        costCcc: toNumber(record['costCcc'] ?? record['costCCC'] ?? record['cost_ccc']) ?? 0,
-        marketValueCcc: toNumber(record['marketValueCcc'] ?? record['marketValueCCC'] ?? record['market_value_ccc']) ?? 0,
-        unrealizedGainLossCcc:
-          toNumber(record['unrealizedGainLossCcc'] ?? record['unrealizedGainLossCCC'] ?? record['unrealized_gain_loss_ccc']) ?? 0,
-        outstanding: toNumber(record['outstanding']) ?? 0,
-        inTransfer: toNumber(record['inTransfer'] ?? record['in_transfer']) ?? 0
-      }
-    : null;
 }
 
 function mapCashDetailsRow(value: unknown): CashDetailsRow | null {

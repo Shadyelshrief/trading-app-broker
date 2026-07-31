@@ -2,6 +2,8 @@ import { Injectable, OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, Observable, Subscription, catchError, finalize, map, of } from 'rxjs';
 
 import type { MarketChartSeries, MarketChartSeriesPoint } from '../../shared/models/market-chart.model';
+import { ReferenceDataLookupsService } from '../../shared/lookups/reference-data-lookups.service';
+import { mapAssetsToSharedSymbolOptions } from '../../shared/utils/symbol-reference.util';
 import { ChartDataService } from '../services/chart-data.service';
 import { ChartRealtimeService } from '../services/chart-realtime.service';
 import { IndicatorCalculatorService } from '../technical-indicators/indicator-calculator.service';
@@ -49,6 +51,7 @@ const initialState: ChartState = {
 
 @Injectable()
 export class ChartingFacade implements OnDestroy {
+  private readonly reference = inject(ReferenceDataLookupsService);
   private readonly chartDataService = inject(ChartDataService);
   private readonly realtimeService = inject(ChartRealtimeService);
   private readonly indicatorCalculator = inject(IndicatorCalculatorService);
@@ -56,6 +59,8 @@ export class ChartingFacade implements OnDestroy {
 
   private readonly stateSubject = new BehaviorSubject<ChartViewModel>(this.toViewModel(initialState));
   private currentState: ChartState = initialState;
+  private instrumentSearchSubscription?: Subscription;
+  private comparisonSearchSubscription?: Subscription;
   private realtimeSubscription?: Subscription;
   private readonly comparisonRealtimeSubscriptions = new Map<string, Subscription>();
 
@@ -63,11 +68,17 @@ export class ChartingFacade implements OnDestroy {
   readonly indicatorDefinitions = this.technicalIndicators.definitions;
 
   updateInstrumentQuery(query: string): void {
-    this.patch({ instrumentOptions: filterChartInstruments(query) });
+    this.instrumentSearchSubscription?.unsubscribe();
+    this.instrumentSearchSubscription = this.searchInstruments(query).subscribe((instrumentOptions) =>
+      this.patch({ instrumentOptions })
+    );
   }
 
   updateComparisonQuery(query: string): void {
-    this.patch({ comparisonOptions: filterChartInstruments(query) });
+    this.comparisonSearchSubscription?.unsubscribe();
+    this.comparisonSearchSubscription = this.searchInstruments(query).subscribe((comparisonOptions) =>
+      this.patch({ comparisonOptions })
+    );
   }
 
   selectInstrument(instrument: ChartInstrument): void {
@@ -194,8 +205,17 @@ export class ChartingFacade implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.instrumentSearchSubscription?.unsubscribe();
+    this.comparisonSearchSubscription?.unsubscribe();
     this.realtimeSubscription?.unsubscribe();
     this.clearComparisonRealtime();
+  }
+
+  private searchInstruments(query: string): Observable<ChartInstrument[]> {
+    return this.reference.searchAssets(query).pipe(
+      map(mapAssetsToSharedSymbolOptions),
+      map((symbols) => filterChartInstruments(query, getReferenceChartInstruments(symbols)))
+    );
   }
 
   private loadHistoricalData(): void {

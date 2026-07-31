@@ -1,30 +1,12 @@
 services:
-  feeder:
-    image: awad422/k-feeder:v1
-    container_name: broker-karepo-feeder
-    ports:
-      - "7070:7070"
-    restart: unless-stopped
-
   broker-ui:
+    build: .
     image: shadyelshrief/broker-karepo:latest
     container_name: broker-karepo-ui
-    pull_policy: always
-    depends_on:
-      - feeder
     environment:
-      ADMIN_API_HOST: host.docker.internal
-      ADMIN_API_PORT: "9090"
-      FEEDER_HOST: feeder
+      FEEDER_HOST: host.docker.internal
       FEEDER_PORT: "7070"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
       - "8081:80"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s

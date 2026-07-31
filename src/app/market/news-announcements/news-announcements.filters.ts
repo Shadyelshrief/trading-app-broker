@@ -1,4 +1,4 @@
-import { getSharedSymbolOptions } from '../../shared/utils/symbol-reference.util';
+import type { SharedSymbolOption } from '../../shared/utils/symbol-reference.util';
 import {
   MarketOption,
   NewsAnnouncementsMarketFilter,
@@ -18,28 +18,13 @@ export const NEWS_ANNOUNCEMENTS_MARKET_OPTIONS: readonly MarketOption[] = [
   { label: 'AbuDhabi Stock Market', value: 'adx' }
 ] as const;
 
-export function getNewsSymbolOptions(): SymbolOption[] {
-  return getSharedSymbolOptions().map((symbol) => ({
+export function getNewsSymbolOptions(symbols: readonly SharedSymbolOption[]): SymbolOption[] {
+  return symbols.map((symbol) => ({
     symbolId: symbol.symbolId,
     symbolName: symbol.symbolName,
     marketShortName: symbol.market,
     marketName: MARKET_NAME_LOOKUP[symbol.market] ?? `${symbol.market} Market`
   }));
-}
-
-export function filterNewsSymbolOptions(query: string): SymbolOption[] {
-  const normalized = query.trim().toLowerCase();
-  const options = getNewsSymbolOptions();
-
-  if (!normalized) {
-    return options.slice(0, 12);
-  }
-
-  return options
-    .filter((option) =>
-      `${option.symbolId} ${option.symbolName} ${option.marketShortName}`.toLowerCase().includes(normalized)
-    )
-    .slice(0, 12);
 }
 
 export function displayNewsSymbol(value: string | SymbolOption | null | undefined): string {

@@ -17,9 +17,11 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
-import { UpdateWorkspaceRequest } from '../model/update-workspace-request';
+import { UpsertWorkspaceRequest } from '../model/upsert-workspace-request';
 // @ts-ignore
 import { WorkspacePreferencesResponse } from '../model/workspace-preferences-response';
+// @ts-ignore
+import { WorkspacesMyPreferencesGet200Response } from '../model/workspaces-my-preferences-get200-response';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -28,7 +30,7 @@ import { BaseService } from '../api.base.service';
 
 
 export interface WorkspacesMyPreferencesPutRequestParams {
-    updateWorkspaceRequest: UpdateWorkspaceRequest;
+    upsertWorkspaceRequest: UpsertWorkspaceRequest;
 }
 
 
@@ -42,16 +44,16 @@ export class WorkspaceService extends BaseService {
     }
 
     /**
-     * Get My Workspace
-     * Retrieve the logged-in broker\&#39;s workspace preferences.
+     * Get All My Workspaces
+     * Retrieve all named workspace configurations and layouts assigned to this logged-in broker.
      * @endpoint get /workspaces/my-preferences
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public workspacesMyPreferencesGet(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<WorkspacePreferencesResponse>;
-    public workspacesMyPreferencesGet(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<WorkspacePreferencesResponse>>;
-    public workspacesMyPreferencesGet(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<WorkspacePreferencesResponse>>;
+    public workspacesMyPreferencesGet(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<WorkspacesMyPreferencesGet200Response>;
+    public workspacesMyPreferencesGet(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<WorkspacesMyPreferencesGet200Response>>;
+    public workspacesMyPreferencesGet(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<WorkspacesMyPreferencesGet200Response>>;
     public workspacesMyPreferencesGet(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
@@ -84,7 +86,7 @@ export class WorkspaceService extends BaseService {
 
         let localVarPath = `/workspaces/my-preferences`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<WorkspacePreferencesResponse>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<WorkspacesMyPreferencesGet200Response>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,
@@ -98,8 +100,8 @@ export class WorkspaceService extends BaseService {
     }
 
     /**
-     * Update My Workspace
-     * Upsert the broker\&#39;s workspace layout and theme.
+     * Save or Create Named Workspace Profile
+     * Upserts a specific dashboard layout by ID or unique name assignment.
      * @endpoint put /workspaces/my-preferences
      * @param requestParameters
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -110,9 +112,9 @@ export class WorkspaceService extends BaseService {
     public workspacesMyPreferencesPut(requestParameters: WorkspacesMyPreferencesPutRequestParams, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<WorkspacePreferencesResponse>>;
     public workspacesMyPreferencesPut(requestParameters: WorkspacesMyPreferencesPutRequestParams, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<WorkspacePreferencesResponse>>;
     public workspacesMyPreferencesPut(requestParameters: WorkspacesMyPreferencesPutRequestParams, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
-        const updateWorkspaceRequest = requestParameters?.updateWorkspaceRequest;
-        if (updateWorkspaceRequest === null || updateWorkspaceRequest === undefined) {
-            throw new Error('Required parameter updateWorkspaceRequest was null or undefined when calling workspacesMyPreferencesPut.');
+        const upsertWorkspaceRequest = requestParameters?.upsertWorkspaceRequest;
+        if (upsertWorkspaceRequest === null || upsertWorkspaceRequest === undefined) {
+            throw new Error('Required parameter upsertWorkspaceRequest was null or undefined when calling workspacesMyPreferencesPut.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -157,7 +159,7 @@ export class WorkspaceService extends BaseService {
         return this.httpClient.request<WorkspacePreferencesResponse>('put', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                body: updateWorkspaceRequest,
+                body: upsertWorkspaceRequest,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

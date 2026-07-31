@@ -16,7 +16,7 @@ export function createOrderTransactionHistoryColumns(): ColDef<OrderTransactionH
     { headerName: 'Average Price', field: 'averagePrice', width: 150, type: 'rightAligned', valueFormatter: (p) => formatPrice(p.value) },
     { headerName: 'Status', field: 'status', width: 140 },
     { headerName: 'Delivered', field: 'delivered', width: 130 },
-    { headerName: 'Custodian', field: 'custodian', width: 150 }
+    { headerName: 'Session', field: 'session', width: 150 }
   ];
 }
 

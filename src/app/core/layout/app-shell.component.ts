@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
+import { MarketDataService } from '../market-data';
 import { ShellLayoutService } from './shell-layout.service';
 import { TradingHeaderComponent } from './trading-header/trading-header.component';
 import { TradingSidebarComponent } from './trading-sidebar/trading-sidebar.component';
@@ -15,4 +16,9 @@ import { TradingSidebarComponent } from './trading-sidebar/trading-sidebar.compo
 })
 export class AppShellComponent {
   protected readonly layout = inject(ShellLayoutService);
+  private readonly marketData = inject(MarketDataService);
+
+  constructor() {
+    this.marketData.connect();
+  }
 }

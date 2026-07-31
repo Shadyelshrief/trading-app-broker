@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { ReferenceDataLookupsService } from '../../shared/lookups/reference-data-lookups.service';
+import { mapAssetsToSharedSymbolOptions } from '../../shared/utils/symbol-reference.util';
 import type { TechnicalIndicatorConfig, TechnicalIndicatorSeries } from '../technical-indicators/indicator.models';
 
 export type PerformanceDirection = 'UP' | 'DOWN' | 'UNCHANGED';
@@ -83,6 +85,7 @@ export interface ComparisonSeries {
 @Injectable({ providedIn: 'root' })
 export class MarketPerformanceService {
   private readonly http = inject(HttpClient);
+  private readonly reference = inject(ReferenceDataLookupsService);
   private readonly base = `${environment.apiUrl}/market-performance`;
 
   getIndexOptions(query: string): Observable<IndexOption[]> {
@@ -92,9 +95,17 @@ export class MarketPerformanceService {
   }
 
   getSecurityOptions(query: string): Observable<SecurityOption[]> {
-    return this.http
-      .get<unknown>(`${this.base}/securities`, { params: new HttpParams().set('query', query) })
-      .pipe(map((response) => mapArray(response).map(mapSecurityOption).filter((item): item is SecurityOption => item !== null)));
+    return this.reference.searchAssets(query).pipe(
+      map((assets) =>
+        mapAssetsToSharedSymbolOptions(assets)
+          .map((symbol) => ({
+            symbolId: symbol.symbolId,
+            symbolName: symbol.symbolName,
+            market: symbol.market,
+            currency: symbol.currency
+          }))
+      )
+    );
   }
 
   getIndexPerformance(request: PerformanceRequest): Observable<IndexPerformanceRow[]> {
@@ -168,25 +179,6 @@ function mapIndexOption(value: unknown): IndexOption | null {
         indexId,
         indexName: toString(record['indexName'] ?? record['name'] ?? record['label']) ?? indexId,
         market: toString(record['market'] ?? record['exchange']) ?? ''
-      }
-    : null;
-}
-
-function mapSecurityOption(value: unknown): SecurityOption | null {
-  const record = toRecord(value);
-
-  if (!record) {
-    return null;
-  }
-
-  const symbolId = toString(record['symbolId'] ?? record['id'] ?? record['symbol']);
-
-  return symbolId
-    ? {
-        symbolId,
-        symbolName: toString(record['symbolName'] ?? record['name'] ?? record['label']) ?? symbolId,
-        market: toString(record['market'] ?? record['exchange']) ?? '',
-        currency: toString(record['currency']) ?? ''
       }
     : null;
 }

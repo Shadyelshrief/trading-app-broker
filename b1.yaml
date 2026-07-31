@@ -56,33 +56,40 @@ paths:
 
   /workspaces/my-preferences:
     get:
-      summary: Get My Workspace
-      description: Retrieve the logged-in broker's workspace preferences.
-      tags: [Workspace]
+      summary: Get All My Workspaces
+      description: Retrieve all named workspace configurations and layouts assigned to this logged-in broker.
+      tags: [ Workspace ]
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       responses:
         '200':
-          description: Workspace preferences retrieved
+          description: List of workspaces retrieved successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkspacePreferencesResponse'
+                allOf:
+                  - $ref: '#/components/schemas/BaseApiResponse'
+                  - type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/WorkspacePreferencesDto'
     put:
-      summary: Update My Workspace
-      description: Upsert the broker's workspace layout and theme.
-      tags: [Workspace]
+      summary: Save or Create Named Workspace Profile
+      description: Upserts a specific dashboard layout by ID or unique name assignment.
+      tags: [ Workspace ]
       security:
-        - BearerAuth: []
+        - BearerAuth: [ ]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateWorkspaceRequest'
+              $ref: '#/components/schemas/UpsertWorkspaceRequest'
       responses:
         '200':
-          description: Workspace preferences saved
+          description: Workspace configurations updated
           content:
             application/json:
               schema:
@@ -102,9 +109,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarketListResponse'
-  /markets/{marketCode}/products:
+  /markets/{marketCode}/assets:
     get:
-      summary: Get Products by Market
+      summary: Get Assets by Market
       tags: [ Reference Data ]
       security:
         - BearerAuth: [ ]
@@ -121,7 +128,46 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductListResponse'
+                $ref: '#/components/schemas/assetsListResponse'
+  /markets/{marketCode}/assets/search:
+    get:
+      summary: Search Assets by Market
+      description: Paginated search for assets within a specific market by symbol.
+      tags: [ Reference Data ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: marketCode
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "DFM"
+        - name: q
+          in: query
+          required: true
+          description: Symbol or name to search for
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number (starts at 1)
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          description: Number of records per page
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful paginated retrieval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAssetsResponse'
   /markets/{marketCode}/sectors:
     get:
       summary: Get Sectors by Market
@@ -161,9 +207,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SectorListResponse'
-  /sectors/{sectorId}/products:
+  /sectors/{sectorId}/assets:
     get:
-      summary: Get Products by Sector
+      summary: Get Assets by Sector
       tags: [ Reference Data ]
       security:
         - BearerAuth: [ ]
@@ -180,7 +226,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductListResponse'
+                $ref: '#/components/schemas/assetsListResponse'
+
+  /languages:
+    get:
+      summary: Get Supported Languages
+      description: Retrieves the complete list of system-wide supported active languages for dual-language dropdown rendering.
+      tags: [ Reference Data ]
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Successful retrieval of active languages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LanguageListResponse'
+
   /clients/search:
     get:
       summary: Search Assigned Clients (Broker Only)
@@ -431,6 +493,33 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PaginatedOrderGridResponse' }
+  /orders/sessions:
+    get:
+      summary: Get Market Sessions
+      description: Retrieve available trading sessions for a specific market or product. The active/primary session will be marked as default.
+      tags: [ Broker Orders ]
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: market
+          in: query
+          required: false
+          description: Market UUID or Market Code (e.g., ADX)
+          schema:
+            type: string
+        - name: product
+          in: query
+          required: false
+          description: Asset UUID or Symbol (e.g., ALDAR)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful retrieval of market sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketSessionListResponse'
 
   /orders/{orderId}:
     put:
@@ -621,17 +710,23 @@ components:
       type: object
       properties:
         id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        name: { type: string, example: "Trading Monitor Desk" }
         theme: { $ref: '#/components/schemas/WorkspaceTheme' }
         languageId: { type: string, format: uuid }
         layoutJson: { type: object, nullable: true }
+        isDefault: { type: boolean, example: true }
 
-    UpdateWorkspaceRequest:
+    UpsertWorkspaceRequest:
       type: object
-      required: [theme, languageId]
+      required: [ name, theme, languageId ]
       properties:
+        id: { type: string, format: uuid, nullable: true, description: "Pass if editing known profile, omit to register fresh" }
+        name: { type: string, example: "Analysis Dashboard" }
         theme: { $ref: '#/components/schemas/WorkspaceTheme' }
         languageId: { type: string, format: uuid }
         layoutJson: { type: object, nullable: true }
+        isDefault: { type: boolean, default: false }
 
     WorkspacePreferencesResponse:
       allOf:
@@ -658,7 +753,7 @@ components:
         name: { type: string }
         description: { type: string, nullable: true }
 
-    ProductDto:
+    assetsDto:
       type: object
       properties:
         id: { type: string, format: uuid }
@@ -695,14 +790,29 @@ components:
             body:
               type: array
               items: { $ref: '#/components/schemas/SectorDto' }
-    ProductListResponse:
+    assetsListResponse:
       allOf:
         - $ref: '#/components/schemas/BaseApiResponse'
         - type: object
           properties:
             body:
               type: array
-              items: { $ref: '#/components/schemas/ProductDto' }
+              items: { $ref: '#/components/schemas/assetsDto' }
+    PaginatedAssetsResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items: { $ref: '#/components/schemas/assetsDto' }
+                currentPage: { type: integer }
+                totalPages: { type: integer }
+                totalElements: { type: integer, format: int64 }
+                hasNext: { type: boolean }
     ClientSearchResponse:
       allOf:
         - $ref: '#/components/schemas/BaseApiResponse'
@@ -761,7 +871,7 @@ components:
       properties:
         marketName:
           type: string
-        productName:
+        assetsName:
           type: string
         symbol:
           type: string
@@ -901,7 +1011,7 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/ProductDto'
+            $ref: '#/components/schemas/assetsDto'
 
     CreateWatchlistRequest:
       type: object
@@ -946,7 +1056,7 @@ components:
 
     OnlineOrderRequest:
       type: object
-      required: [ targetClientId, portfolioId, walletId, productId, marketId, direction, orderType, timeInForce, quantity ]
+      required: [ targetClientId, portfolioId, walletId, assetsId, marketId, direction, orderType, timeInForce, quantity ]
       properties:
         targetClientId:
           type: string
@@ -954,14 +1064,49 @@ components:
           description: "Ignored/Overridden by Retail Gateway. Required for Broker Gateway."
         portfolioId: { type: string, format: uuid }
         walletId: { type: string, format: uuid }
-        productId: { type: string, format: uuid }
+        assetsId: { type: string, format: uuid }
         marketId: { type: string, format: uuid }
         direction: { type: string, enum: [ BUY, SELL ] }
         orderType: { type: string, enum: [ MARKET, LIMIT ] }
         timeInForce: { type: string, enum: [ DAY, GTC, IOC, FOK ] }
         quantity: { type: integer, format: int64 }
         price: { type: number, format: double, nullable: true }
-
+    MarketSessionDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        nameLocal:
+          type: string
+          nullable: true
+        sessionOrder:
+          type: integer
+        sessionStart:
+          type: string
+          example: "09:00:00"
+        sessionEnd:
+          type: string
+          example: "16:00:00"
+        status:
+          type: string
+          example: "ACTIVE"
+        isPrimarySession:
+          type: boolean
+        isDefault:
+          type: boolean
+          description: "True for the first session in the sorted list to help frontend auto-selection"
+    MarketSessionListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: array
+              items:
+                $ref: '#/components/schemas/MarketSessionDto'
     OrderModifyRequest:
       type: object
       required: [ orderId, newQuantity ]
@@ -1044,3 +1189,36 @@ components:
                 totalPages: { type: integer }
                 totalElements: { type: integer, format: int64 }
                 hasNext: { type: boolean }
+
+    LanguageDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "019d0b34-5c3e-72b9-a9c3-e3745ebbb5f5"
+        code:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: "en"
+        name:
+          type: string
+          example: "English"
+        nameLocal:
+          type: string
+          nullable: true
+          example: "الانجليزية"
+        isActive:
+          type: boolean
+          example: true
+
+    LanguageListResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseApiResponse'
+        - type: object
+          properties:
+            body:
+              type: array
+              items:
+                $ref: '#/components/schemas/LanguageDto'

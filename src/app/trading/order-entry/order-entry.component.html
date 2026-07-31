@@ -52,7 +52,7 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Portfolio</mat-label>
-        <mat-select formControlName="portfolioId" (valueChange)="selectPortfolio($event)">
+        <mat-select formControlName="portfolioId" [disabled]="!vm.selectedClient" (valueChange)="selectPortfolio($event)">
           @for (portfolio of vm.portfolioOptions; track portfolio.portfolioId) {
             <mat-option [value]="portfolio.portfolioId">{{ portfolio.portfolioName }} · {{ portfolio.currency }}</mat-option>
           }
@@ -61,7 +61,7 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Cash Account</mat-label>
-        <mat-select formControlName="cashAccountId">
+        <mat-select formControlName="cashAccountId" [disabled]="!form.controls.portfolioId.value">
           @for (account of vm.cashAccountOptions; track account.cashAccountId) {
             <mat-option [value]="account.cashAccountId">{{ account.cashAccountId }} · {{ account.cashAccountName }}</mat-option>
           }
@@ -69,8 +69,17 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
+        <mat-label>Market</mat-label>
+        <mat-select formControlName="market" (valueChange)="selectMarket($event)">
+          @for (market of vm.lookups?.markets ?? []; track market.value) {
+            <mat-option [value]="market.value">{{ market.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
         <mat-label>Symbol</mat-label>
-        <input matInput type="text" [formControl]="symbolSearch" [matAutocomplete]="symbolAutocomplete" />
+        <input matInput type="text" [formControl]="symbolSearch" [matAutocomplete]="symbolAutocomplete" [placeholder]="form.controls.market.value ? 'Search symbol ID or name' : 'Select market first'" />
         <mat-autocomplete #symbolAutocomplete="matAutocomplete" [displayWith]="displaySymbol" (optionSelected)="selectSymbol($event.option.value)">
           @for (symbol of vm.symbolOptions; track symbol.symbolId + symbol.market) {
             <mat-option [value]="symbol">{{ symbol.symbolId }} · {{ symbol.symbolName }} · {{ symbol.market }}</mat-option>
@@ -131,10 +140,10 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Custodian</mat-label>
-        <mat-select formControlName="custodianId">
-          @for (custodian of (vm.symbolOptionsState?.custodians?.length ? vm.symbolOptionsState?.custodians : vm.lookups?.custodians) ?? []; track custodian.value) {
-            <mat-option [value]="custodian.value">{{ custodian.label }}</mat-option>
+        <mat-label>Session</mat-label>
+        <mat-select formControlName="sessionId">
+          @for (session of vm.symbolOptionsState?.sessions ?? []; track session.value) {
+            <mat-option [value]="session.value">{{ session.label }}</mat-option>
           }
         </mat-select>
       </mat-form-field>

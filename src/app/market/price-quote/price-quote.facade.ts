@@ -7,10 +7,13 @@ import {
   scan,
   shareReplay,
   startWith,
-  switchMap
+  switchMap,
+  tap
 } from 'rxjs';
 
 import { buildTickTopic, MarketDataService } from '../../core/market-data';
+import { ReferenceDataLookupsService } from '../../shared/lookups/reference-data-lookups.service';
+import { mapAssetsToSharedSymbolOptions } from '../../shared/utils/symbol-reference.util';
 import { applyFeederTickToFullMarketRow, parseFullMarketFeederTick } from '../full-market/full-market-feed.mapper';
 import { buildReferenceFullMarketRows } from '../full-market/full-market-reference.data';
 import { FullMarketRow } from '../models/full-market-row.model';
@@ -27,20 +30,35 @@ interface PriceQuoteStateInput {
 @Injectable()
 export class PriceQuoteFacade {
   private readonly marketData = inject(MarketDataService);
+  private readonly reference = inject(ReferenceDataLookupsService);
   private readonly selectedRowSubject = new BehaviorSubject<FullMarketRow>(createFallbackRow('ADX', 'IHC'));
+  private readonly symbolQuerySubject = new BehaviorSubject('');
+  private availableSymbols: FullMarketRow[] = [];
 
   readonly vm$ = this.selectedRowSubject.pipe(
     distinctUntilChanged((left, right) => left.market === right.market && left.symbolId === right.symbolId),
     switchMap((selectedRow) => {
       const topic = buildTickTopic(selectedRow.market, selectedRow.symbolId);
-      const availableSymbols = buildReferenceFullMarketRows(selectedRow.market);
+      const availableSymbols$ = this.symbolQuerySubject.pipe(
+        switchMap((query) => this.reference.searchAssets(query, selectedRow.market)),
+        map((assets) =>
+          mapAssetsToSharedSymbolOptions(assets).map((symbol) => ({
+            ...createFallbackRow(symbol.market, symbol.symbolId),
+            symbolName: symbol.symbolName,
+            currency: symbol.currency
+          }))
+        ),
+        tap((symbols) => (this.availableSymbols = symbols)),
+        startWith([] as FullMarketRow[])
+      );
 
       return combineLatest([
         this.marketData.observe<unknown>(topic).pipe(startWith(undefined)),
-        this.marketData.getConnectionState().pipe(startWith(null))
+        this.marketData.getConnectionState().pipe(startWith(null)),
+        availableSymbols$
       ]).pipe(
         scan(
-          (state, [payload, connection]) => {
+          (state, [payload, connection, availableSymbols]) => {
             const tick = payload ? parseFullMarketFeederTick(payload, topic) : null;
             const nextRow = tick ? applyFeederTickToFullMarketRow(state.row, tick) : state.row;
             const nextChartData = appendPriceQuotePoint(state.chartData, nextRow);
@@ -50,16 +68,18 @@ export class PriceQuoteFacade {
             return {
               row: nextRow,
               chartData: nextChartData,
+              availableSymbols,
               loading: !isConnected && nextChartData.length === 0
             };
           },
           {
             row: selectedRow,
             chartData: appendPriceQuotePoint([], selectedRow),
+            availableSymbols: [] as FullMarketRow[],
             loading: true
           }
         ),
-        map((state) => mapRowToPriceQuoteViewModel(state.row, state.chartData, availableSymbols, state.loading))
+        map((state) => mapRowToPriceQuoteViewModel(state.row, state.chartData, state.availableSymbols, state.loading))
       );
     }),
     shareReplay({ bufferSize: 1, refCount: true })
@@ -81,10 +101,14 @@ export class PriceQuoteFacade {
     this.selectedRowSubject.next(quote);
   }
 
+  updateSymbolQuery(query: string): void {
+    this.symbolQuerySubject.next(query);
+  }
+
   selectSymbol(symbolId: string): void {
     const current = this.selectedRowSubject.value;
     const nextRow =
-      buildReferenceFullMarketRows(current.market).find((row) => row.symbolId === symbolId) ??
+      this.availableSymbols.find((row) => row.symbolId === symbolId) ??
       current;
 
     if (nextRow.symbolId === current.symbolId && nextRow.market === current.market) {
@@ -95,6 +119,7 @@ export class PriceQuoteFacade {
       ...nextRow,
       status: nextRow.status || 'ACTIVE'
     });
+    this.symbolQuerySubject.next('');
   }
 
   captureState(baseState: PriceQuoteStateInput | undefined): PriceQuoteStateInput {

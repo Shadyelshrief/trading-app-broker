@@ -10,9 +10,11 @@
 import { AssetsDto } from './assets-dto';
 
 
-export interface WatchlistDetailsDto { 
-    id?: string;
-    name?: string;
-    items?: Array<AssetsDto>;
+export interface PaginatedAssetsResponseAllOfBody { 
+    data?: Array<AssetsDto>;
+    currentPage?: number;
+    totalPages?: number;
+    totalElements?: number;
+    hasNext?: boolean;
 }
 

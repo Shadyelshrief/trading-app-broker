@@ -17,9 +17,13 @@ import { Observable }                                        from 'rxjs';
 import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
+import { AssetsListResponse } from '../model/assets-list-response';
+// @ts-ignore
+import { LanguageListResponse } from '../model/language-list-response';
+// @ts-ignore
 import { MarketListResponse } from '../model/market-list-response';
 // @ts-ignore
-import { ProductListResponse } from '../model/product-list-response';
+import { PaginatedAssetsResponse } from '../model/paginated-assets-response';
 // @ts-ignore
 import { SectorListResponse } from '../model/sector-list-response';
 
@@ -29,8 +33,18 @@ import { Configuration }                                     from '../configurat
 import { BaseService } from '../api.base.service';
 
 
-export interface MarketsMarketCodeProductsGetRequestParams {
+export interface MarketsMarketCodeAssetsGetRequestParams {
     marketCode: string;
+}
+
+export interface MarketsMarketCodeAssetsSearchGetRequestParams {
+    marketCode: string;
+    /** Symbol or name to search for */
+    q: string;
+    /** Page number (starts at 1) */
+    page?: number;
+    /** Number of records per page */
+    size?: number;
 }
 
 export interface MarketsMarketCodeSectorsGetRequestParams {
@@ -41,7 +55,7 @@ export interface SectorsSearchGetRequestParams {
     q: string;
 }
 
-export interface SectorsSectorIdProductsGetRequestParams {
+export interface SectorsSectorIdAssetsGetRequestParams {
     sectorId: string;
 }
 
@@ -53,6 +67,62 @@ export class ReferenceDataService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
+    }
+
+    /**
+     * Get Supported Languages
+     * Retrieves the complete list of system-wide supported active languages for dual-language dropdown rendering.
+     * @endpoint get /languages
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public languagesGet(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<LanguageListResponse>;
+    public languagesGet(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<LanguageListResponse>>;
+    public languagesGet(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<LanguageListResponse>>;
+    public languagesGet(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/languages`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<LanguageListResponse>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
     }
 
     /**
@@ -112,20 +182,20 @@ export class ReferenceDataService extends BaseService {
     }
 
     /**
-     * Get Products by Market
-     * @endpoint get /markets/{marketCode}/products
+     * Get Assets by Market
+     * @endpoint get /markets/{marketCode}/assets
      * @param requestParameters
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public marketsMarketCodeProductsGet(requestParameters: MarketsMarketCodeProductsGetRequestParams, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<ProductListResponse>;
-    public marketsMarketCodeProductsGet(requestParameters: MarketsMarketCodeProductsGetRequestParams, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<ProductListResponse>>;
-    public marketsMarketCodeProductsGet(requestParameters: MarketsMarketCodeProductsGetRequestParams, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<ProductListResponse>>;
-    public marketsMarketCodeProductsGet(requestParameters: MarketsMarketCodeProductsGetRequestParams, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public marketsMarketCodeAssetsGet(requestParameters: MarketsMarketCodeAssetsGetRequestParams, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<AssetsListResponse>;
+    public marketsMarketCodeAssetsGet(requestParameters: MarketsMarketCodeAssetsGetRequestParams, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<AssetsListResponse>>;
+    public marketsMarketCodeAssetsGet(requestParameters: MarketsMarketCodeAssetsGetRequestParams, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<AssetsListResponse>>;
+    public marketsMarketCodeAssetsGet(requestParameters: MarketsMarketCodeAssetsGetRequestParams, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         const marketCode = requestParameters?.marketCode;
         if (marketCode === null || marketCode === undefined) {
-            throw new Error('Required parameter marketCode was null or undefined when calling marketsMarketCodeProductsGet.');
+            throw new Error('Required parameter marketCode was null or undefined when calling marketsMarketCodeAssetsGet.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -156,11 +226,108 @@ export class ReferenceDataService extends BaseService {
             }
         }
 
-        let localVarPath = `/markets/${this.configuration.encodeParam({name: "marketCode", value: marketCode, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/products`;
+        let localVarPath = `/markets/${this.configuration.encodeParam({name: "marketCode", value: marketCode, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/assets`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<ProductListResponse>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<AssetsListResponse>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Search Assets by Market
+     * Paginated search for assets within a specific market by symbol.
+     * @endpoint get /markets/{marketCode}/assets/search
+     * @param requestParameters
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public marketsMarketCodeAssetsSearchGet(requestParameters: MarketsMarketCodeAssetsSearchGetRequestParams, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<PaginatedAssetsResponse>;
+    public marketsMarketCodeAssetsSearchGet(requestParameters: MarketsMarketCodeAssetsSearchGetRequestParams, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<PaginatedAssetsResponse>>;
+    public marketsMarketCodeAssetsSearchGet(requestParameters: MarketsMarketCodeAssetsSearchGetRequestParams, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<PaginatedAssetsResponse>>;
+    public marketsMarketCodeAssetsSearchGet(requestParameters: MarketsMarketCodeAssetsSearchGetRequestParams, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        const marketCode = requestParameters?.marketCode;
+        if (marketCode === null || marketCode === undefined) {
+            throw new Error('Required parameter marketCode was null or undefined when calling marketsMarketCodeAssetsSearchGet.');
+        }
+        const q = requestParameters?.q;
+        if (q === null || q === undefined) {
+            throw new Error('Required parameter q was null or undefined when calling marketsMarketCodeAssetsSearchGet.');
+        }
+        const page = requestParameters?.page;
+        const size = requestParameters?.size;
+
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'q',
+            <any>q,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'page',
+            <any>page,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'size',
+            <any>size,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/markets/${this.configuration.encodeParam({name: "marketCode", value: marketCode, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/assets/search`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<PaginatedAssetsResponse>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters.toHttpParams(),
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
@@ -304,20 +471,20 @@ export class ReferenceDataService extends BaseService {
     }
 
     /**
-     * Get Products by Sector
-     * @endpoint get /sectors/{sectorId}/products
+     * Get Assets by Sector
+     * @endpoint get /sectors/{sectorId}/assets
      * @param requestParameters
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
      */
-    public sectorsSectorIdProductsGet(requestParameters: SectorsSectorIdProductsGetRequestParams, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<ProductListResponse>;
-    public sectorsSectorIdProductsGet(requestParameters: SectorsSectorIdProductsGetRequestParams, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<ProductListResponse>>;
-    public sectorsSectorIdProductsGet(requestParameters: SectorsSectorIdProductsGetRequestParams, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<ProductListResponse>>;
-    public sectorsSectorIdProductsGet(requestParameters: SectorsSectorIdProductsGetRequestParams, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public sectorsSectorIdAssetsGet(requestParameters: SectorsSectorIdAssetsGetRequestParams, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<AssetsListResponse>;
+    public sectorsSectorIdAssetsGet(requestParameters: SectorsSectorIdAssetsGetRequestParams, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<AssetsListResponse>>;
+    public sectorsSectorIdAssetsGet(requestParameters: SectorsSectorIdAssetsGetRequestParams, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<AssetsListResponse>>;
+    public sectorsSectorIdAssetsGet(requestParameters: SectorsSectorIdAssetsGetRequestParams, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         const sectorId = requestParameters?.sectorId;
         if (sectorId === null || sectorId === undefined) {
-            throw new Error('Required parameter sectorId was null or undefined when calling sectorsSectorIdProductsGet.');
+            throw new Error('Required parameter sectorId was null or undefined when calling sectorsSectorIdAssetsGet.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -348,9 +515,9 @@ export class ReferenceDataService extends BaseService {
             }
         }
 
-        let localVarPath = `/sectors/${this.configuration.encodeParam({name: "sectorId", value: sectorId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/products`;
+        let localVarPath = `/sectors/${this.configuration.encodeParam({name: "sectorId", value: sectorId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}/assets`;
         const { basePath, withCredentials } = this.configuration;
-        return this.httpClient.request<ProductListResponse>('get', `${basePath}${localVarPath}`,
+        return this.httpClient.request<AssetsListResponse>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,

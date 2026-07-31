@@ -12,8 +12,6 @@ import type {
   OrderStatisticsRequest,
   OrderStatisticsRow,
   PortfolioOption,
-  SymbolOption,
-  SymbolOrderOptions
 } from './order.models';
 import type { OrderTransactionDetails, OrderTransactionHistoryRow } from '../order-transaction-details/order-transaction-details.models';
 
@@ -29,10 +27,6 @@ export function mapCashAccountOptionsResponse(response: unknown): CashAccountOpt
   return mapArray(response).map(mapCashAccountOption).filter((item): item is CashAccountOption => item !== null);
 }
 
-export function mapSymbolOptionsResponse(response: unknown): SymbolOption[] {
-  return mapArray(response).map(mapSymbolOption).filter((item): item is SymbolOption => item !== null);
-}
-
 export function mapOrderLookupsResponse(response: unknown): OrderLookups {
   const record = toRecord(response) ?? {};
 
@@ -41,24 +35,10 @@ export function mapOrderLookupsResponse(response: unknown): OrderLookups {
     orderTypes: mapLookupArray(record['orderTypes'] ?? ['Limit Order', 'Market Order', 'Take Order', 'Hit Order']),
     goodTillOptions: mapLookupArray(record['goodTillOptions'] ?? record['goodTill'] ?? ['Day', 'GTW', 'GTM', 'GTD', 'FOK', 'GTC', 'FAK', 'At Opening', 'GTT']),
     fillTerms: mapLookupArray(record['fillTerms'] ?? ['Market Default', 'AON', 'MF', 'MB']),
-    custodians: mapLookupArray(record['custodians'] ?? []),
     markets: mapLookupArray(record['markets'] ?? ['All Markets', 'ADX', 'DFM', 'Saudi Arabian Stock Market']),
     statuses: mapLookupArray(record['statuses'] ?? []),
     statusGroups: mapLookupArray(record['statusGroups'] ?? ['Outstanding', 'Market Outstanding', 'Cancelled', 'Partially Executed', 'Fully Executed', 'Rejected']),
     maxExpiryDate: toString(record['maxExpiryDate'] ?? record['max_expiry_date'])
-  };
-}
-
-export function mapSymbolOrderOptionsResponse(response: unknown): SymbolOrderOptions {
-  const record = toRecord(response) ?? {};
-
-  return {
-    orderTypes: mapLookupArray(record['orderTypes'] ?? ['Limit Order', 'Market Order', 'Take Order', 'Hit Order']),
-    goodTillOptions: mapLookupArray(record['goodTillOptions'] ?? record['goodTill'] ?? ['Day', 'GTW', 'GTM', 'GTD', 'FOK', 'GTC', 'FAK', 'At Opening', 'GTT']),
-    custodians: mapLookupArray(record['custodians'] ?? []),
-    fillTerms: mapLookupArray(record['fillTerms'] ?? ['Market Default', 'AON', 'MF', 'MB']),
-    maxExpiryDate: toString(record['maxExpiryDate'] ?? record['max_expiry_date']),
-    warning: toString(record['warning'] ?? record['marketWarning'] ?? record['productWarning'])
   };
 }
 
@@ -109,7 +89,7 @@ export function mapOrderDetailsResponse(response: unknown): OrderTransactionDeta
       company: toString(record['company'] ?? record['symbolName']) ?? '',
       fillTerm: toString(record['fillTerm'] ?? record['fill_term']) ?? '',
       orderDate: toString(record['orderDate'] ?? record['order_date']) ?? '',
-      custodian: toString(record['custodian']) ?? '',
+      session: toString(record['sessionName'] ?? record['session'] ?? record['marketSession'] ?? record['sessionId']) ?? '',
       minimumQuantity: toNumber(record['minimumQuantity'] ?? record['minimum_quantity']) ?? 0,
       period: toString(record['period'] ?? record['goodTill']) ?? '',
       disclosedVolume: toNumber(record['disclosedVolume'] ?? record['disclosed_volume']) ?? 0,
@@ -200,26 +180,6 @@ function mapCashAccountOption(value: unknown): CashAccountOption | null {
     : null;
 }
 
-function mapSymbolOption(value: unknown): SymbolOption | null {
-  const record = toRecord(value);
-  const symbolId = toString(record?.['symbolId'] ?? record?.['symbol'] ?? record?.['id']);
-  return symbolId
-    ? {
-        productId: toString(record?.['productId'] ?? record?.['assetId'] ?? record?.['id']),
-        marketId: toString(record?.['marketId']),
-        symbolId,
-        symbolName: toString(record?.['symbolName'] ?? record?.['name']) ?? symbolId,
-        symbolShortName: toString(record?.['symbolShortName'] ?? record?.['shortName']) ?? symbolId,
-        market: toString(record?.['market'] ?? record?.['exchange']) ?? '',
-        currency: toString(record?.['currency']) ?? '',
-        tradingEnabled: record?.['tradingEnabled'] !== false,
-        productEnabled: record?.['productEnabled'] !== false,
-        natPrice: toNumber(record?.['natPrice'] ?? record?.['nat']),
-        midPrice: toNumber(record?.['midPrice'] ?? record?.['mid'])
-      }
-    : null;
-}
-
 function mapOrderMonitoringRow(value: unknown): OrderMonitoringRow | null {
   const record = toRecord(value);
   const orderNumber = toString(record?.['orderNumber'] ?? record?.['order_number'] ?? record?.['id'] ?? record?.['friendlyId']);
@@ -291,7 +251,7 @@ function mapHistoryRow(value: unknown, index: number): OrderTransactionHistoryRo
     averagePrice: toNumber(record['averagePrice'] ?? record['average_price']) ?? toString(record['averagePrice']) ?? '--',
     status: toString(record['status']) ?? '',
     delivered: toNumber(record['delivered']) ?? toString(record['delivered']) ?? '',
-    custodian: toString(record['custodian']) ?? ''
+    session: toString(record['sessionName'] ?? record['session'] ?? record['marketSession'] ?? record['sessionId']) ?? ''
   };
 }
 

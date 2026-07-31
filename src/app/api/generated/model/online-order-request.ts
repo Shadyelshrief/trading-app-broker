@@ -16,7 +16,7 @@ export interface OnlineOrderRequest {
     targetClientId: string;
     portfolioId: string;
     walletId: string;
-    productId: string;
+    assetsId: string;
     marketId: string;
     direction: OnlineOrderRequestDirectionEnum;
     orderType: OnlineOrderRequestOrderTypeEnum;

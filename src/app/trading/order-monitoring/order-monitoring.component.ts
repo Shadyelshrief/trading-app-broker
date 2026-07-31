@@ -221,13 +221,14 @@ export class OrderMonitoringComponent {
             quantity: row.quantity,
             orderPrice: typeof row.price === 'number' ? row.price : undefined,
             goodTill: 'DAY',
-            custodianId: '',
+            sessionId: '',
             fillTerm: 'MARKET_DEFAULT'
           },
           fees: 0,
           orderAmount: 0,
           expiresOn: row.expiryDate,
           portfolioLabel: row.portfolio,
+          sessionLabel: '',
           requirePassword: true
         }
       })

@@ -15,7 +15,6 @@ import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-la
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import type { MarketGridContextAction } from '../../shared/models/market-grid.model';
 import { CashDetailsDialogComponent } from '../cash-details/cash-details-dialog.component';
-import { CustodianDetailsDialogComponent } from '../custodian-details/custodian-details-dialog.component';
 import { createPortfolioPositioningColumns } from './portfolio-positioning.columns';
 import { PortfolioPositioningFacade } from './portfolio-positioning.facade';
 import type { ClientOption, PortfolioPositionRow, PortfolioPositioningViewModel } from './portfolio-positioning.models';
@@ -118,25 +117,6 @@ export class PortfolioPositioningComponent {
         clientId: vm.selectedClient.clientId,
         portfolioId: vm.selectedPortfolio.portfolioId,
         portfolioCurrency: vm.selectedPortfolio.currency
-      }
-    });
-  }
-
-  protected openCustodianDetails(row: PortfolioPositionRow, vm: PortfolioPositioningViewModel): void {
-    if (!vm.selectedClient || !vm.selectedPortfolio) {
-      return;
-    }
-
-    this.dialog.open(CustodianDetailsDialogComponent, {
-      width: 'min(1220px, 94vw)',
-      maxWidth: '94vw',
-      data: {
-        clientId: vm.selectedClient.clientId,
-        portfolioId: vm.selectedPortfolio.portfolioId,
-        exchange: row.exchange,
-        symbolId: row.symbolId,
-        symbolName: row.symbolName,
-        currency: row.currency
       }
     });
   }

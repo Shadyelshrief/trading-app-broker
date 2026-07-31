@@ -8,6 +8,7 @@ export type FillTerm = 'MARKET_DEFAULT' | 'AON' | 'MF' | 'MB';
 export interface ClientOption {
   clientId: string;
   clientName: string;
+  friendlyId?: string;
 }
 
 export interface PortfolioOption {
@@ -41,12 +42,15 @@ export interface LookupOption {
   value: string;
 }
 
+export interface MarketSessionOption extends LookupOption {
+  isDefault: boolean;
+}
+
 export interface OrderLookups {
   orderSides: LookupOption[];
   orderTypes: LookupOption[];
   goodTillOptions: LookupOption[];
   fillTerms: LookupOption[];
-  custodians: LookupOption[];
   markets: LookupOption[];
   statuses: LookupOption[];
   statusGroups: LookupOption[];
@@ -56,7 +60,7 @@ export interface OrderLookups {
 export interface SymbolOrderOptions {
   orderTypes: LookupOption[];
   goodTillOptions: LookupOption[];
-  custodians: LookupOption[];
+  sessions: MarketSessionOption[];
   fillTerms: LookupOption[];
   maxExpiryDate?: string;
   warning?: string;
@@ -75,7 +79,7 @@ export interface OrderEntryForm {
   tradeAmount?: number;
   goodTill: GoodTill;
   expiryDate?: string;
-  custodianId: string;
+  sessionId: string;
   fillTerm: FillTerm;
   minQuantity?: number;
   disclosedVolume?: number;
@@ -151,7 +155,7 @@ export interface OrderModificationRequest {
   quantity: number;
   orderPrice?: number;
   goodTill: string;
-  custodianId: string;
+  sessionId: string;
   fillTerm: string;
   minQuantity?: number;
   disclosedVolume?: number;

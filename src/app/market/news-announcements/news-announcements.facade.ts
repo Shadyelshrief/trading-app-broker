@@ -3,6 +3,7 @@ import {
   BehaviorSubject,
   catchError,
   combineLatest,
+  distinctUntilChanged,
   map,
   of,
   shareReplay,
@@ -11,9 +12,10 @@ import {
 } from 'rxjs';
 
 import { MarketGridSettings } from '../../shared/models/market-grid.model';
+import { ReferenceDataLookupsService } from '../../shared/lookups/reference-data-lookups.service';
+import { mapAssetsToSharedSymbolOptions } from '../../shared/utils/symbol-reference.util';
 import {
   NEWS_ANNOUNCEMENTS_MARKET_OPTIONS,
-  filterNewsSymbolOptions,
   getNewsSymbolOptions
 } from './news-announcements.filters';
 import { createNewsAnnouncementsColumns } from './news-announcements.columns';
@@ -54,14 +56,29 @@ const SETTINGS_STORAGE_KEY = 'news-announcements-settings-v1';
 @Injectable()
 export class NewsAnnouncementsFacade {
   private readonly service = inject(NewsAnnouncementsService);
+  private readonly reference = inject(ReferenceDataLookupsService);
   private readonly filtersSubject = new BehaviorSubject<NewsAnnouncementsFilters>(DEFAULT_FILTERS);
   private readonly symbolQuerySubject = new BehaviorSubject<string>('');
   private readonly settingsSubject = new BehaviorSubject<MarketGridSettings>(this.readStoredSettings());
+  private readonly symbolOptions$ = combineLatest([
+    this.filtersSubject,
+    this.symbolQuerySubject
+  ]).pipe(
+    map(([filters, query]) => ({ market: filters.market, query })),
+    distinctUntilChanged(
+      (left, right) => left.market === right.market && left.query === right.query
+    ),
+    switchMap(({ market, query }) =>
+      this.reference.searchAssets(query, market === 'all' ? undefined : market)
+    ),
+    map((assets) => getNewsSymbolOptions(mapAssetsToSharedSymbolOptions(assets))),
+    startWith([] as SymbolOption[])
+  );
 
   readonly vm$ = combineLatest([
     this.filtersSubject,
-    this.symbolQuerySubject,
     this.settingsSubject,
+    this.symbolOptions$,
     this.filtersSubject.pipe(
       switchMap((filters) => {
         const validationError = validateNewsAnnouncementsFilters(filters);
@@ -106,11 +123,11 @@ export class NewsAnnouncementsFacade {
       shareReplay({ bufferSize: 1, refCount: true })
     )
   ]).pipe(
-    map(([filters, query, settings, state]) => ({
+    map(([filters, settings, symbolOptions, state]) => ({
       filters,
       marketOptions: NEWS_ANNOUNCEMENTS_MARKET_OPTIONS,
-      symbolOptions: getNewsSymbolOptions(),
-      filteredSymbolOptions: filterNewsSymbolOptions(query),
+      symbolOptions,
+      filteredSymbolOptions: symbolOptions,
       rows: state.rows,
       loading: state.loading,
       error: state.error,
@@ -135,7 +152,7 @@ export class NewsAnnouncementsFacade {
       ...this.filtersSubject.value,
       symbol: normalizeSelectedSymbol(symbol)
     });
-    this.symbolQuerySubject.next(symbol ? `${symbol.symbolId} - ${symbol.symbolName}` : '');
+    this.symbolQuerySubject.next(symbol?.symbolId ?? '');
   }
 
   updateSymbolQuery(query: string): void {

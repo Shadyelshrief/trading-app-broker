@@ -17,12 +17,6 @@ export interface PortfolioPositioningRequest {
   portfolioId: string;
 }
 
-export interface PortfolioSymbolRequest extends PortfolioPositioningRequest {
-  exchange: string;
-  symbolId: string;
-  currency?: string;
-}
-
 export interface CashDetailsRequest extends PortfolioPositioningRequest {
   currency?: string;
 }

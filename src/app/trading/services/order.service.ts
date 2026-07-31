@@ -1,20 +1,17 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, forkJoin, map, of, switchMap } from 'rxjs';
+import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { BrokerLookupsService } from '../../shared/lookups/broker-lookups.service';
-import { MarketLookupOption, ProductLookupOption, ReferenceDataLookupsService } from '../../shared/lookups/reference-data-lookups.service';
+import { ReferenceDataLookupsService } from '../../shared/lookups/reference-data-lookups.service';
 import type { OrderTransactionDetails } from '../order-transaction-details/order-transaction-details.models';
 import {
   buildSearchParams,
   mapOrderActionResponse,
   mapOrderDetailsResponse,
-  mapOrderLookupsResponse,
   mapOrderSearchResponse,
-  mapOrderStatisticsResponse,
-  mapSymbolOptionsResponse,
-  mapSymbolOrderOptionsResponse
+  mapOrderStatisticsResponse
 } from './order.mapper';
 import type {
   CalculateRequest,
@@ -25,6 +22,7 @@ import type {
   OrderCalculationResult,
   OrderEntryForm,
   OrderLookups,
+  MarketSessionOption,
   OrderModificationRequest,
   OrderMonitoringRow,
   OrderRequest,
@@ -48,12 +46,12 @@ export class OrderService {
   }
 
   searchSymbols(query: string, market?: string): Observable<SymbolOption[]> {
-    const normalized = query.trim().toLowerCase();
-    return this.getMarketProducts(market).pipe(
+    return forkJoin({
+      markets: this.reference.getMarkets(),
+      products: this.reference.searchAssets(query, market)
+    }).pipe(
       map(({ markets, products }) =>
         products
-          .filter((product) => !normalized || `${product.symbol} ${product.label}`.toLowerCase().includes(normalized))
-          .slice(0, 20)
           .map((product) => {
             const marketOption = markets.find((item) => item.code.toUpperCase() === product.marketCode.toUpperCase());
             return {
@@ -90,7 +88,6 @@ export class OrderService {
           { label: 'FOK', value: 'FOK' }
         ],
         fillTerms: [],
-        custodians: [],
         markets: markets.map((market) => ({ label: market.label, value: market.value })),
         statuses: ['NEW', 'PENDING', 'PARTIALLY_EXECUTED', 'EXECUTED', 'CANCELLED', 'REJECTED'].map((status) => ({
           label: status,
@@ -117,21 +114,27 @@ export class OrderService {
     );
   }
 
-  getSymbolOrderOptions(symbolId: string, market: string): Observable<SymbolOrderOptions> {
-    return of({
-      orderTypes: [
-        { label: 'Limit Order', value: 'LIMIT' },
-        { label: 'Market Order', value: 'MARKET' }
-      ],
-      goodTillOptions: [
-        { label: 'Day', value: 'DAY' },
-        { label: 'GTC', value: 'GTC' },
-        { label: 'IOC', value: 'IOC' },
-        { label: 'FOK', value: 'FOK' }
-      ],
-      custodians: [],
-      fillTerms: []
-    });
+  getSymbolOrderOptions(symbol: SymbolOption): Observable<SymbolOrderOptions> {
+    const params = new HttpParams()
+      .set('market', symbol.marketId ?? symbol.market)
+      .set('product', symbol.productId ?? symbol.symbolId);
+
+    return this.http.get<ApiResponse<MarketSessionDto[]>>(`${this.base}/sessions`, { params }).pipe(
+      map((response) => ({
+        orderTypes: [
+          { label: 'Limit Order', value: 'LIMIT' },
+          { label: 'Market Order', value: 'MARKET' }
+        ],
+        goodTillOptions: [
+          { label: 'Day', value: 'DAY' },
+          { label: 'GTC', value: 'GTC' },
+          { label: 'IOC', value: 'IOC' },
+          { label: 'FOK', value: 'FOK' }
+        ],
+        sessions: (response.body ?? []).map(mapMarketSession).filter((session): session is MarketSessionOption => session !== null),
+        fillTerms: []
+      }))
+    );
   }
 
   simulateOrder(orderRequest: OrderRequest): Observable<OrderActionResult> {
@@ -238,18 +241,18 @@ export class OrderService {
   private buildOnlineOrder(order: OrderEntryForm): Observable<OnlineOrderRequest> {
     return forkJoin({
       marketId: this.resolveMarketId(order.market),
-      productId: this.resolveProductId(order.market, order.symbolId)
+      assetsId: this.resolveProductId(order.market, order.symbolId)
     }).pipe(
-      map(({ marketId, productId }) => {
-        if (!marketId || !productId) {
-          throw new Error('Unable to resolve market/product identifiers for order submission.');
+      map(({ marketId, assetsId }) => {
+        if (!marketId || !assetsId) {
+          throw new Error('Unable to resolve market/asset identifiers for order submission.');
         }
 
         return {
           targetClientId: order.clientId,
           portfolioId: order.portfolioId,
           walletId: order.cashAccountId,
-          productId,
+          assetsId,
           marketId,
           direction: order.orderSide,
           orderType: order.orderType === 'MARKET' || order.orderType === 'TAKE' || order.orderType === 'HIT' ? 'MARKET' : 'LIMIT',
@@ -273,26 +276,8 @@ export class OrderService {
   }
 
   private resolveProductId(market: string, symbolId: string): Observable<string | undefined> {
-    return this.reference.getProductsByMarket(market).pipe(
+    return this.reference.searchAssets(symbolId, market).pipe(
       map((products) => products.find((product) => product.symbol.toUpperCase() === symbolId.toUpperCase())?.id)
-    );
-  }
-
-  private getMarketProducts(market?: string): Observable<{ markets: MarketLookupOption[]; products: ProductLookupOption[] }> {
-    return this.reference.getMarkets().pipe(
-      switchMap((markets) => {
-        const filteredMarkets = market
-          ? markets.filter((item) => item.value === market.toLowerCase() || item.code.toUpperCase() === market.toUpperCase())
-          : markets;
-
-        if (filteredMarkets.length === 0) {
-          return of({ markets, products: [] });
-        }
-
-        return forkJoin(filteredMarkets.map((item) => this.reference.getProductsByMarket(item.code).pipe(catchError(() => of([]))))).pipe(
-          map((groups) => ({ markets, products: groups.flat() }))
-        );
-      })
     );
   }
 }
@@ -301,13 +286,45 @@ interface OnlineOrderRequest {
   targetClientId: string;
   portfolioId: string;
   walletId: string;
-  productId: string;
+  assetsId: string;
   marketId: string;
   direction: 'BUY' | 'SELL';
   orderType: 'MARKET' | 'LIMIT';
   timeInForce: 'DAY' | 'GTC' | 'IOC' | 'FOK';
   quantity: number;
   price: number | null;
+}
+
+interface ApiResponse<T> {
+  body?: T;
+}
+
+interface MarketSessionDto {
+  id?: string;
+  name?: string;
+  sessionStart?: string;
+  sessionEnd?: string;
+  isPrimarySession?: boolean;
+  isDefault?: boolean;
+}
+
+function mapMarketSession(session: MarketSessionDto): MarketSessionOption | null {
+  const value = session.id?.trim();
+  const name = session.name?.trim();
+
+  if (!value || !name) {
+    return null;
+  }
+
+  const hours = session.sessionStart && session.sessionEnd
+    ? ` (${session.sessionStart} - ${session.sessionEnd})`
+    : '';
+
+  return {
+    value,
+    label: `${name}${hours}`,
+    isDefault: Boolean(session.isDefault || session.isPrimarySession)
+  };
 }
 
 function mapTimeInForce(value: OrderEntryForm['goodTill']): OnlineOrderRequest['timeInForce'] {

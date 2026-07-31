@@ -21,7 +21,6 @@ import {
 } from '../../shared/services/linked-filter-group.service';
 import { normalizeSharedSymbolOption } from '../../shared/utils/symbol-reference.util';
 import { TimeSalesFacade } from './time-sales.facade';
-import { TIME_SALES_SYMBOL_OPTIONS } from './time-sales.filters';
 import { SymbolOption, TimeSalesRow } from './time-sales.models';
 
 @Component({
@@ -296,13 +295,13 @@ export class TimeSalesComponent implements OnInit {
       return null;
     }
 
-    const marketShortName = sharedSymbol.market === 'TADAWUL' ? 'TADAWUL' : sharedSymbol.market;
-
-    return (
-      TIME_SALES_SYMBOL_OPTIONS.find(
-        (option) => option.symbolId === sharedSymbol.symbolId && option.marketShortName === marketShortName
-      ) ?? null
-    );
+    return {
+      symbolId: sharedSymbol.symbolId,
+      symbolName: sharedSymbol.symbolName,
+      marketShortName: sharedSymbol.market,
+      marketName: `${sharedSymbol.market} Market`,
+      currency: sharedSymbol.currency
+    };
   }
 }
 

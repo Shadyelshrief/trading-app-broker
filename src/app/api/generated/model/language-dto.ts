@@ -7,18 +7,13 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { WorkspaceTheme } from './workspace-theme';
 
 
-export interface WorkspacePreferencesDto { 
+export interface LanguageDto { 
     id?: string;
-    userId?: string;
+    code?: string;
     name?: string;
-    theme?: WorkspaceTheme;
-    languageId?: string;
-    layoutJson?: object | null;
-    isDefault?: boolean;
+    nameLocal?: string | null;
+    isActive?: boolean;
 }
-
-
 

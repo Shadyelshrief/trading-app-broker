@@ -86,7 +86,7 @@ export class OrderEntryComponent {
       tradeAmount: [undefined as number | undefined],
       goodTill: ['DAY' as OrderEntryForm['goodTill'], Validators.required],
       expiryDate: [this.today],
-      custodianId: ['', Validators.required],
+      sessionId: ['', Validators.required],
       fillTerm: ['MARKET_DEFAULT' as OrderEntryForm['fillTerm'], Validators.required],
       minQuantity: [undefined as number | undefined],
       disclosedVolume: [undefined as number | undefined]
@@ -102,9 +102,35 @@ export class OrderEntryComponent {
         this.facade.updateClientQuery(value);
       }
     });
-    this.symbolSearch.valueChanges.pipe(debounceTime(160), takeUntilDestroyed()).subscribe((value) => {
+    this.facade.clientOptions$.pipe(takeUntilDestroyed()).subscribe((clients) => {
+      const value = this.clientSearch.value;
+
+      if (typeof value !== 'string') {
+        return;
+      }
+
+      const normalized = value.trim().toLowerCase();
+      const client = clients.find((item) =>
+        [item.clientId, item.friendlyId].some((id) => id?.toLowerCase() === normalized)
+      );
+
+      if (client) {
+        this.selectClient(client);
+      }
+    });
+    this.symbolSearch.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
       if (typeof value === 'string') {
         this.facade.updateSymbolQuery(value);
+      }
+    });
+    this.facade.symbolOrderOptions$.pipe(takeUntilDestroyed()).subscribe((options) => {
+      const sessions = options?.sessions ?? [];
+      const current = this.form.controls.sessionId.value;
+
+      if (!sessions.some((session) => session.value === current)) {
+        this.form.controls.sessionId.setValue(
+          sessions.find((session) => session.isDefault)?.value ?? sessions[0]?.value ?? ''
+        );
       }
     });
     this.form.controls.orderType.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.syncEnabledFields());
@@ -130,14 +156,23 @@ export class OrderEntryComponent {
 
   protected selectClient(client: ClientOption): void {
     this.clientSearch.setValue(client, { emitEvent: false });
-    this.form.patchValue({ clientId: client.clientId, portfolioId: '', cashAccountId: '' });
+    this.form.patchValue({ clientId: client.clientId, portfolioId: '', cashAccountId: '', symbolId: '', market: '', sessionId: '' });
+    this.symbolSearch.setValue('', { emitEvent: false });
+    this.facade.updateSymbolQuery('');
     this.facade.selectClient(client);
   }
 
   protected selectSymbol(symbol: SymbolOption): void {
     this.symbolSearch.setValue(symbol, { emitEvent: false });
-    this.form.patchValue({ symbolId: symbol.symbolId, market: symbol.market });
+    this.form.patchValue({ symbolId: symbol.symbolId, sessionId: '' });
     this.facade.selectSymbol(symbol);
+  }
+
+  protected selectMarket(market: string): void {
+    this.form.patchValue({ symbolId: '', sessionId: '' });
+    this.symbolSearch.setValue('', { emitEvent: false });
+    this.facade.updateSymbolQuery('');
+    this.facade.selectMarket(market);
   }
 
   protected selectPortfolio(portfolioId: string): void {
@@ -184,6 +219,7 @@ export class OrderEntryComponent {
       orderAmount: vm.calculation?.orderAmount ?? calculateOrderAmount(order),
       expiresOn: order.expiryDate ?? '',
       portfolioLabel: vm.portfolioOptions.find((portfolio) => portfolio.portfolioId === order.portfolioId)?.portfolioName ?? order.portfolioId,
+      sessionLabel: vm.symbolOptionsState?.sessions.find((session) => session.value === order.sessionId)?.label ?? order.sessionId,
       requirePassword: true
     };
 
@@ -211,11 +247,13 @@ export class OrderEntryComponent {
       orderType: 'LIMIT',
       goodTill: 'DAY',
       expiryDate: this.today,
-      custodianId: '',
+      sessionId: '',
       fillTerm: 'MARKET_DEFAULT'
     });
     this.clientSearch.setValue('');
     this.symbolSearch.setValue('');
+    this.facade.selectClient(null);
+    this.facade.selectMarket('');
     this.facade.clearResult();
   }
 
@@ -290,6 +328,8 @@ export class OrderEntryComponent {
       clientId: typeof order['clientId'] === 'string' ? order['clientId'] : '',
       portfolioId: typeof order['portfolioNumber'] === 'string' ? order['portfolioNumber'] : '',
       symbolId: typeof order['symbolId'] === 'string' ? order['symbolId'] : '',
+      market: typeof order['market'] === 'string' ? order['market'] : '',
+      sessionId: typeof order['sessionId'] === 'string' ? order['sessionId'] : '',
       orderSide: side === 'sell' ? 'SELL' : 'BUY'
     });
   }

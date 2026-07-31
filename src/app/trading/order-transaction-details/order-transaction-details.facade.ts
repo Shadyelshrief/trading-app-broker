@@ -44,7 +44,7 @@ function emptyDetails(orderNumber: string): OrderTransactionDetails {
       company: '',
       fillTerm: '',
       orderDate: '',
-      custodian: '',
+      session: '',
       minimumQuantity: 0,
       period: '',
       disclosedVolume: 0,

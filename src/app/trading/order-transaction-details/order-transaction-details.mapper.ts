@@ -19,7 +19,7 @@ export function mapExecutionRowToOrderTransactionDetails(row: ExecutionTickerRow
       company: toString(raw['company'] ?? raw['companyName'] ?? raw['symbolName']) ?? row.symbolName,
       fillTerm: toString(raw['fillTerm'] ?? raw['fill_term']) ?? '',
       orderDate: toDateTimeLabel(raw['orderDate'] ?? raw['order_date'] ?? row.receivedAt),
-      custodian: toString(raw['custodian']) ?? '',
+      session: toString(raw['sessionName'] ?? raw['session'] ?? raw['marketSession'] ?? raw['sessionId']) ?? '',
       minimumQuantity: toNumber(raw['minimumQuantity'] ?? raw['minimum_quantity']) ?? 0,
       period: toString(raw['period']) ?? '',
       disclosedVolume: toNumber(raw['disclosedVolume'] ?? raw['disclosed_volume']) ?? 0,
@@ -68,7 +68,7 @@ function mapTransactionHistory(raw: UnknownRecord, row: ExecutionTickerRow): Ord
       averagePrice: row.price,
       status: row.transactionType,
       delivered: '',
-      custodian: ''
+      session: ''
     }
   ];
 }
@@ -93,7 +93,7 @@ function mapHistoryRecord(value: unknown, serialNo: number, row: ExecutionTicker
     averagePrice: toNumber(record['averagePrice'] ?? record['average_price']) ?? toString(record['averagePrice']) ?? '--',
     status: toString(record['status']) ?? '',
     delivered: toNumber(record['delivered']) ?? toString(record['delivered']) ?? '',
-    custodian: toString(record['custodian']) ?? ''
+    session: toString(record['sessionName'] ?? record['session'] ?? record['marketSession'] ?? record['sessionId']) ?? ''
   };
 }
 
