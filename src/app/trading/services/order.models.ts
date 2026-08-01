@@ -85,9 +85,7 @@ export interface OrderEntryForm {
   disclosedVolume?: number;
 }
 
-export interface OrderRequest extends OrderEntryForm {
-  password?: string;
-}
+export type OrderRequest = OrderEntryForm;
 
 export interface CalculateRequest {
   symbolId: string;
@@ -165,7 +163,6 @@ export interface OrderModificationRequest {
 export interface OrderActionRequest {
   orderNumber: string;
   reason?: string;
-  password?: string;
 }
 
 export interface OrderStatisticsRequest {

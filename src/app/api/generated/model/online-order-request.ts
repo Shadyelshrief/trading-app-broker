@@ -16,7 +16,7 @@ export interface OnlineOrderRequest {
     targetClientId: string;
     portfolioId: string;
     walletId: string;
-    assetsId: string;
+    assetId: string;
     marketId: string;
     direction: OnlineOrderRequestDirectionEnum;
     orderType: OnlineOrderRequestOrderTypeEnum;
@@ -38,6 +38,5 @@ export enum OnlineOrderRequestTimeInForceEnum {
     Ioc = 'IOC',
     Fok = 'FOK'
 };
-
 
 

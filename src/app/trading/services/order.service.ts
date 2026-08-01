@@ -241,10 +241,10 @@ export class OrderService {
   private buildOnlineOrder(order: OrderEntryForm): Observable<OnlineOrderRequest> {
     return forkJoin({
       marketId: this.resolveMarketId(order.market),
-      assetsId: this.resolveProductId(order.market, order.symbolId)
+      assetId: this.resolveProductId(order.market, order.symbolId)
     }).pipe(
-      map(({ marketId, assetsId }) => {
-        if (!marketId || !assetsId) {
+      map(({ marketId, assetId }) => {
+        if (!marketId || !assetId) {
           throw new Error('Unable to resolve market/asset identifiers for order submission.');
         }
 
@@ -252,7 +252,7 @@ export class OrderService {
           targetClientId: order.clientId,
           portfolioId: order.portfolioId,
           walletId: order.cashAccountId,
-          assetsId,
+          assetId,
           marketId,
           direction: order.orderSide,
           orderType: order.orderType === 'MARKET' || order.orderType === 'TAKE' || order.orderType === 'HIT' ? 'MARKET' : 'LIMIT',
@@ -286,7 +286,7 @@ interface OnlineOrderRequest {
   targetClientId: string;
   portfolioId: string;
   walletId: string;
-  assetsId: string;
+  assetId: string;
   marketId: string;
   direction: 'BUY' | 'SELL';
   orderType: 'MARKET' | 'LIMIT';

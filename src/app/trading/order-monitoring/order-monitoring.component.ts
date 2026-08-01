@@ -228,14 +228,13 @@ export class OrderMonitoringComponent {
           orderAmount: 0,
           expiresOn: row.expiryDate,
           portfolioLabel: row.portfolio,
-          sessionLabel: '',
-          requirePassword: true
+          sessionLabel: ''
         }
       })
       .afterClosed()
       .subscribe((result) => {
         if (result?.confirmed) {
-          this.facade.cancel(row, result.password).subscribe(() => this.facade.search());
+          this.facade.cancel(row).subscribe(() => this.facade.search());
         }
       });
   }

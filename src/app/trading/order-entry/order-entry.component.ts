@@ -219,8 +219,7 @@ export class OrderEntryComponent {
       orderAmount: vm.calculation?.orderAmount ?? calculateOrderAmount(order),
       expiresOn: order.expiryDate ?? '',
       portfolioLabel: vm.portfolioOptions.find((portfolio) => portfolio.portfolioId === order.portfolioId)?.portfolioName ?? order.portfolioId,
-      sessionLabel: vm.symbolOptionsState?.sessions.find((session) => session.value === order.sessionId)?.label ?? order.sessionId,
-      requirePassword: true
+      sessionLabel: vm.symbolOptionsState?.sessions.find((session) => session.value === order.sessionId)?.label ?? order.sessionId
     };
 
     this.dialog
@@ -230,8 +229,8 @@ export class OrderEntryComponent {
       })
       .afterClosed()
       .subscribe((result) => {
-        if (result?.confirmed && result.password) {
-          this.facade.place(mapTakeHitType(order), result.password).subscribe();
+        if (result?.confirmed) {
+          this.facade.place(mapTakeHitType(order)).subscribe();
         }
       });
   }

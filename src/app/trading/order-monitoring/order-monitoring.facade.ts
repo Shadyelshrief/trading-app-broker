@@ -150,8 +150,8 @@ export class OrderMonitoringFacade {
     this.searchTriggerSubject.next(Date.now());
   }
 
-  cancel(row: OrderMonitoringRow, password?: string): Observable<OrderActionResult> {
-    return this.service.cancelOrder({ orderNumber: row.orderNumber, password });
+  cancel(row: OrderMonitoringRow): Observable<OrderActionResult> {
+    return this.service.cancelOrder({ orderNumber: row.orderNumber });
   }
 
   suspend(row: OrderMonitoringRow): Observable<OrderActionResult> {

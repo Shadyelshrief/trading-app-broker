@@ -195,9 +195,9 @@ export class OrderEntryFacade {
       .pipe(tap((lastResult) => this.patch({ lastResult, error: undefined })));
   }
 
-  place(order: OrderEntryForm, password: string): Observable<OrderActionResult> {
+  place(order: OrderEntryForm): Observable<OrderActionResult> {
     return this.service
-      .placeOrder({ ...order, password })
+      .placeOrder(order)
       .pipe(tap((lastResult) => this.patch({ lastResult, error: undefined })));
   }
 

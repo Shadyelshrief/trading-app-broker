@@ -36,10 +36,8 @@ export interface OrderConfirmationData {
   expiresOn: string;
   portfolioLabel: string;
   sessionLabel: string;
-  requirePassword: boolean;
 }
 
 export interface OrderConfirmationResult {
   confirmed: boolean;
-  password?: string;
 }

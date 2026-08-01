@@ -1056,7 +1056,7 @@ components:
 
     OnlineOrderRequest:
       type: object
-      required: [ targetClientId, portfolioId, walletId, assetsId, marketId, direction, orderType, timeInForce, quantity ]
+      required: [ targetClientId, portfolioId, walletId, assetId, marketId, direction, orderType, timeInForce, quantity ]
       properties:
         targetClientId:
           type: string
@@ -1064,7 +1064,7 @@ components:
           description: "Ignored/Overridden by Retail Gateway. Required for Broker Gateway."
         portfolioId: { type: string, format: uuid }
         walletId: { type: string, format: uuid }
-        assetsId: { type: string, format: uuid }
+        assetId: { type: string, format: uuid }
         marketId: { type: string, format: uuid }
         direction: { type: string, enum: [ BUY, SELL ] }
         orderType: { type: string, enum: [ MARKET, LIMIT ] }
