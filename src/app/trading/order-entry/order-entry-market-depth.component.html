@@ -1,0 +1,120 @@
+@if (vm$ | async; as vm) {
+  <section class="order-entry-depth" aria-label="Live market depth">
+    <header class="order-entry-depth__heading">
+      <div>
+        <p class="order-entry-depth__eyebrow">Live liquidity</p>
+        <h3>Market Depth</h3>
+      </div>
+
+      <div class="order-entry-depth__heading-meta">
+        @if (vm.symbol; as symbol) {
+          <span class="order-entry-depth__symbol">
+            <strong>{{ symbol.symbolId }}</strong>
+            <span>{{ symbol.market }} · {{ symbol.currency || '--' }}</span>
+          </span>
+        }
+        <span
+          class="order-entry-depth__status"
+          [class.order-entry-depth__status--live]="vm.connectionState === 'CONNECTED'"
+          [class.order-entry-depth__status--pending]="vm.connectionState === 'CONNECTING' || vm.connectionState === 'RECONNECTING'"
+        >
+          <span aria-hidden="true"></span>
+          {{ connectionLabel(vm.connectionState) }}
+        </span>
+      </div>
+    </header>
+
+    @if (!vm.symbol) {
+      <div class="order-entry-depth__empty">
+        <span class="order-entry-depth__empty-icon" aria-hidden="true">↕</span>
+        <strong>Select a market and symbol</strong>
+        <span>Market by Price and Market by Order will stream here.</span>
+      </div>
+    } @else {
+      <p class="order-entry-depth__hint">
+        Double-click a bid to prepare a sell order or an offer to prepare a buy order at that price.
+      </p>
+
+      <div class="order-entry-depth__books">
+        <article class="order-entry-depth__card order-entry-depth__card--mbp">
+          <header class="order-entry-depth__card-heading">
+            <div>
+              <span class="order-entry-depth__badge">MBP</span>
+              <div>
+                <h4>Market by Price</h4>
+                <span>Aggregated price levels</span>
+              </div>
+            </div>
+            <span class="order-entry-depth__updated">
+              {{ vm.mbp.lastUpdated ? (vm.mbp.lastUpdated | date: 'HH:mm:ss') : '--:--:--' }}
+            </span>
+          </header>
+
+          @if (vm.mbp.error) {
+            <div class="order-entry-depth__error">{{ vm.mbp.error }}</div>
+          }
+
+          <app-market-depth-book
+            class="order-entry-depth__book"
+            [bids]="vm.mbp.bids"
+            [offers]="vm.mbp.offers"
+            mode="PRICE"
+            [totalBidQuantity]="vm.mbp.totalBidQuantity"
+            [totalBidOrders]="vm.mbp.totalBidOrders"
+            [totalOfferQuantity]="vm.mbp.totalOfferQuantity"
+            [totalOfferOrders]="vm.mbp.totalOfferOrders"
+            [loading]="vm.mbp.loading"
+            [selectedSymbol]="vm.symbol.symbolId"
+            (bidDoubleClicked)="useBid($event)"
+            (offerDoubleClicked)="useOffer($event)"
+          />
+        </article>
+
+        <article class="order-entry-depth__card order-entry-depth__card--mbo">
+          <header class="order-entry-depth__card-heading">
+            <div>
+              <span class="order-entry-depth__badge">MBO</span>
+              <div>
+                <h4>Market by Order</h4>
+                <span>Individual order queue</span>
+              </div>
+            </div>
+
+            <div class="order-entry-depth__mbo-controls">
+              <mat-button-toggle-group
+                [value]="vm.mboOrderType"
+                (valueChange)="selectMboOrderType($event)"
+                aria-label="Market by Order type"
+              >
+                <mat-button-toggle value="REGULAR">Regular</mat-button-toggle>
+                <mat-button-toggle value="SPECIAL">Special</mat-button-toggle>
+              </mat-button-toggle-group>
+              <span class="order-entry-depth__updated">
+                {{ vm.mbo.lastUpdated ? (vm.mbo.lastUpdated | date: 'HH:mm:ss') : '--:--:--' }}
+              </span>
+            </div>
+          </header>
+
+          @if (vm.mbo.error) {
+            <div class="order-entry-depth__error">{{ vm.mbo.error }}</div>
+          }
+
+          <app-market-depth-book
+            class="order-entry-depth__book"
+            [bids]="vm.mbo.bids"
+            [offers]="vm.mbo.offers"
+            mode="ORDER"
+            [totalBidQuantity]="vm.mbo.totalBidQuantity"
+            [totalBidOrders]="vm.mbo.totalBidOrders"
+            [totalOfferQuantity]="vm.mbo.totalOfferQuantity"
+            [totalOfferOrders]="vm.mbo.totalOfferOrders"
+            [loading]="vm.mbo.loading"
+            [selectedSymbol]="vm.symbol.symbolId"
+            (bidDoubleClicked)="useBid($event)"
+            (offerDoubleClicked)="useOffer($event)"
+          />
+        </article>
+      </div>
+    }
+  </section>
+}

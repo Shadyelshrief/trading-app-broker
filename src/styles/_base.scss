@@ -292,6 +292,12 @@ a {
   display: none;
 }
 
+// Golden Layout pop-outs do not render a tab header, so keep the screen
+// identity visible inside the Order Entry component in that context.
+body.gl-popout-window .lm_content .order-entry__header > div:first-child:not(:only-child) {
+  display: block;
+}
+
 .lm_content [class$='__header'],
 .lm_content [class$='__toolbar'],
 .lm_content [class$='__filters'],

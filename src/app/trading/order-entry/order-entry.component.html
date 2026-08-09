@@ -15,31 +15,33 @@
       </div>
     </header>
 
-    @if (vm.warning) {
-      <section class="order-entry__warning">{{ vm.warning }}</section>
-    }
-    @if (vm.error) {
-      <section class="order-entry__error">{{ vm.error }}</section>
-    }
-    @if (vm.lastResult) {
-      <section class="order-entry__result" [class.order-entry__result--failed]="!vm.lastResult.success">
-        <strong>{{ vm.lastResult.message }}</strong>
-        @if (vm.lastResult.orderNumber) {
-          <span>Order Number: {{ vm.lastResult.orderNumber }}</span>
+    <div class="order-entry__workspace">
+      <main class="order-entry__ticket">
+        @if (vm.warning) {
+          <section class="order-entry__warning">{{ vm.warning }}</section>
         }
-        @if (vm.lastResult.orderAmount !== undefined) {
-          <span>Order Amount: {{ vm.lastResult.orderAmount | number: '1.2-2' }}</span>
+        @if (vm.error) {
+          <section class="order-entry__error">{{ vm.error }}</section>
         }
-        @if (vm.lastResult.orderTradeAmount !== undefined) {
-          <span>Order Trade Amount: {{ vm.lastResult.orderTradeAmount | number: '1.2-2' }}</span>
+        @if (vm.lastResult) {
+          <section class="order-entry__result" [class.order-entry__result--failed]="!vm.lastResult.success">
+            <strong>{{ vm.lastResult.message }}</strong>
+            @if (vm.lastResult.orderNumber) {
+              <span>Order Number: {{ vm.lastResult.orderNumber }}</span>
+            }
+            @if (vm.lastResult.orderAmount !== undefined) {
+              <span>Order Amount: {{ vm.lastResult.orderAmount | number: '1.2-2' }}</span>
+            }
+            @if (vm.lastResult.orderTradeAmount !== undefined) {
+              <span>Order Trade Amount: {{ vm.lastResult.orderTradeAmount | number: '1.2-2' }}</span>
+            }
+            @if (vm.lastResult.orderFees !== undefined) {
+              <span>Order Fees: {{ vm.lastResult.orderFees | number: '1.2-2' }}</span>
+            }
+          </section>
         }
-        @if (vm.lastResult.orderFees !== undefined) {
-          <span>Order Fees: {{ vm.lastResult.orderFees | number: '1.2-2' }}</span>
-        }
-      </section>
-    }
 
-    <form class="order-entry__form" [formGroup]="form">
+        <form class="order-entry__form" [formGroup]="form">
       <mat-form-field appearance="outline">
         <mat-label>Client ID</mat-label>
         <input matInput type="text" [formControl]="clientSearch" [matAutocomplete]="clientAutocomplete" />
@@ -166,27 +168,34 @@
         <mat-label>Disclosed Volume</mat-label>
         <input matInput type="number" formControlName="disclosedVolume" min="0" />
       </mat-form-field>
-    </form>
+        </form>
 
-    @if (form.errors; as errors) {
-      <section class="order-entry__validation">
-        @if (errors['quantityRequired']) { <span>Quantity is required.</span> }
-        @if (errors['priceRequired']) { <span>Order price is required for Limit orders.</span> }
-        @if (errors['tradeAmountRequired']) { <span>Trade amount is required for Take/Hit orders.</span> }
-        @if (errors['minQuantityExceedsQuantity']) { <span>Minimum quantity must not exceed quantity.</span> }
-        @if (errors['disclosedVolumeExceedsQuantity']) { <span>Disclosed volume must be less than quantity.</span> }
-        @if (errors['expiryDateRequired']) { <span>Expiry date is required for GTD.</span> }
-      </section>
-    }
+        @if (form.errors; as errors) {
+          <section class="order-entry__validation">
+            @if (errors['quantityRequired']) { <span>Quantity is required.</span> }
+            @if (errors['priceRequired']) { <span>Order price is required for Limit orders.</span> }
+            @if (errors['tradeAmountRequired']) { <span>Trade amount is required for Take/Hit orders.</span> }
+            @if (errors['minQuantityExceedsQuantity']) { <span>Minimum quantity must not exceed quantity.</span> }
+            @if (errors['disclosedVolumeExceedsQuantity']) { <span>Disclosed volume must be less than quantity.</span> }
+            @if (errors['expiryDateRequired']) { <span>Expiry date is required for GTD.</span> }
+          </section>
+        }
 
-    <section class="order-entry__nat-mid">
-      <div class="order-entry__nat-mid-labels">
-        <span>NAT {{ vm.selectedSymbol?.natPrice ?? '--' }}</span>
-        <span>MID {{ vm.selectedSymbol?.midPrice ?? '--' }}</span>
-      </div>
-      <div class="order-entry__range">
-        <span [style.left.%]="natMidPercent(vm)"></span>
-      </div>
-    </section>
+        <section class="order-entry__nat-mid">
+          <div class="order-entry__nat-mid-labels">
+            <span>NAT {{ vm.selectedSymbol?.natPrice ?? '--' }}</span>
+            <span>MID {{ vm.selectedSymbol?.midPrice ?? '--' }}</span>
+          </div>
+          <div class="order-entry__range">
+            <span [style.left.%]="natMidPercent(vm)"></span>
+          </div>
+        </section>
+      </main>
+
+      <app-order-entry-market-depth
+        [symbol]="vm.selectedSymbol"
+        (levelSelected)="applyDepthLevel($event.side, $event.level)"
+      />
+    </div>
   </section>
 }

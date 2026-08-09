@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, HostListener, inject, input } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -11,8 +11,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { debounceTime, take } from 'rxjs';
 
 import { OrderConfirmationDialogComponent } from '../order-confirmation/order-confirmation-dialog.component';
+import { MarketDepthLevel } from '../../shared/utils/market-depth.mapper';
 import type { ClientOption, OrderEntryForm, OrderSide, OrderType, SymbolOption } from '../services/order.models';
 import { calculateOrderAmount, mapTakeHitType, resolveDisclosedVolume } from './order-entry.mapper';
+import { OrderEntryMarketDepthComponent } from './order-entry-market-depth.component';
 import type { OrderConfirmationData, OrderEntryViewModel } from './order-entry.models';
 import { OrderEntryFacade } from './order-entry.facade';
 import { orderEntryValidator, pricePrecisionValidator } from './order-entry.validators';
@@ -22,7 +24,6 @@ import { orderEntryValidator, pricePrecisionValidator } from './order-entry.vali
   standalone: true,
   imports: [
     AsyncPipe,
-    DatePipe,
     DecimalPipe,
     MatAutocompleteModule,
     MatButtonModule,
@@ -30,7 +31,8 @@ import { orderEntryValidator, pricePrecisionValidator } from './order-entry.vali
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    OrderEntryMarketDepthComponent
   ],
   templateUrl: './order-entry.component.html',
   styleUrl: './order-entry.component.scss',
@@ -277,6 +279,16 @@ export class OrderEntryComponent {
     }
 
     return Math.max(0, Math.min(100, ((price - symbol.natPrice) / (symbol.midPrice - symbol.natPrice)) * 100));
+  }
+
+  protected applyDepthLevel(side: OrderSide, level: MarketDepthLevel): void {
+    this.form.patchValue({
+      orderSide: side,
+      orderType: 'LIMIT',
+      orderPrice: level.price
+    });
+    this.syncEnabledFields();
+    this.facade.clearResult();
   }
 
   private syncEnabledFields(): void {
