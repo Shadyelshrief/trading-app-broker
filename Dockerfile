@@ -2,7 +2,8 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+# Angular CLI and the production builder are devDependencies required at build time.
+RUN npm ci --include=dev
 COPY . .
 RUN npm run build -- --configuration production
 

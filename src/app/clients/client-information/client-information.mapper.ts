@@ -25,7 +25,8 @@ export function mapClientInformationResponse(response: unknown): ClientInformati
 
   return {
     clientId,
-    clientName: toString(record['clientName'] ?? record['name']) ?? clientId,
+    friendlyId: toString(record['friendlyId'] ?? record['friendly_id']),
+    clientName: toString(record['clientName'] ?? record['name'] ?? record['fullName'] ?? record['full_name']) ?? clientId,
     idType: toString(record['idType'] ?? record['id_type']) ?? '',
     idNumber: toString(record['idNumber'] ?? record['id_number']) ?? '',
     status: toString(record['status']) ?? '',

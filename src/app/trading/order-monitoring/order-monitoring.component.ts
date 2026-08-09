@@ -15,6 +15,7 @@ import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-la
 import { MarketDropdownComponent } from '../../shared/components';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import type { MarketGridContextAction } from '../../shared/models/market-grid.model';
+import { formatClientDisplay } from '../../shared/utils/client-display.util';
 import { OrderConfirmationDialogComponent } from '../order-confirmation/order-confirmation-dialog.component';
 import { OrderTransactionDetailsDialogComponent } from '../order-transaction-details/order-transaction-details-dialog.component';
 import type { ClientOption, OrderMonitoringRow, SymbolOption } from '../services/order.models';
@@ -130,7 +131,7 @@ export class OrderMonitoringComponent {
   }
 
   protected displayClient(value: string | ClientOption | null): string {
-    return !value ? '' : typeof value === 'string' ? value : `${value.clientId} - ${value.clientName}`;
+    return formatClientDisplay(value);
   }
 
   protected displaySymbol(value: string | SymbolOption | null): string {

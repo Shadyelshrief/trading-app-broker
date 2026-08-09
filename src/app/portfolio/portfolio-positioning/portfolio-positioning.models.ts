@@ -1,9 +1,11 @@
 import type { MarketGridSettings } from '../../shared/models/market-grid.model';
 import type { WebSocketState } from '../../core/market-data';
+import type { CashDetailsRow, CashPositionSummary } from '../cash-details/cash-details.models';
 
 export interface ClientOption {
   clientId: string;
   clientName: string;
+  friendlyId?: string;
 }
 
 export interface PortfolioOption {
@@ -15,14 +17,6 @@ export interface PortfolioOption {
 export interface PortfolioPositioningRequest {
   clientId: string;
   portfolioId: string;
-}
-
-export interface CashDetailsRequest extends PortfolioPositioningRequest {
-  currency?: string;
-}
-
-export interface CashPositionRequest extends PortfolioPositioningRequest {
-  currency: string;
 }
 
 export interface PortfolioPositionRow {
@@ -72,6 +66,8 @@ export interface PortfolioPositioningViewModel {
   portfolioOptions: readonly PortfolioOption[];
   selectedPortfolio: PortfolioOption | null;
   rows: readonly PortfolioPositionRow[];
+  wallets: readonly CashDetailsRow[];
+  cashSummary: CashPositionSummary | null;
   totals: PortfolioTotals;
   loading: boolean;
   error?: string;
@@ -79,6 +75,12 @@ export interface PortfolioPositioningViewModel {
   connectionState: WebSocketState;
   lastUpdated?: number;
   settings: MarketGridSettings;
+}
+
+export interface PortfolioPositioningSnapshot {
+  rows: readonly PortfolioPositionRow[];
+  wallets: readonly CashDetailsRow[];
+  cashSummary: CashPositionSummary;
 }
 
 export interface PortfolioTickPayload {

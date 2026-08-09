@@ -10,11 +10,11 @@
 
     <section class="client-information__filters">
       <mat-form-field appearance="outline" class="client-information__client-field">
-        <mat-label>Client ID</mat-label>
+        <mat-label>Client</mat-label>
         <input
           matInput
           type="text"
-          placeholder="Search client ID or name"
+          placeholder="Search Friendly ID or name"
           [formControl]="clientControl"
           [matAutocomplete]="clientAutocomplete"
           (keydown.enter)="searchTypedClient()"
@@ -26,8 +26,7 @@
         >
           @for (client of vm.clientOptions; track client.clientId) {
             <mat-option [value]="client">
-              <span>{{ client.clientId }}</span>
-              <small>{{ client.clientName }}</small>
+              <span>{{ displayClient(client) }}</span>
             </mat-option>
           }
         </mat-autocomplete>
@@ -43,12 +42,8 @@
     @if (vm.selectedClient; as client) {
       <section class="client-information__profile">
         <div>
-          <span>Client ID</span>
-          <strong>{{ client.clientId || '--' }}</strong>
-        </div>
-        <div>
-          <span>Client Name</span>
-          <strong>{{ client.clientName || '--' }}</strong>
+          <span>Client</span>
+          <strong>{{ displayClient(client) || '--' }}</strong>
         </div>
         <div>
           <span>ID Type</span>

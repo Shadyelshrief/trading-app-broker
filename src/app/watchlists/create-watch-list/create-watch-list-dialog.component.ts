@@ -12,6 +12,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatListModule } from '@angular/material/list';
 import { catchError, debounceTime, of, switchMap } from 'rxjs';
 
+import { formatClientDisplay } from '../../shared/utils/client-display.util';
 import {
   ClientOption,
   PortfolioOption,
@@ -115,7 +116,7 @@ export class CreateWatchListDialogComponent {
   }
 
   protected displayClient(value: string | ClientOption | null): string {
-    return !value ? '' : typeof value === 'string' ? value : `${value.clientId} - ${value.clientName}`;
+    return formatClientDisplay(value);
   }
 
   protected selectClient(client: ClientOption): void {

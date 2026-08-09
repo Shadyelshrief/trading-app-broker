@@ -87,10 +87,11 @@ export class ClientService {
   }
 }
 
-function toClientSearchResults(clients: Array<{ clientId: string; clientName: string }>): ClientSearchResult[] {
+function toClientSearchResults(clients: Array<{ clientId: string; clientName: string; friendlyId?: string }>): ClientSearchResult[] {
   return clients.map((client) => ({
     clientId: client.clientId,
-    clientName: client.clientName
+    clientName: client.clientName,
+    friendlyId: client.friendlyId
   }));
 }
 

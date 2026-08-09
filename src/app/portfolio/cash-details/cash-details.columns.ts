@@ -4,28 +4,26 @@ import type { CashDetailsRow } from './cash-details.models';
 
 export function createCashDetailsColumns(): ColDef<CashDetailsRow>[] {
   return [
-    { headerName: 'Cash Account', field: 'cashAccount', minWidth: 155, pinned: 'left' },
-    { headerName: 'Cash Account Name', field: 'cashAccountName', minWidth: 220 },
+    { headerName: 'Wallet ID', field: 'walletId', minWidth: 250, pinned: 'left' },
+    { headerName: 'Wallet Name', field: 'walletName', minWidth: 180 },
     { headerName: 'Currency', field: 'currency', minWidth: 110 },
-    { headerName: 'Group', field: 'group', minWidth: 125 },
-    moneyColumn('Cash Amount', 'cashAmount', 150),
-    moneyColumn('Blocked', 'blocked', 130),
-    moneyColumn('Account Limit', 'accountLimit', 150),
-    moneyColumn('Purchase Power', 'purchasePower', 165),
-    percentColumn('Coverage Ratio', 'coverageRatio', 155),
-    moneyColumn('Buy Amount In Transit', 'buyAmountInTransit', 200),
-    numberColumn('Unsettled Buy Units', 'unsettledBuyUnits', 180),
-    numberColumn('Unsettled Sell Units', 'unsettledSellUnits', 185),
-    moneyColumn('Holding Value', 'holdingValue', 150)
+    { headerName: 'Wallet Type', field: 'isMargin', minWidth: 130, valueFormatter: (params) => params.value ? 'Margin' : 'Cash' },
+    moneyColumn('Available Amount', 'availableAmount', 170),
+    moneyColumn('Blocked Amount', 'blockedAmount', 160),
+    moneyColumn('Limit Amount', 'limitAmount', 145),
+    moneyColumn('Purchasing Power', 'purchasingPower', 170),
+    percentColumn('Cover Ratio', 'coverRatio', 140),
+    moneyColumn('Holding Market Value', 'holdingMarketValue', 195),
+    moneyColumn('Marginable Value', 'marginableValue', 170),
+    moneyColumn('Pending Buy Amount', 'pendingBuyAmount', 185),
+    moneyColumn('PP Margin', 'ppMargin', 140),
+    moneyColumn('Unsettled Buy Amount', 'unsettledBuyAmount', 195),
+    moneyColumn('Unsettled Sell Amount', 'unsettledSellAmount', 200)
   ];
 }
 
 function moneyColumn(headerName: string, field: keyof CashDetailsRow, minWidth: number): ColDef<CashDetailsRow> {
   return { headerName, field, minWidth, type: 'rightAligned', valueFormatter: moneyFormatter };
-}
-
-function numberColumn(headerName: string, field: keyof CashDetailsRow, minWidth: number): ColDef<CashDetailsRow> {
-  return { headerName, field, minWidth, type: 'rightAligned', valueFormatter: integerFormatter };
 }
 
 function percentColumn(headerName: string, field: keyof CashDetailsRow, minWidth: number): ColDef<CashDetailsRow> {
@@ -34,10 +32,6 @@ function percentColumn(headerName: string, field: keyof CashDetailsRow, minWidth
 
 function moneyFormatter(params: ValueFormatterParams<CashDetailsRow, number>): string {
   return formatNumber(params.value, 2);
-}
-
-function integerFormatter(params: ValueFormatterParams<CashDetailsRow, number>): string {
-  return formatNumber(params.value, 0);
 }
 
 function percentFormatter(params: ValueFormatterParams<CashDetailsRow, number>): string {

@@ -21,14 +21,9 @@
 
   @if (summary$ | async; as summary) {
     <section class="cash-dialog__summary">
-      <article><span>Cash Amount</span><strong>{{ summary.cashAmount | number: '1.2-2' }}</strong></article>
-      <article><span>Blocked</span><strong>{{ summary.blocked | number: '1.2-2' }}</strong></article>
-      <article><span>Account Limit</span><strong>{{ summary.accountLimit | number: '1.2-2' }}</strong></article>
-      <article><span>Marginable Value</span><strong>{{ summary.marginableValue | number: '1.2-2' }}</strong></article>
-      <article><span>Outstanding Buy Orders</span><strong>{{ summary.outstandingBuyOrders | number: '1.2-2' }}</strong></article>
-      <article><span>Purchase Power</span><strong>{{ summary.purchasePower | number: '1.2-2' }}</strong></article>
-      <article><span>Coverage Ratio</span><strong>{{ summary.coverageRatio | number: '1.2-2' }}%</strong></article>
-      <article><span>Portfolio Value</span><strong>{{ summary.portfolioValue | number: '1.2-2' }}</strong></article>
+      <article><span>Total Cash Available</span><strong>{{ summary.totalCashAvailable | number: '1.2-2' }}</strong></article>
+      <article><span>Total Holding Value</span><strong>{{ summary.totalHoldingValue | number: '1.2-2' }}</strong></article>
+      <article><span>Total Purchasing Power</span><strong>{{ summary.totalPurchasingPower | number: '1.2-2' }}</strong></article>
     </section>
   }
 

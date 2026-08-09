@@ -1,33 +1,32 @@
 export interface CashDetailsRow {
-  cashAccount: string;
-  cashAccountName: string;
+  walletId: string;
+  walletName: string;
   currency: string;
-  group: string;
-  cashAmount: number;
-  blocked: number;
-  accountLimit: number;
-  purchasePower: number;
-  coverageRatio: number;
-  buyAmountInTransit: number;
-  unsettledBuyUnits: number;
-  unsettledSellUnits: number;
-  holdingValue: number;
+  isMargin: boolean;
+  availableAmount: number;
+  blockedAmount: number;
+  coverRatio: number;
+  holdingMarketValue: number;
+  limitAmount: number;
+  marginableValue: number;
+  pendingBuyAmount: number;
+  ppMargin: number;
+  purchasingPower: number;
+  unsettledBuyAmount: number;
+  unsettledSellAmount: number;
 }
 
 export interface CashPositionSummary {
   currency: string;
-  cashAmount: number;
-  blocked: number;
-  accountLimit: number;
-  marginableValue: number;
-  outstandingBuyOrders: number;
-  purchasePower: number;
-  coverageRatio: number;
-  portfolioValue: number;
+  totalCashAvailable: number;
+  totalHoldingValue: number;
+  totalPurchasingPower: number;
 }
 
 export interface CashDetailsDialogData {
   clientId: string;
   portfolioId: string;
   portfolioCurrency: string;
+  wallets: readonly CashDetailsRow[];
+  summary: CashPositionSummary;
 }

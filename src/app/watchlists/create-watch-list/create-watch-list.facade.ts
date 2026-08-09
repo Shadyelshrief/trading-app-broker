@@ -71,7 +71,8 @@ export class CreateWatchListFacade {
       map((clients) =>
         clients.map((client) => ({
           clientId: client.clientId,
-          clientName: client.clientName
+          clientName: client.clientName,
+          friendlyId: client.friendlyId
         }))
       )
     );

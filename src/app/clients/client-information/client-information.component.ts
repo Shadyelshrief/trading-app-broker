@@ -14,6 +14,7 @@ import { debounceTime } from 'rxjs';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
+import { formatClientDisplay } from '../../shared/utils/client-display.util';
 import { CashAccountsDialogComponent } from '../cash-accounts/cash-accounts-dialog.component';
 import { MarketsAccountsDialogComponent } from '../markets-accounts/markets-accounts-dialog.component';
 import { createClientPortfolioColumns } from './client-information.columns';
@@ -73,12 +74,13 @@ export class ClientInformationComponent {
 
       const client = {
         clientId,
+        friendlyId: readString(context?.['friendlyId']),
         clientName: readString(context?.['clientName']) ?? clientId
       };
 
       this.loadedContextClientId = clientId;
       this.clientControl.setValue(client, { emitEvent: false });
-      this.facade.loadClient(clientId);
+      this.facade.selectClient(client);
     });
 
     this.clientControl.valueChanges
@@ -91,11 +93,7 @@ export class ClientInformationComponent {
   }
 
   protected displayClient(value: string | ClientSearchResult | null): string {
-    if (!value) {
-      return '';
-    }
-
-    return typeof value === 'string' ? value : `${value.clientId} - ${value.clientName}`;
+    return formatClientDisplay(value);
   }
 
   protected selectClient(client: ClientSearchResult): void {

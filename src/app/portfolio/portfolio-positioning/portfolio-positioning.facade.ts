@@ -110,14 +110,20 @@ export class PortfolioPositioningFacade {
           portfolioId: selectedPortfolio.portfolioId
         })
         .pipe(
-          switchMap((baseRows) => this.observeRowsWithLivePrices(baseRows)),
-          map((rows) =>
+          switchMap((snapshot) =>
+            this.observeRowsWithLivePrices(snapshot.rows).pipe(
+              map((rows) => ({ ...snapshot, rows }))
+            )
+          ),
+          map((snapshot) =>
             this.createViewModel({
               state,
               clientOptions,
               portfolioOptions,
               selectedPortfolio,
-              rows,
+              rows: snapshot.rows,
+              wallets: snapshot.wallets,
+              cashSummary: snapshot.cashSummary,
               connectionState
             })
           ),
@@ -202,6 +208,8 @@ export class PortfolioPositioningFacade {
     portfolioOptions: readonly PortfolioOption[];
     selectedPortfolio: PortfolioOption | null;
     rows: readonly PortfolioPositionRow[];
+    wallets?: PortfolioPositioningViewModel['wallets'];
+    cashSummary?: PortfolioPositioningViewModel['cashSummary'];
     connectionState: WebSocketState;
     loading?: boolean;
     error?: string;
@@ -213,6 +221,8 @@ export class PortfolioPositioningFacade {
       portfolioOptions: options.portfolioOptions,
       selectedPortfolio: options.selectedPortfolio,
       rows: options.rows,
+      wallets: options.wallets ?? [],
+      cashSummary: options.cashSummary ?? null,
       totals: calculatePortfolioTotals(options.rows),
       loading: options.loading ?? false,
       error: options.error,

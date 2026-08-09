@@ -7,7 +7,7 @@
       </div>
 
       <div class="portfolio-positioning__actions">
-        <button mat-stroked-button type="button" [disabled]="!vm.selectedClient || !vm.selectedPortfolio" (click)="openCashDetails(vm)">
+        <button mat-stroked-button type="button" [disabled]="!vm.selectedClient || !vm.selectedPortfolio || !vm.cashSummary" (click)="openCashDetails(vm)">
           Cash Details
         </button>
         <button mat-flat-button type="button" class="portfolio-positioning__primary" (click)="facade.refresh()">Refresh</button>
@@ -20,7 +20,7 @@
         <input
           matInput
           type="text"
-          placeholder="Search client ID or name"
+          placeholder="Search Friendly ID or name"
           [formControl]="clientControl"
           [matAutocomplete]="clientAutocomplete"
         />
@@ -31,8 +31,7 @@
         >
           @for (client of vm.clientOptions; track client.clientId) {
             <mat-option [value]="client">
-              <span>{{ client.clientId }}</span>
-              <small>{{ client.clientName }}</small>
+              <span>{{ displayClient(client) }}</span>
             </mat-option>
           }
         </mat-autocomplete>

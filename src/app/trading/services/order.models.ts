@@ -126,6 +126,7 @@ export interface OrderSearchRequest {
 export interface OrderMonitoringRow {
   orderNumber: string;
   clientId: string;
+  clientFriendlyId: string;
   clientName: string;
   portfolio: string;
   portfolioId?: string;

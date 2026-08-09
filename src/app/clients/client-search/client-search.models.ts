@@ -16,6 +16,7 @@ export interface ClientSearchFilters {
 export interface ClientSearchResult {
   clientId: string;
   clientName: string;
+  friendlyId?: string;
 }
 
 export interface ClientSearchViewModel {

@@ -5,11 +5,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
-import { catchError, combineLatest, of, shareReplay, startWith, switchMap } from 'rxjs';
+import { combineLatest, map, of, shareReplay, startWith } from 'rxjs';
 
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import type { MarketGridSettings } from '../../shared/models/market-grid.model';
-import { PortfolioPositioningService } from '../portfolio-positioning/portfolio-positioning.service';
+import { calculateCashPositionSummary } from '../portfolio-positioning/portfolio-positioning.mapper';
 import { createCashDetailsColumns } from './cash-details.columns';
 import type { CashDetailsDialogData } from './cash-details.models';
 
@@ -32,7 +32,6 @@ import type { CashDetailsDialogData } from './cash-details.models';
 })
 export class CashDetailsDialogComponent {
   protected readonly data = inject<CashDetailsDialogData>(MAT_DIALOG_DATA);
-  private readonly service = inject(PortfolioPositioningService);
   protected readonly currencyControl = new FormControl('', { nonNullable: true });
   protected readonly columns = createCashDetailsColumns();
   protected readonly settings: MarketGridSettings = {
@@ -44,43 +43,32 @@ export class CashDetailsDialogComponent {
     theme: 'dark',
     presetId: 'cash-details'
   };
+  private readonly wallets = this.data.wallets.map((wallet) => ({
+    ...wallet,
+    currency: wallet.currency || this.data.portfolioCurrency
+  }));
   protected readonly selectedCurrency$ = this.currencyControl.valueChanges.pipe(startWith(this.currencyControl.value));
   protected readonly rows$ = this.selectedCurrency$.pipe(
-    switchMap((currency) =>
-      this.service
-        .getCashDetails({
-          clientId: this.data.clientId,
-          portfolioId: this.data.portfolioId,
-          currency: currency || undefined
-        })
-        .pipe(catchError(() => of([])))
-    ),
+    map((currency) => this.wallets.filter((wallet) => !currency || wallet.currency === currency)),
     shareReplay({ bufferSize: 1, refCount: true })
   );
-  protected readonly summary$ = this.selectedCurrency$.pipe(
-    switchMap((currency) =>
+  protected readonly summary$ = combineLatest([this.rows$, this.selectedCurrency$]).pipe(
+    map(([wallets, currency]) =>
       currency
-        ? this.service
-            .getCashPositionByCurrency({
-              clientId: this.data.clientId,
-              portfolioId: this.data.portfolioId,
-              currency
-            })
-            .pipe(catchError(() => of(null)))
-        : of(null)
+        ? calculateCashPositionSummary(wallets, currency)
+        : {
+            ...this.data.summary,
+            currency: this.data.summary.currency || this.data.portfolioCurrency
+          }
     ),
     shareReplay({ bufferSize: 1, refCount: true })
   );
-  protected readonly currencyOptions$ = combineLatest([this.rows$, this.selectedCurrency$]).pipe(
-    switchMap(([rows, selectedCurrency]) =>
-      of(
-        Array.from(
-          new Set(
-            [this.data.portfolioCurrency, selectedCurrency, ...rows.map((row) => row.currency)]
-              .map((currency) => currency.trim())
-              .filter(Boolean)
-          )
-        )
+  protected readonly currencyOptions$ = of(
+    Array.from(
+      new Set(
+        [this.data.portfolioCurrency, ...this.wallets.map((wallet) => wallet.currency)]
+          .map((currency) => currency.trim())
+          .filter(Boolean)
       )
     )
   );

@@ -54,10 +54,10 @@ export class ClientInformationFacade {
 
   selectClient(client: ClientSearchResult): void {
     this.patch({ clientOptions: [client] });
-    this.loadClient(client.clientId);
+    this.loadClient(client.clientId, client);
   }
 
-  loadClient(clientId: string): void {
+  loadClient(clientId: string, clientOption?: ClientSearchResult): void {
     const trimmed = clientId.trim();
 
     if (!trimmed) {
@@ -109,6 +109,8 @@ export class ClientInformationFacade {
         this.patch({
           selectedClient: {
             ...result.information,
+            friendlyId: result.information.friendlyId ?? clientOption?.friendlyId,
+            clientName: result.information.clientName || clientOption?.clientName || result.information.clientId,
             portfolios,
             deliveryChannels
           },

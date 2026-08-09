@@ -11,6 +11,7 @@ import { debounceTime } from 'rxjs';
 
 import { MarketDropdownComponent } from '../../shared/components';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
+import { formatClientDisplay } from '../../shared/utils/client-display.util';
 import type { ClientOption, SymbolOption } from '../services/order.models';
 import { createOrderStatisticsColumns } from './order-statistics.columns';
 import { OrderStatisticsFacade } from './order-statistics.facade';
@@ -78,7 +79,7 @@ export class OrderStatisticsComponent {
   }
 
   protected displayClient(value: string | ClientOption | null): string {
-    return !value ? '' : typeof value === 'string' ? value : `${value.clientId} - ${value.clientName}`;
+    return formatClientDisplay(value);
   }
 
   protected displaySymbol(value: string | SymbolOption | null): string {

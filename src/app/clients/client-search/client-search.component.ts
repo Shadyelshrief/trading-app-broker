@@ -10,6 +10,7 @@ import type { GridOptions } from 'ag-grid-community';
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import type { MarketGridContextAction } from '../../shared/models/market-grid.model';
+import { formatClientDisplay } from '../../shared/utils/client-display.util';
 import { createClientSearchColumns } from './client-search.columns';
 import { ClientSearchFacade } from './client-search.facade';
 import type { ClientSearchFilters, ClientSearchResult } from './client-search.models';
@@ -90,14 +91,16 @@ export class ClientSearchComponent {
   }
 
   protected openClientInformation(row: ClientSearchResult): void {
+    const clientLabel = formatClientDisplay(row);
+
     this.workspace.openPanel({
       type: 'client-information',
       state: {
-        title: `Client Information - ${row.clientId}`,
+        title: `Client Information - ${clientLabel}`,
         route: `/app/management/client-information/${encodeURIComponent(row.clientId)}`,
         section: 'management',
         screen: 'client-information',
-        context: { clientId: row.clientId, clientName: row.clientName }
+        context: { clientId: row.clientId, friendlyId: row.friendlyId, clientName: row.clientName }
       }
     });
   }
@@ -125,10 +128,12 @@ export class ClientSearchComponent {
   }
 
   private openOrderEntry(row: ClientSearchResult): void {
+    const clientLabel = formatClientDisplay(row);
+
     this.workspace.openPanel({
       type: 'order-entry',
       state: {
-        title: `Order Entry - ${row.clientId}`,
+        title: `Order Entry - ${clientLabel}`,
         route: `/app/trading/order-entry/client/${encodeURIComponent(row.clientId)}`,
         section: 'trading',
         screen: 'order-entry',
@@ -138,10 +143,12 @@ export class ClientSearchComponent {
   }
 
   private openOrderMonitor(row: ClientSearchResult): void {
+    const clientLabel = formatClientDisplay(row);
+
     this.workspace.openPanel({
       type: 'order-monitoring',
       state: {
-        title: `Order Monitor - ${row.clientId}`,
+        title: `Order Monitor - ${clientLabel}`,
         route: `/app/trading/order-monitor/${encodeURIComponent(row.clientId)}`,
         section: 'trading',
         screen: 'order-monitoring',
@@ -151,10 +158,12 @@ export class ClientSearchComponent {
   }
 
   private openPortfolioPositioning(row: ClientSearchResult): void {
+    const clientLabel = formatClientDisplay(row);
+
     this.workspace.openPanel({
       type: 'portfolio-positioning',
       state: {
-        title: `Portfolio Positioning - ${row.clientId}`,
+        title: `Portfolio Positioning - ${clientLabel}`,
         route: `/app/trading/portfolio-position/${encodeURIComponent(row.clientId)}`,
         section: 'trading',
         screen: 'portfolio-positioning',

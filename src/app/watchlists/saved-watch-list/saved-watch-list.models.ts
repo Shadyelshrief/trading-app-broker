@@ -8,6 +8,7 @@ export type WatchListDirection = 'UP' | 'DOWN' | 'UNCHANGED';
 export interface ClientOption {
   clientId: string;
   clientName: string;
+  friendlyId?: string;
 }
 
 export interface PortfolioOption {

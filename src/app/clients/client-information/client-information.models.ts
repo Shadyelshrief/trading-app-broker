@@ -3,6 +3,7 @@ import type { ClientSearchResult } from '../client-search/client-search.models';
 export interface ClientInformation {
   clientId: string;
   clientName: string;
+  friendlyId?: string;
   idType: string;
   idNumber: string;
   status: string;

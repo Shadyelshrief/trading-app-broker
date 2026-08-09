@@ -25,6 +25,7 @@ export function mapClientSearchResult(value: unknown): ClientSearchResult | null
   return clientId
     ? {
         clientId,
+        friendlyId: toString(record?.['friendlyId'] ?? record?.['friendly_id']),
         clientName:
           toString(record?.['clientName'] ?? record?.['name'] ?? record?.['label'] ?? record?.['fullName'] ?? record?.['username'] ?? record?.['friendlyId']) ??
           clientId

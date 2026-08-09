@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { debounceTime, take } from 'rxjs';
 
 import { OrderConfirmationDialogComponent } from '../order-confirmation/order-confirmation-dialog.component';
+import { formatClientDisplay } from '../../shared/utils/client-display.util';
 import { MarketDepthLevel } from '../../shared/utils/market-depth.mapper';
 import type { ClientOption, OrderEntryForm, OrderSide, OrderType, SymbolOption } from '../services/order.models';
 import { calculateOrderAmount, mapTakeHitType, resolveDisclosedVolume } from './order-entry.mapper';
@@ -149,7 +150,7 @@ export class OrderEntryComponent {
   }
 
   protected displayClient(value: string | ClientOption | null): string {
-    return !value ? '' : typeof value === 'string' ? value : `${value.clientId} - ${value.clientName}`;
+    return formatClientDisplay(value);
   }
 
   protected displaySymbol(value: string | SymbolOption | null): string {

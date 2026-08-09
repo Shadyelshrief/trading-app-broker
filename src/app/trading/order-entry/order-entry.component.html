@@ -43,11 +43,11 @@
 
         <form class="order-entry__form" [formGroup]="form">
       <mat-form-field appearance="outline">
-        <mat-label>Client ID</mat-label>
-        <input matInput type="text" [formControl]="clientSearch" [matAutocomplete]="clientAutocomplete" />
+        <mat-label>Client</mat-label>
+        <input matInput type="text" [formControl]="clientSearch" [matAutocomplete]="clientAutocomplete" placeholder="Friendly ID or name" />
         <mat-autocomplete #clientAutocomplete="matAutocomplete" [displayWith]="displayClient" (optionSelected)="selectClient($event.option.value)">
           @for (client of vm.clientOptions; track client.clientId) {
-            <mat-option [value]="client">{{ client.clientId }} · {{ client.clientName }}</mat-option>
+            <mat-option [value]="client">{{ displayClient(client) }}</mat-option>
           }
         </mat-autocomplete>
       </mat-form-field>

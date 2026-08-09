@@ -149,6 +149,7 @@ function mapClientOption(value: unknown): ClientOption | null {
   return clientId
     ? {
         clientId,
+        friendlyId: toString(record?.['friendlyId'] ?? record?.['friendly_id']),
         clientName:
           toString(record?.['clientName'] ?? record?.['name'] ?? record?.['label'] ?? record?.['fullName'] ?? record?.['username'] ?? record?.['friendlyId']) ??
           clientId
@@ -191,8 +192,17 @@ function mapOrderMonitoringRow(value: unknown): OrderMonitoringRow | null {
   return {
     orderNumber,
     clientId: toString(record['clientId'] ?? record['client_id']) ?? '',
+    clientFriendlyId:
+      toString(record['clientFriendlyId'] ?? record['client_friendly_id'] ?? record['clientId'] ?? record['client_id']) ?? '',
     clientName: toString(record['clientName'] ?? record['client_name']) ?? '',
-    portfolio: toString(record['portfolio'] ?? record['portfolioName'] ?? record['portfolioId']) ?? '',
+    portfolio:
+      toString(
+        record['portfolioFriendlyId'] ??
+        record['portfolio_friendly_id'] ??
+        record['portfolio'] ??
+        record['portfolioName'] ??
+        record['portfolioId']
+      ) ?? '',
     portfolioId: toString(record['portfolioId'] ?? record['portfolio_id']),
     status: toString(record['status'] ?? record['orderStatus']) ?? '',
     orderType: toString(record['orderType'] ?? record['order_type'] ?? record['type']) ?? '',

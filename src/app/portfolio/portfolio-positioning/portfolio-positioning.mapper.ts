@@ -1,14 +1,10 @@
-import { HttpParams } from '@angular/common/http';
-
 import { buildTickTopic } from '../../core/market-data';
 import type { CashDetailsRow, CashPositionSummary } from '../cash-details/cash-details.models';
 import type {
-  CashDetailsRequest,
-  CashPositionRequest,
   ClientOption,
   PortfolioOption,
   PortfolioPositionRow,
-  PortfolioPositioningRequest,
+  PortfolioPositioningSnapshot,
   PortfolioTotals
 } from './portfolio-positioning.models';
 
@@ -20,52 +16,41 @@ export function mapPortfolioOptionsResponse(response: unknown): PortfolioOption[
   return mapArray(response).map(mapPortfolioOption).filter((portfolio): portfolio is PortfolioOption => portfolio !== null);
 }
 
-export function mapPortfolioPositioningResponse(response: unknown): PortfolioPositionRow[] {
-  const record = toRecord(response);
-  const body = toRecord(record?.['body']);
-  const source = body?.['holdings'] ?? response;
-
-  return mapArray(source)
+export function mapPortfolioPositioningResponse(response: unknown): PortfolioPositioningSnapshot {
+  const record = toRecord(response) ?? {};
+  const body = toRecord(record['body']) ?? record;
+  const rows = mapArray(body['holdings'])
     .map(mapPortfolioPositionRow)
     .filter((row): row is PortfolioPositionRow => row !== null);
-}
-
-export function mapCashDetailsResponse(response: unknown): CashDetailsRow[] {
-  return mapArray(response).map(mapCashDetailsRow).filter((row): row is CashDetailsRow => row !== null);
-}
-
-export function mapCashPositionSummaryResponse(response: unknown, currency: string): CashPositionSummary {
-  const record = toRecord(response) ?? {};
+  const wallets = mapArray(body['wallets'])
+    .map(mapWalletRow)
+    .filter((row): row is CashDetailsRow => row !== null);
 
   return {
-    currency: toString(record['currency']) ?? currency,
-    cashAmount: toNumber(record['cashAmount'] ?? record['cash_amount']) ?? 0,
-    blocked: toNumber(record['blocked']) ?? 0,
-    accountLimit: toNumber(record['accountLimit'] ?? record['account_limit']) ?? 0,
-    marginableValue: toNumber(record['marginableValue'] ?? record['marginable_value']) ?? 0,
-    outstandingBuyOrders: toNumber(record['outstandingBuyOrders'] ?? record['outstanding_buy_orders']) ?? 0,
-    purchasePower: toNumber(record['purchasePower'] ?? record['purchase_power']) ?? 0,
-    coverageRatio: toNumber(record['coverageRatio'] ?? record['coverage_ratio']) ?? 0,
-    portfolioValue: toNumber(record['portfolioValue'] ?? record['portfolio_value']) ?? 0
+    rows,
+    wallets,
+    cashSummary: mapCashPositionSummary(body['summary'], wallets)
   };
 }
 
-export function buildPositioningParams(request: PortfolioPositioningRequest): HttpParams {
-  return new HttpParams().set('clientId', request.clientId).set('portfolioId', request.portfolioId);
-}
-
-export function buildCashDetailsParams(request: CashDetailsRequest): HttpParams {
-  let params = buildPositioningParams(request);
-
-  if (request.currency) {
-    params = params.set('currency', request.currency);
-  }
-
-  return params;
-}
-
-export function buildCashPositionParams(request: CashPositionRequest): HttpParams {
-  return buildPositioningParams(request).set('currency', request.currency);
+export function calculateCashPositionSummary(
+  wallets: readonly CashDetailsRow[],
+  currency: string
+): CashPositionSummary {
+  return wallets.reduce<CashPositionSummary>(
+    (summary, wallet) => ({
+      currency,
+      totalCashAvailable: summary.totalCashAvailable + wallet.availableAmount,
+      totalHoldingValue: summary.totalHoldingValue + wallet.holdingMarketValue,
+      totalPurchasingPower: summary.totalPurchasingPower + wallet.purchasingPower
+    }),
+    {
+      currency,
+      totalCashAvailable: 0,
+      totalHoldingValue: 0,
+      totalPurchasingPower: 0
+    }
+  );
 }
 
 export function buildPortfolioTickTopics(rows: readonly PortfolioPositionRow[]): string[] {
@@ -146,6 +131,7 @@ function mapClientOption(value: unknown): ClientOption | null {
   return clientId
     ? {
         clientId,
+        friendlyId: toString(record['friendlyId'] ?? record['friendly_id']),
         clientName:
           toString(record['clientName'] ?? record['name'] ?? record['label'] ?? record['fullName'] ?? record['username'] ?? record['friendlyId']) ??
           clientId
@@ -235,26 +221,40 @@ function mapPortfolioPositionRow(value: unknown): PortfolioPositionRow | null {
   };
 }
 
-function mapCashDetailsRow(value: unknown): CashDetailsRow | null {
+function mapWalletRow(value: unknown): CashDetailsRow | null {
   const record = toRecord(value);
 
   return record
     ? {
-        cashAccount: toString(record['cashAccount'] ?? record['cash_account'] ?? record['account']) ?? '--',
-        cashAccountName: toString(record['cashAccountName'] ?? record['cash_account_name'] ?? record['name']) ?? '--',
-        currency: toString(record['currency']) ?? '',
-        group: toString(record['group']) ?? '',
-        cashAmount: toNumber(record['cashAmount'] ?? record['cash_amount']) ?? 0,
-        blocked: toNumber(record['blocked']) ?? 0,
-        accountLimit: toNumber(record['accountLimit'] ?? record['account_limit']) ?? 0,
-        purchasePower: toNumber(record['purchasePower'] ?? record['purchase_power']) ?? 0,
-        coverageRatio: toNumber(record['coverageRatio'] ?? record['coverage_ratio']) ?? 0,
-        buyAmountInTransit: toNumber(record['buyAmountInTransit'] ?? record['buy_amount_in_transit']) ?? 0,
-        unsettledBuyUnits: toNumber(record['unsettledBuyUnits'] ?? record['unsettled_buy_units']) ?? 0,
-        unsettledSellUnits: toNumber(record['unsettledSellUnits'] ?? record['unsettled_sell_units']) ?? 0,
-        holdingValue: toNumber(record['holdingValue'] ?? record['holding_value']) ?? 0
+        walletId: toString(record['walletId'] ?? record['wallet_id'] ?? record['cashAccount'] ?? record['cash_account']) ?? '--',
+        walletName: toString(record['walletName'] ?? record['wallet_name'] ?? record['cashAccountName'] ?? record['name']) ?? '--',
+        currency: toString(record['currency'] ?? record['currencyCode'] ?? record['currency_code']) ?? '',
+        isMargin: Boolean(record['isMargin'] ?? record['is_margin']),
+        availableAmount: toNumber(record['availableAmount'] ?? record['available_amount'] ?? record['cashAmount']) ?? 0,
+        blockedAmount: toNumber(record['blockedAmount'] ?? record['blocked_amount'] ?? record['blocked']) ?? 0,
+        coverRatio: toNumber(record['coverRatio'] ?? record['cover_ratio'] ?? record['coverageRatio']) ?? 0,
+        holdingMarketValue: toNumber(record['holdingMarketValue'] ?? record['holding_market_value'] ?? record['holdingValue']) ?? 0,
+        limitAmount: toNumber(record['limitAmount'] ?? record['limit_amount'] ?? record['accountLimit']) ?? 0,
+        marginableValue: toNumber(record['marginableValue'] ?? record['marginable_value']) ?? 0,
+        pendingBuyAmount: toNumber(record['pendingBuyAmount'] ?? record['pending_buy_amount'] ?? record['buyAmountInTransit']) ?? 0,
+        ppMargin: toNumber(record['ppMargin'] ?? record['pp_margin']) ?? 0,
+        purchasingPower: toNumber(record['purchasingPower'] ?? record['purchasing_power'] ?? record['purchasePower']) ?? 0,
+        unsettledBuyAmount: toNumber(record['unsettledBuyAmount'] ?? record['unsettled_buy_amount'] ?? record['unsettledBuyUnits']) ?? 0,
+        unsettledSellAmount: toNumber(record['unsettledSellAmount'] ?? record['unsettled_sell_amount'] ?? record['unsettledSellUnits']) ?? 0
       }
     : null;
+}
+
+function mapCashPositionSummary(value: unknown, wallets: readonly CashDetailsRow[]): CashPositionSummary {
+  const record = toRecord(value);
+  const fallback = calculateCashPositionSummary(wallets, '');
+
+  return {
+    currency: toString(record?.['currency'] ?? record?.['currencyCode'] ?? record?.['currency_code']) ?? '',
+    totalCashAvailable: toNumber(record?.['totalCashAvailable'] ?? record?.['total_cash_available']) ?? fallback.totalCashAvailable,
+    totalHoldingValue: toNumber(record?.['totalHoldingValue'] ?? record?.['total_holding_value']) ?? fallback.totalHoldingValue,
+    totalPurchasingPower: toNumber(record?.['totalPurchasingPower'] ?? record?.['total_purchasing_power']) ?? fallback.totalPurchasingPower
+  };
 }
 
 function mapArray(response: unknown): unknown[] {
@@ -268,7 +268,7 @@ function mapArray(response: unknown): unknown[] {
     return [];
   }
 
-  for (const key of ['body', 'items', 'data', 'rows', 'results', 'portfolios', 'clients', 'positions', 'holdings', 'cashAccounts']) {
+  for (const key of ['body', 'items', 'data', 'rows', 'results', 'portfolios', 'clients', 'positions', 'holdings', 'wallets', 'cashAccounts']) {
     if (Array.isArray(record[key])) {
       return record[key] as unknown[];
     }

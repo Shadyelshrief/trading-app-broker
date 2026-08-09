@@ -14,6 +14,7 @@ import { debounceTime } from 'rxjs';
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import type { MarketGridContextAction } from '../../shared/models/market-grid.model';
+import { formatClientDisplay } from '../../shared/utils/client-display.util';
 import { CashDetailsDialogComponent } from '../cash-details/cash-details-dialog.component';
 import { createPortfolioPositioningColumns } from './portfolio-positioning.columns';
 import { PortfolioPositioningFacade } from './portfolio-positioning.facade';
@@ -81,11 +82,7 @@ export class PortfolioPositioningComponent {
   }
 
   protected displayClient(value: string | ClientOption | null): string {
-    if (!value) {
-      return '';
-    }
-
-    return typeof value === 'string' ? value : `${value.clientId} - ${value.clientName}`;
+    return formatClientDisplay(value);
   }
 
   protected selectClient(client: ClientOption): void {
@@ -106,7 +103,7 @@ export class PortfolioPositioningComponent {
   }
 
   protected openCashDetails(vm: PortfolioPositioningViewModel): void {
-    if (!vm.selectedClient || !vm.selectedPortfolio) {
+    if (!vm.selectedClient || !vm.selectedPortfolio || !vm.cashSummary) {
       return;
     }
 
@@ -116,7 +113,9 @@ export class PortfolioPositioningComponent {
       data: {
         clientId: vm.selectedClient.clientId,
         portfolioId: vm.selectedPortfolio.portfolioId,
-        portfolioCurrency: vm.selectedPortfolio.currency
+        portfolioCurrency: vm.selectedPortfolio.currency,
+        wallets: vm.wallets,
+        summary: vm.cashSummary
       }
     });
   }
