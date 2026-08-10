@@ -33,6 +33,7 @@ export class TradingSidebarComponent implements AfterViewInit {
   private readonly workspace = inject(WorkspaceLayoutService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly registeredMenuElements = new Set<HTMLElement>();
+  private menuPointerOrigin: { x: number; y: number } | null = null;
 
   protected readonly groups: readonly NavMenuGroup[] = APP_MENU_GROUPS;
 
@@ -108,6 +109,26 @@ export class TradingSidebarComponent implements AfterViewInit {
 
   protected trackByItemId(_index: number, item: NavMenuItem): string {
     return item.id;
+  }
+
+  protected beginMenuInteraction(event: PointerEvent): void {
+    this.menuPointerOrigin = { x: event.clientX, y: event.clientY };
+  }
+
+  protected openMenuItemInNewWindow(event: MouseEvent, route?: string): void {
+    const origin = this.menuPointerOrigin;
+    this.menuPointerOrigin = null;
+
+    if (!route || event.defaultPrevented) {
+      return;
+    }
+
+    if (event.detail !== 0 && origin && Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 6) {
+      return;
+    }
+
+    this.workspace.openRouteInNewWindow(route);
+    this.layout.closeMobileNav();
   }
 
   private registerMenuDragSources(): void {

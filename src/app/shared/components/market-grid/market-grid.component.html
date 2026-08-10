@@ -3,7 +3,10 @@
     <mat-progress-bar mode="indeterminate" />
   }
 
-  <div class="market-grid-shell__viewport ag-theme-quartz">
+  <div
+    class="market-grid-shell__viewport ag-theme-quartz"
+    [class.market-grid-shell__viewport--product-links]="productDetailsOnSymbolClick()"
+  >
     <ag-grid-angular
       class="market-grid-shell__grid"
       [columnDefs]="columnDefs()"

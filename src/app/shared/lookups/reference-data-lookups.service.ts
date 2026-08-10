@@ -23,6 +23,10 @@ export interface ProductLookupOption extends LookupOption {
   id?: string;
   symbol: string;
   marketCode: string;
+  name?: string;
+  sector?: string;
+  status?: string;
+  currency?: string;
 }
 
 interface ApiResponse<T> {
@@ -49,6 +53,10 @@ interface ProductDto {
   id?: string;
   name?: string;
   symbol?: string;
+  sector?: string | { name?: string };
+  sectorName?: string;
+  status?: string;
+  currency?: string;
 }
 
 interface LanguageDto {
@@ -65,6 +73,7 @@ export class ReferenceDataLookupsService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.apiUrl;
   private readonly sectorsByMarket = new Map<string, Observable<SectorLookupOption[]>>();
+  private readonly assetsByMarket = new Map<string, Observable<ProductLookupOption[]>>();
   private readonly languageId$ = this.http.get<ApiResponse<LanguageDto[]>>(`${this.base}/languages`).pipe(
     map((response) => resolveLanguageId(response.body ?? [])),
     catchError(() => of(DEFAULT_LANGUAGE_ID)),
@@ -109,6 +118,33 @@ export class ReferenceDataLookupsService {
     }
 
     return this.sectorsByMarket.get(code) ?? of([]);
+  }
+
+  getAssetsByMarket(marketCode: string): Observable<ProductLookupOption[]> {
+    const code = marketCode.trim().toUpperCase();
+
+    if (!code || code === 'ALL') {
+      return of([]);
+    }
+
+    if (!this.assetsByMarket.has(code)) {
+      this.assetsByMarket.set(
+        code,
+        this.http
+          .get<ApiResponse<ProductDto[]>>(`${this.base}/markets/${encodeURIComponent(code)}/assets`)
+          .pipe(
+            map((response) =>
+              (response.body ?? [])
+                .map((asset) => mapProduct(asset, code))
+                .filter((option): option is ProductLookupOption => option !== null)
+            ),
+            catchError(() => of([] as ProductLookupOption[])),
+            shareReplay({ bufferSize: 1, refCount: false })
+          )
+      );
+    }
+
+    return this.assetsByMarket.get(code) ?? of([]);
   }
 
   searchAssets(query: string, marketCode?: string): Observable<ProductLookupOption[]> {
@@ -191,11 +227,20 @@ function mapProduct(product: ProductDto, marketCode: string): ProductLookupOptio
     return null;
   }
 
+  const name = product.name?.trim();
+  const sector =
+    product.sectorName?.trim() ??
+    (typeof product.sector === 'string' ? product.sector.trim() : product.sector?.name?.trim());
+
   return {
     id: product.id,
     symbol,
     marketCode,
     value: symbol,
-    label: product.name ? `${symbol} - ${product.name}` : symbol
+    label: name ? `${symbol} - ${name}` : symbol,
+    name,
+    sector,
+    status: product.status?.trim(),
+    currency: product.currency?.trim()
   };
 }

@@ -9,16 +9,18 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import type { GridOptions } from 'ag-grid-community';
-import { debounceTime } from 'rxjs';
+import { Observable, debounceTime, finalize } from 'rxjs';
 
-import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { ProductDetailsDialogService } from '../../market/price-quote/product-details-dialog.service';
 import { MarketDropdownComponent } from '../../shared/components';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import type { MarketGridContextAction } from '../../shared/models/market-grid.model';
 import { formatClientDisplay } from '../../shared/utils/client-display.util';
 import { OrderConfirmationDialogComponent } from '../order-confirmation/order-confirmation-dialog.component';
+import { OrderModifyDialogComponent } from '../order-modify/order-modify-dialog.component';
+import { OrderModifyDialogResult } from '../order-modify/order-modify-dialog.models';
 import { OrderTransactionDetailsDialogComponent } from '../order-transaction-details/order-transaction-details-dialog.component';
-import type { ClientOption, OrderMonitoringRow, SymbolOption } from '../services/order.models';
+import type { ClientOption, OrderActionResult, OrderMonitoringRow, SymbolOption } from '../services/order.models';
 import { createOrderMonitoringColumns } from './order-monitoring.columns';
 import { OrderMonitoringFacade } from './order-monitoring.facade';
 
@@ -49,10 +51,12 @@ export class OrderMonitoringComponent {
   protected readonly facade = inject(OrderMonitoringFacade);
   private readonly fb = inject(FormBuilder);
   private readonly dialog = inject(MatDialog);
-  private readonly workspace = inject(WorkspaceLayoutService);
+  private readonly productDetails = inject(ProductDetailsDialogService);
   protected readonly vm$ = this.facade.vm$;
   protected readonly columns = createOrderMonitoringColumns();
   protected readonly selectedRow = signal<OrderMonitoringRow | null>(null);
+  protected readonly actionBusy = signal(false);
+  protected readonly actionFeedback = signal<{ success: boolean; message: string } | null>(null);
   protected readonly gridOptions: GridOptions<OrderMonitoringRow> = {
     getRowId: (params) => params.data.orderNumber,
     suppressScrollOnNewData: true
@@ -70,6 +74,7 @@ export class OrderMonitoringComponent {
   });
   protected readonly contextActions: MarketGridContextAction<OrderMonitoringRow>[] = [
     { id: 'transaction-details', label: 'Order Transaction Details' },
+    { id: 'quote', label: 'Product Details' },
     { id: 'modify', label: 'Modify Order', disabled: (row) => !row || !this.facade.permissions.canModify(row.status) },
     { id: 'cancel', label: 'Cancel Order', disabled: (row) => !row || !this.facade.permissions.canCancel(row.status) },
     { id: 'suspend', label: 'Suspend Order', disabled: (row) => !row || !this.facade.permissions.canSuspend(row.status) },
@@ -176,6 +181,9 @@ export class OrderMonitoringComponent {
       case 'transaction-details':
         this.openDetails(row);
         return;
+      case 'quote':
+        this.openProductDetails(row);
+        return;
       case 'modify':
         this.openModify(row);
         return;
@@ -192,19 +200,35 @@ export class OrderMonitoringComponent {
   }
 
   protected openModify(row: OrderMonitoringRow): void {
-    this.workspace.openPanel({
-      type: 'order-entry',
-      state: {
-        title: `Modify Order - ${row.orderNumber}`,
-        route: `/app/trading/order-entry/modify/${row.orderNumber}`,
-        section: 'trading',
-        screen: 'order-entry',
-        context: { mode: 'modify', order: row }
-      }
-    });
+    if (!this.facade.permissions.canModify(row.status)) {
+      this.actionFeedback.set({ success: false, message: `Order ${row.orderNumber} can no longer be modified.` });
+      return;
+    }
+
+    this.dialog
+      .open<OrderModifyDialogComponent, { row: OrderMonitoringRow }, OrderModifyDialogResult | undefined>(OrderModifyDialogComponent, {
+        width: 'min(620px, 94vw)',
+        maxWidth: '94vw',
+        data: { row }
+      })
+      .afterClosed()
+      .subscribe((changes) => {
+        if (changes) {
+          this.runAction(this.facade.modify(row, changes), 'Order modification submitted.');
+        }
+      });
+  }
+
+  protected openProductDetails(row: OrderMonitoringRow): void {
+    this.productDetails.open(row);
   }
 
   protected confirmCancel(row: OrderMonitoringRow): void {
+    if (!this.facade.permissions.canCancel(row.status)) {
+      this.actionFeedback.set({ success: false, message: `Order ${row.orderNumber} can no longer be cancelled.` });
+      return;
+    }
+
     this.dialog
       .open(OrderConfirmationDialogComponent, {
         width: 'min(520px, 94vw)',
@@ -235,7 +259,33 @@ export class OrderMonitoringComponent {
       .afterClosed()
       .subscribe((result) => {
         if (result?.confirmed) {
-          this.facade.cancel(row).subscribe(() => this.facade.search());
+          this.runAction(this.facade.cancel(row), 'Order cancellation submitted.');
+        }
+      });
+  }
+
+  private runAction(action$: Observable<OrderActionResult>, fallbackMessage: string): void {
+    this.actionBusy.set(true);
+    this.actionFeedback.set(null);
+
+    action$
+      .pipe(finalize(() => this.actionBusy.set(false)))
+      .subscribe({
+        next: (result) => {
+          this.actionFeedback.set({
+            success: result.success,
+            message: result.message || fallbackMessage
+          });
+
+          if (result.success) {
+            this.facade.search();
+          }
+        },
+        error: (error: unknown) => {
+          this.actionFeedback.set({
+            success: false,
+            message: resolveActionError(error)
+          });
         }
       });
   }
@@ -243,4 +293,17 @@ export class OrderMonitoringComponent {
   captureState() {
     return this.state();
   }
+}
+
+function resolveActionError(error: unknown): string {
+  if (error && typeof error === 'object') {
+    const candidate = error as { error?: { message?: unknown; messageLocale?: unknown }; message?: unknown };
+    const message = candidate.error?.messageLocale ?? candidate.error?.message ?? candidate.message;
+
+    if (typeof message === 'string' && message.trim()) {
+      return message.trim();
+    }
+  }
+
+  return 'The order action could not be completed. Please refresh and try again.';
 }

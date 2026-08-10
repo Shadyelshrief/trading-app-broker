@@ -65,6 +65,7 @@ export interface PortfolioPositioningViewModel {
   selectedClient: ClientOption | null;
   portfolioOptions: readonly PortfolioOption[];
   selectedPortfolio: PortfolioOption | null;
+  positionCurrency: string;
   rows: readonly PortfolioPositionRow[];
   wallets: readonly CashDetailsRow[];
   cashSummary: CashPositionSummary | null;

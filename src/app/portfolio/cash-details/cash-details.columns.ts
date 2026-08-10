@@ -16,6 +16,7 @@ export function createCashDetailsColumns(): ColDef<CashDetailsRow>[] {
     moneyColumn('Holding Market Value', 'holdingMarketValue', 195),
     moneyColumn('Marginable Value', 'marginableValue', 170),
     moneyColumn('Pending Buy Amount', 'pendingBuyAmount', 185),
+    moneyColumn('Reserved Sell Amount', 'reservedSellAmount', 190),
     moneyColumn('PP Margin', 'ppMargin', 140),
     moneyColumn('Unsettled Buy Amount', 'unsettledBuyAmount', 195),
     moneyColumn('Unsettled Sell Amount', 'unsettledSellAmount', 200)

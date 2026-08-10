@@ -233,12 +233,24 @@ export class OrderEntryComponent {
       .afterClosed()
       .subscribe((result) => {
         if (result?.confirmed) {
-          this.facade.place(mapTakeHitType(order)).subscribe();
+          this.facade.place(mapTakeHitType(order)).subscribe((placementResult) => {
+            if (placementResult.success) {
+              this.resetFormFields();
+              this.facade.resetAfterSuccessfulOrder();
+            }
+          });
         }
       });
   }
 
   protected clear(): void {
+    this.resetFormFields();
+    this.facade.selectClient(null);
+    this.facade.selectMarket('');
+    this.facade.clearResult();
+  }
+
+  private resetFormFields(): void {
     this.form.reset({
       clientId: '',
       portfolioId: '',
@@ -254,9 +266,6 @@ export class OrderEntryComponent {
     });
     this.clientSearch.setValue('');
     this.symbolSearch.setValue('');
-    this.facade.selectClient(null);
-    this.facade.selectMarket('');
-    this.facade.clearResult();
   }
 
   protected currentOrder(): OrderEntryForm {

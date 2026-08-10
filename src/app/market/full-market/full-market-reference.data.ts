@@ -9,6 +9,16 @@ interface FullMarketReferenceRow {
   currency?: string;
 }
 
+export interface FullMarketAssetSource {
+  symbol: string;
+  marketCode?: string;
+  name?: string;
+  label?: string;
+  sector?: string;
+  status?: string;
+  currency?: string;
+}
+
 const FULL_MARKET_REFERENCE_ROWS: readonly FullMarketReferenceRow[] = [
   { symbolId: 'IHC', symbolName: 'International Holding Company', market: 'ADX', sector: 'Industrials' },
   { symbolId: 'FAB', symbolName: 'First Abu Dhabi Bank', market: 'ADX', sector: 'Banks' },
@@ -30,6 +40,59 @@ export function buildReferenceFullMarketRows(exchange: string): FullMarketRow[] 
   return FULL_MARKET_REFERENCE_ROWS
     .filter((row) => row.market === normalizedExchange)
     .map((row) => createEmptyFullMarketRow(row));
+}
+
+export function buildFullMarketRowsFromAssets(
+  exchange: string,
+  assets: readonly FullMarketAssetSource[]
+): FullMarketRow[] {
+  const normalizedExchange = exchange.trim().toUpperCase();
+  const referenceRows = new Map(
+    FULL_MARKET_REFERENCE_ROWS
+      .filter((row) => row.market === normalizedExchange)
+      .map((row) => [row.symbolId, row] as const)
+  );
+  const seen = new Set<string>();
+
+  return assets
+    .map((asset) => {
+      const symbolId = asset.symbol.trim().toUpperCase();
+      const market = asset.marketCode?.trim().toUpperCase() || normalizedExchange;
+
+      if (!symbolId || market !== normalizedExchange || seen.has(symbolId)) {
+        return null;
+      }
+
+      seen.add(symbolId);
+      const reference = referenceRows.get(symbolId);
+
+      return createEmptyFullMarketRow({
+        symbolId,
+        symbolName: resolveAssetName(asset, symbolId) || reference?.symbolName || symbolId,
+        market,
+        sector: asset.sector?.trim() || reference?.sector || '',
+        status: asset.status?.trim() || reference?.status,
+        currency: asset.currency?.trim() || reference?.currency
+      });
+    })
+    .filter((row): row is FullMarketRow => row !== null);
+}
+
+function resolveAssetName(asset: FullMarketAssetSource, symbolId: string): string {
+  const name = asset.name?.trim();
+
+  if (name) {
+    return name;
+  }
+
+  const label = asset.label?.trim();
+
+  if (!label) {
+    return '';
+  }
+
+  const prefix = `${symbolId} - `;
+  return label.toUpperCase().startsWith(prefix.toUpperCase()) ? label.slice(prefix.length).trim() : label;
 }
 
 function createEmptyFullMarketRow(row: FullMarketReferenceRow): FullMarketRow {

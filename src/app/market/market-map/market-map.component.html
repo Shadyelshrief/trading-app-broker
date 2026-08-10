@@ -68,7 +68,7 @@
               [style.font-size.px]="vm.settings.fontSize"
               [matTooltip]="tooltipFor(symbol)"
               matTooltipClass="market-map__tooltip"
-              (dblclick)="openPriceQuote(symbol)"
+              (click)="openPriceQuote(symbol)"
               (contextmenu)="openContextMenu($event, symbol)"
             >
               <span class="market-map-page__tile-id">{{ symbol.symbolId }}</span>

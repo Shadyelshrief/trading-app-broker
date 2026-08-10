@@ -10,6 +10,7 @@ import {
   buildSearchParams,
   mapOrderActionResponse,
   mapOrderDetailsResponse,
+  mapMonitoringRowToOrderDetails,
   mapOrderSearchResponse,
   mapOrderStatisticsResponse
 } from './order.mapper';
@@ -203,7 +204,12 @@ export class OrderService {
   }
 
   getOrderTransactionDetails(orderNumber: string): Observable<OrderTransactionDetails> {
-    return this.searchOrders({ orderNumber }).pipe(map((rows) => mapOrderDetailsResponse(rows[0] ?? { orderNumber })));
+    return this.searchOrders({ orderNumber }).pipe(
+      map((rows) => {
+        const row = rows.find((candidate) => candidate.orderNumber === orderNumber);
+        return row ? mapMonitoringRowToOrderDetails(row) : mapOrderDetailsResponse({ orderNumber });
+      })
+    );
   }
 
   getOrderStatistics(orderStatisticsRequest: OrderStatisticsRequest): Observable<OrderStatisticsRow[]> {

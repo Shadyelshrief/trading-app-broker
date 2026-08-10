@@ -57,7 +57,8 @@ export function mapCalculationResponse(response: unknown): OrderCalculationResul
 export function mapOrderActionResponse(response: unknown): OrderActionResult {
   const record = toRecord(response) ?? {};
   const body = toRecord(record['body']) ?? {};
-  const success = (record['status'] ?? 'SUCCESS') !== 'ERROR_POPUP' && (record['status'] ?? 'SUCCESS') !== 'VALIDATION_FAIL';
+  const status = toString(record['status'])?.toUpperCase() ?? 'SUCCESS';
+  const success = status === 'SUCCESS';
 
   return {
     success,
@@ -84,18 +85,18 @@ export function mapOrderDetailsResponse(response: unknown): OrderTransactionDeta
     orderNumber: toString(record['orderNumber'] ?? record['order_number']) ?? '--',
     status: toString(record['status']) ?? '--',
     order: {
-      portfolio: toString(record['portfolio']) ?? '',
+      portfolio: toString(record['portfolioFriendlyId'] ?? record['portfolioName'] ?? record['portfolio']) ?? '',
       orderType: toString(record['orderType'] ?? record['order_type']) ?? '',
       company: toString(record['company'] ?? record['symbolName']) ?? '',
       fillTerm: toString(record['fillTerm'] ?? record['fill_term']) ?? '',
-      orderDate: toString(record['orderDate'] ?? record['order_date']) ?? '',
+      orderDate: toString(record['orderDate'] ?? record['order_date'] ?? record['createdAt'] ?? record['created_at']) ?? '',
       session: toString(record['sessionName'] ?? record['session'] ?? record['marketSession'] ?? record['sessionId']) ?? '',
       minimumQuantity: toNumber(record['minimumQuantity'] ?? record['minimum_quantity']) ?? 0,
-      period: toString(record['period'] ?? record['goodTill']) ?? '',
+      period: toString(record['period'] ?? record['goodTill'] ?? record['timeInForce']) ?? '',
       disclosedVolume: toNumber(record['disclosedVolume'] ?? record['disclosed_volume']) ?? 0,
       expiryDate: toString(record['expiryDate'] ?? record['expiry_date']) ?? '',
       sameDay: Boolean(record['sameDay'] ?? record['same_day']),
-      cashAccount: toString(record['cashAccount'] ?? record['cash_account']) ?? ''
+      cashAccount: toString(record['cashAccountName'] ?? record['walletName'] ?? record['cashAccount'] ?? record['cash_account']) ?? ''
     },
     orderInfo: {
       orderQuantity: toNumber(record['orderQuantity'] ?? record['quantity']) ?? 0,
@@ -112,6 +113,64 @@ export function mapOrderDetailsResponse(response: unknown): OrderTransactionDeta
       orderRejectionReason: toString(record['orderRejectionReason'] ?? record['rejectionReason'])
     },
     transactions: mapArray(record['transactions'] ?? record['transactionHistory'] ?? record['history']).map(mapHistoryRow)
+  };
+}
+
+export function mapMonitoringRowToOrderDetails(row: OrderMonitoringRow): OrderTransactionDetails {
+  const raw = toRecord(row.raw) ?? {};
+  const mapped = mapOrderDetailsResponse(raw);
+  const price = numericValue(row.price);
+  const orderAmount = price * row.quantity;
+  const executedAmount = price * row.executedQuantity;
+  const transactionTime =
+    toString(raw['updatedAt'] ?? raw['updated_at'] ?? raw['createdAt'] ?? raw['created_at']) ??
+    new Date(row.updatedAt).toISOString();
+  const transactions = mapped.transactions.length > 0
+    ? mapped.transactions
+    : [
+        {
+          serialNo: 1,
+          transactionTime,
+          type: row.orderSide ?? row.orderType,
+          expiryDate: row.expiryDate,
+          quantity: row.executedQuantity || row.quantity,
+          price: row.price,
+          fees: 0,
+          tradingAmount: row.executedQuantity > 0 ? executedAmount : orderAmount,
+          orderAmount,
+          averagePrice: row.price,
+          status: row.status,
+          delivered: row.executedQuantity,
+          session: mapped.order.session
+        }
+      ];
+
+  return {
+    orderNumber: row.orderNumber,
+    status: row.status || mapped.status,
+    order: {
+      ...mapped.order,
+      portfolio: mapped.order.portfolio || row.portfolio,
+      orderType: mapped.order.orderType || row.orderType,
+      company: mapped.order.company || row.symbolName || row.symbolId,
+      orderDate: mapped.order.orderDate || transactionTime,
+      expiryDate: mapped.order.expiryDate || row.expiryDate
+    },
+    orderInfo: {
+      ...mapped.orderInfo,
+      orderQuantity: row.quantity,
+      price: row.price,
+      currency: row.currency || mapped.orderInfo.currency,
+      tradeAmount: mapped.orderInfo.tradeAmount || orderAmount,
+      totalOrderAmount: mapped.orderInfo.totalOrderAmount || orderAmount
+    },
+    executionInfo: {
+      ...mapped.executionInfo,
+      remainingQuantity: row.remainingQuantity,
+      executedQuantity: row.executedQuantity,
+      executedAmount: mapped.executionInfo.executedAmount || executedAmount
+    },
+    transactions
   };
 }
 
@@ -327,6 +386,11 @@ function toNumber(value: unknown): number | undefined {
     return Number.isFinite(parsed) ? parsed : undefined;
   }
   return undefined;
+}
+
+function numericValue(value: number | string): number {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function resolveTimestamp(value: unknown): number {

@@ -1,7 +1,10 @@
 import { ExecutionTickerRow } from '../execution-ticker/execution-ticker.models';
+import { OrderMonitoringRow } from '../services/order.models';
+
+export type OrderTransactionDetailsSourceRow = ExecutionTickerRow | OrderMonitoringRow;
 
 export interface OrderTransactionDetailsDialogData {
-  row?: ExecutionTickerRow;
+  row?: OrderTransactionDetailsSourceRow;
   orderNumber?: string;
 }
 

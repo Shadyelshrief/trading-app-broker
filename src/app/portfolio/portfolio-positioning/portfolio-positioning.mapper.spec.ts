@@ -10,9 +10,10 @@ describe('portfolio positioning response mapping', () => {
       body: {
         holdings: [
           {
-            symbolId: 'IHC',
-            exchange: 'ADX',
-            quantity: 10,
+            symbol: 'IHC',
+            marketName: 'Abu Dhabi Securities Exchange',
+            currencyId: '019fc66c-c123-7000-8000-000000000001',
+            totalQty: 10,
             evaluationPrice: 4.3
           }
         ],
@@ -35,6 +36,7 @@ describe('portfolio positioning response mapping', () => {
             pendingBuyAmount: 0,
             ppMargin: 0,
             purchasingPower: 269398.075,
+            reservedSellAmount: 0,
             unsettledBuyAmount: 1463676.2875,
             unsettledSellAmount: 0
           }
@@ -43,20 +45,27 @@ describe('portfolio positioning response mapping', () => {
     });
 
     expect(snapshot.rows.length).toBe(1);
+    expect(snapshot.rows[0].currency).toBe('AED');
     expect(snapshot.wallets).toEqual([
       jasmine.objectContaining({
         walletName: 'AED Wallet',
         availableAmount: 269398.075,
         holdingMarketValue: 43000.7908,
         purchasingPower: 269398.075,
+        reservedSellAmount: 0,
         unsettledBuyAmount: 1463676.2875
       })
     ]);
     expect(snapshot.cashSummary).toEqual({
-      currency: '',
+      currency: 'AED',
       totalCashAvailable: 269398.075,
       totalHoldingValue: 43000.7908,
-      totalPurchasingPower: 269398.075
+      totalPurchasingPower: 269398.075,
+      totalUnsettledBuy: 1463676.2875,
+      totalUnsettledSell: 0,
+      totalPendingBuy: 0,
+      totalReservedSell: 0,
+      totalLimit: 0
     });
   });
 
@@ -77,8 +86,9 @@ describe('portfolio positioning response mapping', () => {
           pendingBuyAmount: 0,
           ppMargin: 0,
           purchasingPower: 95,
+          reservedSellAmount: 3,
           unsettledBuyAmount: 0,
-          unsettledSellAmount: 0
+          unsettledSellAmount: 2
         }
       ],
       'AED'
@@ -88,7 +98,12 @@ describe('portfolio positioning response mapping', () => {
       currency: 'AED',
       totalCashAvailable: 100,
       totalHoldingValue: 50,
-      totalPurchasingPower: 95
+      totalPurchasingPower: 95,
+      totalUnsettledBuy: 0,
+      totalUnsettledSell: 2,
+      totalPendingBuy: 0,
+      totalReservedSell: 3,
+      totalLimit: 0
     });
   });
 });

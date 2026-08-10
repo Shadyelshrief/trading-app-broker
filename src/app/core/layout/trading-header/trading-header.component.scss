@@ -90,9 +90,91 @@
   text-overflow: ellipsis;
 }
 
-.trading-header__search-field {
+.trading-header__search {
+  position: relative;
   width: min(100%, 36rem);
   margin-inline: auto;
+}
+
+.trading-header__search-field {
+  width: 100%;
+}
+
+.trading-header__search-results {
+  position: absolute;
+  top: calc(100% - 1.25em);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 22rem;
+  overflow-y: auto;
+  padding: 0.35rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-xl);
+}
+
+.trading-header__search-empty {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.trading-header__search-result {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.trading-header__search-result.is-active {
+  background: rgba(96, 135, 255, 0.14);
+}
+
+.trading-header__search-result-icon {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+}
+
+.trading-header__search-result-text {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.trading-header__search-result-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trading-header__search-result-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trading-header__search-result-kind {
+  flex: 0 0 auto;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 .trading-header__workspace-field {
@@ -278,7 +360,7 @@
     order: 3;
   }
 
-  .trading-header__search-field {
+  .trading-header__search {
     width: 100%;
   }
 

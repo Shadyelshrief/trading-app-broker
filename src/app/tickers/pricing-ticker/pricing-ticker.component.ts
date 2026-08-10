@@ -4,7 +4,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 
-import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { ProductDetailsDialogService } from '../../market/price-quote/product-details-dialog.service';
 import { MarketDropdownComponent } from '../../shared/components';
 import { MarketTickerComponent, MarketTickerItem } from '../../shared/components/market-ticker/market-ticker.component';
 import { TickerMode } from '../ticker-settings.models';
@@ -25,7 +25,7 @@ export class PricingTickerComponent {
   readonly state = input<{ title: string; route: string; section?: string; screen?: string; context?: Record<string, unknown> }>();
 
   protected readonly facade = inject(PricingTickerFacade);
-  private readonly workspace = inject(WorkspaceLayoutService);
+  private readonly productDetails = inject(ProductDetailsDialogService);
   protected readonly vm$ = this.facade.vm$;
   protected readonly modes: readonly { label: string; value: TickerMode }[] = [
     { label: 'Actual Market Feed', value: 'MARKET_FEED' },
@@ -44,26 +44,10 @@ export class PricingTickerComponent {
       return;
     }
 
-    this.workspace.openPanel({
-      type: 'price-quote',
-      state: {
-        title: `Price Quote - ${row.symbolId}`,
-        route: `/app/pricing/price-quote/${row.market.toLowerCase()}/${row.symbolId.toLowerCase()}`,
-        section: 'pricing',
-        screen: 'price-quote',
-        context: {
-          quote: {
-            symbolId: row.symbolId,
-            symbolName: row.symbolName,
-            market: row.market,
-            currency: row.currency,
-            lastPrice: row.tradePrice,
-            change: row.change,
-            changePercent: row.changePercent,
-            direction: row.changeDirection
-          }
-        }
-      }
+    this.productDetails.open({
+      ...row,
+      lastPrice: row.tradePrice,
+      direction: row.changeDirection
     });
   }
 

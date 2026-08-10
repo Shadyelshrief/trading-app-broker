@@ -8,7 +8,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
 import { distinctUntilChanged } from 'rxjs';
 
-import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
 import { LinkedFilterGroupControlComponent, MarketDropdownComponent } from '../../shared/components';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import { MarketGridContextAction } from '../../shared/models/market-grid.model';
@@ -17,6 +16,7 @@ import {
   LinkedFilterGroupService,
   readLinkedFilterGroupFromState
 } from '../../shared/services/linked-filter-group.service';
+import { ProductDetailsDialogService } from '../price-quote/product-details-dialog.service';
 import { TopSymbolsFacade } from './top-symbols.facade';
 import { TopSymbolRow, TopSymbolsViewKey } from './top-symbols.models';
 
@@ -44,7 +44,7 @@ export class TopSymbolsComponent implements OnInit {
   readonly state = input<{ title: string; route: string; section?: string; screen?: string; context?: Record<string, unknown> }>();
 
   protected readonly facade = inject(TopSymbolsFacade);
-  protected readonly workspace = inject(WorkspaceLayoutService);
+  private readonly productDetails = inject(ProductDetailsDialogService);
   private readonly linkedFilters = inject(LinkedFilterGroupService);
   private readonly linkedFilterSourceId = this.linkedFilters.createSourceId('top-symbols');
   private readonly linkedFilterGroupSubject = this.linkedFilters.createGroupSubject();
@@ -74,7 +74,7 @@ export class TopSymbolsComponent implements OnInit {
     { id: 'news', label: 'News & Announcements' },
     { id: 'buy', label: 'Place Buy Order' },
     { id: 'sell', label: 'Place Sell Order' },
-    { id: 'quote', label: 'Price Quote' },
+    { id: 'quote', label: 'Product Details' },
     { id: 'spectrum', label: 'Price Spectrum' },
     { id: 'print', label: 'Print' },
     { id: 'selection-type', label: 'Set Selection Type' },
@@ -147,27 +147,7 @@ export class TopSymbolsComponent implements OnInit {
   }
 
   protected openPriceQuote(row: TopSymbolRow): void {
-    this.workspace.openPanel({
-      type: 'price-quote',
-      state: {
-        title: `Price Quote - ${row.symbolId}`,
-        route: `/app/pricing/price-quote/${row.marketShortName.toLowerCase() === 'tadawul' ? 'tadawul' : row.marketShortName.toLowerCase()}/${row.symbolId.toLowerCase()}`,
-        section: 'pricing',
-        screen: 'price-quote',
-        context: {
-          quote: {
-            symbolId: row.symbolId,
-            symbolName: row.symbolName,
-            market: row.marketShortName,
-            currency: row.currency,
-            lastPrice: row.lastPrice,
-            change: row.change,
-            changePercent: row.changePercent,
-            direction: row.changeDirection
-          }
-        }
-      }
-    });
+    this.productDetails.open(row);
   }
 
   captureState() {

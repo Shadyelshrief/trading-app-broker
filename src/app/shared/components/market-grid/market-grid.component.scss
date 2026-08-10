@@ -131,3 +131,24 @@
   color: var(--market-grid-highlight-color, #f6c55b);
   font-weight: 700;
 }
+
+:host ::ng-deep .market-grid-shell__viewport--product-links .ag-cell[col-id='symbol'],
+:host ::ng-deep .market-grid-shell__viewport--product-links .ag-cell[col-id='symbolId'],
+:host ::ng-deep .market-grid-shell__viewport--product-links .ag-cell[col-id='symbolName'],
+:host ::ng-deep .market-grid-shell__viewport--product-links .ag-cell[col-id='securityId'],
+:host ::ng-deep .market-grid-shell__viewport--product-links .ag-cell[col-id='securityName'] {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(105, 168, 255, 0.55);
+  text-decoration-style: dotted;
+  text-underline-offset: 0.18rem;
+}
+
+:host ::ng-deep .market-grid-shell__viewport--product-links .ag-cell[col-id='symbol']:hover,
+:host ::ng-deep .market-grid-shell__viewport--product-links .ag-cell[col-id='symbolId']:hover,
+:host ::ng-deep .market-grid-shell__viewport--product-links .ag-cell[col-id='symbolName']:hover,
+:host ::ng-deep .market-grid-shell__viewport--product-links .ag-cell[col-id='securityId']:hover,
+:host ::ng-deep .market-grid-shell__viewport--product-links .ag-cell[col-id='securityName']:hover {
+  color: #8fc2ff;
+  text-decoration-style: solid;
+}

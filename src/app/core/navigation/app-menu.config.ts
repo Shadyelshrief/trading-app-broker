@@ -10,7 +10,7 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
     items: [
       {
         id: 'dashboard-home',
-        label: 'Dashboard',
+        label: 'Overview',
         icon: 'home',
         routerLink: [APP_ROOT],
         permissions: [{ id: 'dashboard.view' }]
@@ -23,7 +23,7 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
     items: [
       {
         id: 'pricing-full-market',
-        label: 'Full Market',
+        label: 'Market Watch',
         icon: 'grid',
         routerLink: appRoute('/pricing/full-market')
       },
@@ -35,67 +35,67 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
       },
       {
         id: 'pricing-market-indices',
-        label: 'Market Indices',
+        label: 'Indices',
         icon: 'trending',
         routerLink: appRoute('/pricing/market-indices')
       },
       {
         id: 'pricing-time-and-sales',
-        label: 'Time And Sales',
+        label: 'Time & Sales',
         icon: 'clock',
         routerLink: appRoute('/pricing/time-and-sales')
       },
       {
         id: 'pricing-market-depth-by-price',
-        label: 'Market Depth By Price',
+        label: 'Depth by Price',
         icon: 'layers',
         routerLink: appRoute('/pricing/market-depth-by-price')
       },
       {
         id: 'pricing-market-depth-by-order',
-        label: 'Market Depth By Order',
+        label: 'Order Book',
         icon: 'layers',
         routerLink: appRoute('/pricing/market-depth-by-order')
       },
       {
         id: 'pricing-price-spectrum',
-        label: 'Price Spectrum',
+        label: 'Spectrum',
         icon: 'activity',
         routerLink: appRoute('/pricing/price-spectrum')
       },
       {
         id: 'pricing-market-map',
-        label: 'Market Map',
+        label: 'Sector Map',
         icon: 'grid',
         routerLink: appRoute('/pricing/market-map')
       },
       {
         id: 'pricing-market-performance-indices',
-        label: 'Market Performance Indices',
+        label: 'Index Performance',
         icon: 'chart',
         routerLink: appRoute('/pricing/market-performance-indices')
       },
       {
         id: 'pricing-market-performance-security',
-        label: 'Market Performance Security',
+        label: 'Asset Performance',
         icon: 'trending',
         routerLink: appRoute('/pricing/market-performance-security')
       },
       {
         id: 'pricing-top-symbols',
-        label: 'Top Symbols',
+        label: 'Top Movers',
         icon: 'hash',
         routerLink: appRoute('/pricing/top-symbols')
       },
       {
         id: 'pricing-historical-top-symbols',
-        label: 'Historical Top Symbols',
+        label: 'Historical Movers',
         icon: 'book',
         routerLink: appRoute('/pricing/historical-top-symbols')
       },
       {
         id: 'pricing-news-announcements',
-        label: 'News & Announcements',
+        label: 'News & Corporate Actions',
         icon: 'book',
         routerLink: appRoute('/pricing/news-announcements')
       },
@@ -106,19 +106,19 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
         children: [
           {
             id: 'pricing-trading-ticker',
-            label: 'Trading Ticker',
+            label: 'Trade Ticker',
             icon: 'activity',
             routerLink: appRoute('/pricing/trading-ticker')
           },
           {
             id: 'pricing-pricing-ticker',
-            label: 'Pricing Ticker',
+            label: 'Quote Ticker',
             icon: 'hash',
             routerLink: appRoute('/pricing/pricing-ticker')
           },
           {
             id: 'pricing-announcements-ticker',
-            label: 'Announcements Ticker',
+            label: 'News Ticker',
             icon: 'book',
             routerLink: appRoute('/pricing/announcements-ticker')
           }
@@ -137,13 +137,13 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
         children: [
           {
             id: 'pricing-saved-watch-lists',
-            label: 'Saved Watch Lists',
+            label: 'My Watchlists',
             icon: 'list',
             routerLink: appRoute('/pricing/saved-watch-lists')
           },
           {
             id: 'pricing-create-watch-list',
-            label: 'Create Watch List',
+            label: 'New Watchlist',
             icon: 'sliders',
             routerLink: appRoute('/pricing/create-watch-list')
           }
@@ -157,31 +157,31 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
     items: [
       {
         id: 'trading-order-entry',
-        label: 'Order Entry',
+        label: 'Order Ticket',
         icon: 'orders',
         routerLink: appRoute('/trading/order-entry')
       },
       {
         id: 'trading-order-monitor',
-        label: 'Order Monitor',
+        label: 'Order Blotter',
         icon: 'eye',
         routerLink: appRoute('/trading/order-monitor')
       },
       {
         id: 'trading-portfolio-position',
-        label: 'Portfolio Positioning',
+        label: 'Positions',
         icon: 'pie',
         routerLink: appRoute('/trading/portfolio-position')
       },
       {
         id: 'trading-execution-ticker',
-        label: 'Execution Ticker',
+        label: 'Trade Feed',
         icon: 'activity',
         routerLink: appRoute('/trading/execution-ticker')
       },
       {
         id: 'trading-order-statistics',
-        label: 'Order Statistics',
+        label: 'Execution Analytics',
         icon: 'pie',
         routerLink: appRoute('/trading/order-statistics')
       }
@@ -193,13 +193,13 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
     items: [
       {
         id: 'management-client-search',
-        label: 'Client Search',
+        label: 'Client Directory',
         icon: 'search',
         routerLink: appRoute('/management/client-search')
       },
       {
         id: 'management-client-information',
-        label: 'Client Information',
+        label: 'Client Profile',
         icon: 'users',
         routerLink: appRoute('/management/client-information')
       }
@@ -211,7 +211,7 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
     items: [
       {
         id: 'reports-trading',
-        label: 'Trading Reports',
+        label: 'Trade Reports',
         icon: 'book',
         routerLink: appRoute('/reports/trading-reports')
       },
@@ -223,7 +223,7 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
       },
       {
         id: 'reports-audit',
-        label: 'Audit Reports',
+        label: 'Audit Trail',
         icon: 'lock',
         routerLink: appRoute('/reports/audit-reports')
       }

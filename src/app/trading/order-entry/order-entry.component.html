@@ -9,7 +9,15 @@
         <button mat-stroked-button type="button" (click)="clear()">Clear</button>
         <button mat-stroked-button type="button" [disabled]="form.invalid" (click)="calculate()">Calculate</button>
         <button mat-stroked-button type="button" [disabled]="form.invalid" (click)="simulate()">Simulate</button>
-        <button mat-flat-button type="button" class="order-entry__primary" [disabled]="form.invalid" (click)="confirmPlace(vm)">
+        <button
+          mat-flat-button
+          type="button"
+          class="order-entry__primary"
+          [class.order-entry__primary--buy]="form.controls.orderSide.value === 'BUY'"
+          [class.order-entry__primary--sell]="form.controls.orderSide.value === 'SELL'"
+          [disabled]="form.invalid"
+          (click)="confirmPlace(vm)"
+        >
           {{ form.controls.orderSide.value === 'BUY' ? 'Buy' : 'Sell' }}
         </button>
       </div>
@@ -62,10 +70,10 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
-        <mat-label>Cash Account</mat-label>
+        <mat-label>Wallet</mat-label>
         <mat-select formControlName="cashAccountId" [disabled]="!form.controls.portfolioId.value">
           @for (account of vm.cashAccountOptions; track account.cashAccountId) {
-            <mat-option [value]="account.cashAccountId">{{ account.cashAccountId }} · {{ account.cashAccountName }}</mat-option>
+            <mat-option [value]="account.cashAccountId">{{ account.cashAccountName }}</mat-option>
           }
         </mat-select>
       </mat-form-field>

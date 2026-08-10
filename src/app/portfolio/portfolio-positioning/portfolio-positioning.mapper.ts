@@ -37,18 +37,30 @@ export function calculateCashPositionSummary(
   wallets: readonly CashDetailsRow[],
   currency: string
 ): CashPositionSummary {
+  const summaryCurrency = currency || resolveWalletCurrency(wallets);
+
   return wallets.reduce<CashPositionSummary>(
     (summary, wallet) => ({
-      currency,
+      currency: summaryCurrency,
       totalCashAvailable: summary.totalCashAvailable + wallet.availableAmount,
       totalHoldingValue: summary.totalHoldingValue + wallet.holdingMarketValue,
-      totalPurchasingPower: summary.totalPurchasingPower + wallet.purchasingPower
+      totalPurchasingPower: summary.totalPurchasingPower + wallet.purchasingPower,
+      totalUnsettledBuy: summary.totalUnsettledBuy + wallet.unsettledBuyAmount,
+      totalUnsettledSell: summary.totalUnsettledSell + wallet.unsettledSellAmount,
+      totalPendingBuy: summary.totalPendingBuy + wallet.pendingBuyAmount,
+      totalReservedSell: summary.totalReservedSell + wallet.reservedSellAmount,
+      totalLimit: summary.totalLimit + wallet.limitAmount
     }),
     {
-      currency,
+      currency: summaryCurrency,
       totalCashAvailable: 0,
       totalHoldingValue: 0,
-      totalPurchasingPower: 0
+      totalPurchasingPower: 0,
+      totalUnsettledBuy: 0,
+      totalUnsettledSell: 0,
+      totalPendingBuy: 0,
+      totalReservedSell: 0,
+      totalLimit: 0
     }
   );
 }
@@ -190,7 +202,7 @@ function mapPortfolioPositionRow(value: unknown): PortfolioPositionRow | null {
     exchange,
     symbolId,
     symbolName: toString(record['symbolName'] ?? record['name'] ?? record['productName']) ?? symbolId,
-    currency: toString(record['currency'] ?? record['currencyId']) ?? '',
+    currency: resolveHoldingCurrency(record, exchange),
     averageCost,
     evaluationPrice,
     quantity,
@@ -221,28 +233,75 @@ function mapPortfolioPositionRow(value: unknown): PortfolioPositionRow | null {
   };
 }
 
+function resolveHoldingCurrency(record: Record<string, unknown>, exchange: string): string {
+  const explicitCurrency = toString(
+    record['currencyCode'] ??
+      record['currency_code'] ??
+      record['currencyShortName'] ??
+      record['currency_short_name'] ??
+      record['currency']
+  )?.toUpperCase();
+
+  if (explicitCurrency && /^[A-Z]{3}$/.test(explicitCurrency)) {
+    return explicitCurrency;
+  }
+
+  const normalizedMarket = exchange.trim().toUpperCase();
+
+  if (
+    normalizedMarket === 'ADX' ||
+    normalizedMarket === 'DFM' ||
+    normalizedMarket.includes('ABU DHABI') ||
+    normalizedMarket.includes('DUBAI')
+  ) {
+    return 'AED';
+  }
+
+  if (normalizedMarket === 'TADAWUL' || normalizedMarket.includes('SAUDI')) {
+    return 'SAR';
+  }
+
+  // The current holdings contract exposes currencyId as a UUID without a
+  // currency-code lookup. All currently supported holdings are AED.
+  return toString(record['currencyId'] ?? record['currency_id']) ? 'AED' : '';
+}
+
 function mapWalletRow(value: unknown): CashDetailsRow | null {
   const record = toRecord(value);
 
-  return record
-    ? {
-        walletId: toString(record['walletId'] ?? record['wallet_id'] ?? record['cashAccount'] ?? record['cash_account']) ?? '--',
-        walletName: toString(record['walletName'] ?? record['wallet_name'] ?? record['cashAccountName'] ?? record['name']) ?? '--',
-        currency: toString(record['currency'] ?? record['currencyCode'] ?? record['currency_code']) ?? '',
-        isMargin: Boolean(record['isMargin'] ?? record['is_margin']),
-        availableAmount: toNumber(record['availableAmount'] ?? record['available_amount'] ?? record['cashAmount']) ?? 0,
-        blockedAmount: toNumber(record['blockedAmount'] ?? record['blocked_amount'] ?? record['blocked']) ?? 0,
-        coverRatio: toNumber(record['coverRatio'] ?? record['cover_ratio'] ?? record['coverageRatio']) ?? 0,
-        holdingMarketValue: toNumber(record['holdingMarketValue'] ?? record['holding_market_value'] ?? record['holdingValue']) ?? 0,
-        limitAmount: toNumber(record['limitAmount'] ?? record['limit_amount'] ?? record['accountLimit']) ?? 0,
-        marginableValue: toNumber(record['marginableValue'] ?? record['marginable_value']) ?? 0,
-        pendingBuyAmount: toNumber(record['pendingBuyAmount'] ?? record['pending_buy_amount'] ?? record['buyAmountInTransit']) ?? 0,
-        ppMargin: toNumber(record['ppMargin'] ?? record['pp_margin']) ?? 0,
-        purchasingPower: toNumber(record['purchasingPower'] ?? record['purchasing_power'] ?? record['purchasePower']) ?? 0,
-        unsettledBuyAmount: toNumber(record['unsettledBuyAmount'] ?? record['unsettled_buy_amount'] ?? record['unsettledBuyUnits']) ?? 0,
-        unsettledSellAmount: toNumber(record['unsettledSellAmount'] ?? record['unsettled_sell_amount'] ?? record['unsettledSellUnits']) ?? 0
-      }
-    : null;
+  if (!record) {
+    return null;
+  }
+
+  const walletName =
+    toString(record['walletName'] ?? record['wallet_name'] ?? record['cashAccountName'] ?? record['name']) ?? '--';
+
+  return {
+    walletId: toString(record['walletId'] ?? record['wallet_id'] ?? record['cashAccount'] ?? record['cash_account']) ?? '--',
+    walletName,
+    currency:
+      toString(record['currency'] ?? record['currencyCode'] ?? record['currency_code']) ??
+      inferCurrencyFromWalletName(walletName),
+    isMargin: Boolean(record['isMargin'] ?? record['is_margin']),
+    availableAmount: toNumber(record['availableAmount'] ?? record['available_amount'] ?? record['cashAmount']) ?? 0,
+    blockedAmount: toNumber(record['blockedAmount'] ?? record['blocked_amount'] ?? record['blocked']) ?? 0,
+    coverRatio: toNumber(record['coverRatio'] ?? record['cover_ratio'] ?? record['coverageRatio']) ?? 0,
+    holdingMarketValue: toNumber(record['holdingMarketValue'] ?? record['holding_market_value'] ?? record['holdingValue']) ?? 0,
+    limitAmount: toNumber(record['limitAmount'] ?? record['limit_amount'] ?? record['accountLimit']) ?? 0,
+    marginableValue: toNumber(record['marginableValue'] ?? record['marginable_value']) ?? 0,
+    pendingBuyAmount: toNumber(record['pendingBuyAmount'] ?? record['pending_buy_amount'] ?? record['buyAmountInTransit']) ?? 0,
+    ppMargin: toNumber(record['ppMargin'] ?? record['pp_margin']) ?? 0,
+    purchasingPower: toNumber(record['purchasingPower'] ?? record['purchasing_power'] ?? record['purchasePower']) ?? 0,
+    reservedSellAmount:
+      toNumber(
+        record['reservedSellAmount'] ??
+          record['reserved_sell_amount'] ??
+          record['reservedSellValue'] ??
+          record['reserved_sell_value']
+      ) ?? 0,
+    unsettledBuyAmount: toNumber(record['unsettledBuyAmount'] ?? record['unsettled_buy_amount'] ?? record['unsettledBuyUnits']) ?? 0,
+    unsettledSellAmount: toNumber(record['unsettledSellAmount'] ?? record['unsettled_sell_amount'] ?? record['unsettledSellUnits']) ?? 0
+  };
 }
 
 function mapCashPositionSummary(value: unknown, wallets: readonly CashDetailsRow[]): CashPositionSummary {
@@ -250,11 +309,28 @@ function mapCashPositionSummary(value: unknown, wallets: readonly CashDetailsRow
   const fallback = calculateCashPositionSummary(wallets, '');
 
   return {
-    currency: toString(record?.['currency'] ?? record?.['currencyCode'] ?? record?.['currency_code']) ?? '',
+    currency:
+      toString(record?.['currency'] ?? record?.['currencyCode'] ?? record?.['currency_code']) ??
+      fallback.currency,
     totalCashAvailable: toNumber(record?.['totalCashAvailable'] ?? record?.['total_cash_available']) ?? fallback.totalCashAvailable,
     totalHoldingValue: toNumber(record?.['totalHoldingValue'] ?? record?.['total_holding_value']) ?? fallback.totalHoldingValue,
-    totalPurchasingPower: toNumber(record?.['totalPurchasingPower'] ?? record?.['total_purchasing_power']) ?? fallback.totalPurchasingPower
+    totalPurchasingPower: toNumber(record?.['totalPurchasingPower'] ?? record?.['total_purchasing_power']) ?? fallback.totalPurchasingPower,
+    totalUnsettledBuy: toNumber(record?.['totalUnsettledBuy'] ?? record?.['total_unsettled_buy']) ?? fallback.totalUnsettledBuy,
+    totalUnsettledSell: toNumber(record?.['totalUnsettledSell'] ?? record?.['total_unsettled_sell']) ?? fallback.totalUnsettledSell,
+    totalPendingBuy: toNumber(record?.['totalPendingBuy'] ?? record?.['total_pending_buy']) ?? fallback.totalPendingBuy,
+    totalReservedSell: toNumber(record?.['totalReservedSell'] ?? record?.['total_reserved_sell']) ?? fallback.totalReservedSell,
+    totalLimit: toNumber(record?.['totalLimit'] ?? record?.['total_limit']) ?? fallback.totalLimit
   };
+}
+
+function resolveWalletCurrency(wallets: readonly CashDetailsRow[]): string {
+  const currencies = Array.from(new Set(wallets.map((wallet) => wallet.currency).filter(Boolean)));
+  return currencies.length === 1 ? currencies[0] : '';
+}
+
+function inferCurrencyFromWalletName(walletName: string): string {
+  const match = walletName.toUpperCase().match(/(?:^|\s)([A-Z]{3})(?:\s|$)/);
+  return match?.[1] ?? '';
 }
 
 function mapArray(response: unknown): unknown[] {

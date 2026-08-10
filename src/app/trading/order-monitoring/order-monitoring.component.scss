@@ -50,7 +50,8 @@
 }
 
 .order-monitoring__actions,
-.order-monitoring__meta {
+.order-monitoring__meta,
+.order-monitoring__row-actions {
   display: flex;
   align-items: center;
   gap: 0.8rem;
@@ -89,6 +90,43 @@
   color: var(--text-secondary);
   font-size: 0.76rem;
   padding-inline: 0.2rem;
+}
+
+.order-monitoring__row-actions {
+  gap: 0.35rem;
+}
+
+.order-monitoring__selected-order {
+  max-width: 13rem;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-monitoring__cancel-action:not(:disabled) {
+  border-color: rgba(255, 107, 107, 0.55);
+  color: #ff8b8b;
+}
+
+.order-monitoring__feedback {
+  flex: 1 0 100%;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+}
+
+.order-monitoring__feedback--success {
+  border-color: rgba(73, 209, 125, 0.35);
+  background: rgba(73, 209, 125, 0.08);
+  color: #6ee7a0;
+}
+
+.order-monitoring__feedback--error {
+  border-color: rgba(255, 107, 107, 0.35);
+  background: rgba(255, 107, 107, 0.08);
+  color: #ff8b8b;
 }
 
 .order-monitoring__grid {

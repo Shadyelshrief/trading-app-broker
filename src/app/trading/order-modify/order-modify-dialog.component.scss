@@ -1,0 +1,66 @@
+.order-modify {
+  display: block;
+  width: min(36rem, 92vw);
+  padding: 0.6rem;
+  color: var(--text-primary);
+}
+
+.order-modify header p,
+.order-modify header h2 {
+  margin: 0;
+}
+
+.order-modify header p {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.order-modify header span {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.order-modify__summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.order-modify__summary div,
+.order-modify__market-price {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.6rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.order-modify__summary span,
+.order-modify__market-price span {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.order-modify__form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.order-modify__submit {
+  background: linear-gradient(135deg, #00c2a8, #3b82f6);
+  color: #06101c;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .order-modify__summary,
+  .order-modify__form {
+    grid-template-columns: 1fr;
+  }
+}

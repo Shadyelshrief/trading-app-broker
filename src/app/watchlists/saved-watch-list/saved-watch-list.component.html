@@ -36,6 +36,7 @@
         [marketType]="'watch-list'"
         [stateKey]="'saved-watch-list-grid-' + vm.config.id"
         [settings]="vm.settings"
+        [productDetailsOnSymbolClick]="true"
         (priceQuote)="openPriceQuote($event)"
         (rowDoubleClicked)="openPriceQuote($event)"
         (sellOrder)="openOrder('sell', $event)"

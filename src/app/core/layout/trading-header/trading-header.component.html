@@ -20,18 +20,60 @@
     </div>
 
     <div class="trading-header__center">
-      <mat-form-field appearance="outline" class="trading-header__search-field">
-        <mat-label>Command search</mat-label>
-        <app-trading-icon matPrefix name="search" />
-        <input
-          matInput
-          type="search"
-          autocomplete="off"
-          placeholder="Search symbols, clients, commands..."
-          [ngModel]="commandSearch()"
-          (ngModelChange)="commandSearch.set($event)"
-        />
-      </mat-form-field>
+      <div class="trading-header__search">
+        <mat-form-field appearance="outline" class="trading-header__search-field">
+          <mat-label>Command search</mat-label>
+          <app-trading-icon matPrefix name="search" />
+          <input
+            matInput
+            type="search"
+            autocomplete="off"
+            role="combobox"
+            aria-controls="trading-header-search-results"
+            [attr.aria-expanded]="searchOpen()"
+            placeholder="Search symbols, screens, commands..."
+            [ngModel]="commandSearch()"
+            (ngModelChange)="onSearchInput($event)"
+            (focus)="onSearchFocus()"
+            (keydown.arrowdown)="$event.preventDefault(); moveActive(1)"
+            (keydown.arrowup)="$event.preventDefault(); moveActive(-1)"
+            (keydown.enter)="$event.preventDefault(); submitSearch()"
+          />
+        </mat-form-field>
+
+        @if (searchOpen()) {
+          <div
+            id="trading-header-search-results"
+            class="trading-header__search-results"
+            role="listbox"
+          >
+            @if (results().length === 0) {
+              <p class="trading-header__search-empty">No matching symbols or screens</p>
+            } @else {
+              @for (result of results(); track result.kind + ':' + result.label; let i = $index) {
+                <button
+                  type="button"
+                  role="option"
+                  class="trading-header__search-result"
+                  [class.is-active]="i === activeIndex()"
+                  [attr.aria-selected]="i === activeIndex()"
+                  (mouseenter)="activeIndex.set(i)"
+                  (click)="activateResult(result)"
+                >
+                  <app-trading-icon class="trading-header__search-result-icon" [name]="result.icon" />
+                  <span class="trading-header__search-result-text">
+                    <span class="trading-header__search-result-label">{{ result.label }}</span>
+                    @if (result.sublabel) {
+                      <span class="trading-header__search-result-sub">{{ result.sublabel }}</span>
+                    }
+                  </span>
+                  <span class="trading-header__search-result-kind">{{ result.kind === 'symbol' ? 'Symbol' : 'Screen' }}</span>
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
     </div>
 
     <div class="trading-header__right">

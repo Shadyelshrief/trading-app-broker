@@ -20,6 +20,7 @@ import {
   readLinkedFilterGroupFromState
 } from '../../shared/services/linked-filter-group.service';
 import { FullMarketRow } from '../models/full-market-row.model';
+import { ProductDetailsDialogService } from '../price-quote/product-details-dialog.service';
 import { createFullMarketColumns } from './full-market.columns';
 import { FullMarketFacade } from './full-market.facade';
 
@@ -51,6 +52,7 @@ export class FullMarketPageComponent implements OnInit {
 
   protected readonly facade = inject(FullMarketFacade);
   protected readonly workspace = inject(WorkspaceLayoutService);
+  private readonly productDetails = inject(ProductDetailsDialogService);
   private readonly linkedFilters = inject(LinkedFilterGroupService);
   private readonly linkedFilterSourceId = this.linkedFilters.createSourceId('full-market');
   private readonly linkedFilterGroupSubject = this.linkedFilters.createGroupSubject();
@@ -72,7 +74,7 @@ export class FullMarketPageComponent implements OnInit {
     { id: 'news', label: 'News & Announcements' },
     { id: 'buy', label: 'Place Buy Order' },
     { id: 'sell', label: 'Place Sell Order' },
-    { id: 'quote', label: 'Price Quote' },
+    { id: 'quote', label: 'Product Details' },
     { id: 'spectrum', label: 'Price Spectrum' },
     { id: 'selection-type', label: 'Set Selection Type' },
     { id: 'time-sales', label: 'Time & Sales' }
@@ -162,18 +164,7 @@ export class FullMarketPageComponent implements OnInit {
   }
 
   protected openPriceQuote(row: FullMarketRow): void {
-    this.workspace.openPanel({
-      type: 'price-quote',
-      state: {
-        title: `Price Quote - ${row.symbolId}`,
-        route: `/app/pricing/price-quote/${row.market.toLowerCase()}/${row.symbolId.toLowerCase()}`,
-        section: 'pricing',
-        screen: 'price-quote',
-        context: {
-          quote: row
-        }
-      }
-    });
+    this.productDetails.open(row);
   }
 
   protected openOrderTicket(side: 'buy' | 'sell', row: FullMarketRow): void {

@@ -220,6 +220,11 @@ export class PortfolioPositioningFacade {
       selectedClient: options.state.selectedClient,
       portfolioOptions: options.portfolioOptions,
       selectedPortfolio: options.selectedPortfolio,
+      positionCurrency:
+        options.rows.find((row) => Boolean(row.currency))?.currency ||
+        options.selectedPortfolio?.currency ||
+        options.cashSummary?.currency ||
+        '',
       rows: options.rows,
       wallets: options.wallets ?? [],
       cashSummary: options.cashSummary ?? null,

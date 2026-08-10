@@ -80,9 +80,19 @@
 }
 
 .order-entry__primary {
-  background: linear-gradient(135deg, #00c2a8, #3b82f6);
-  color: #06101c;
+  color: #fff;
   font-weight: 800;
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.order-entry__primary--buy {
+  background-color: #168a52;
+  box-shadow: 0 0.3rem 0.9rem rgba(22, 138, 82, 0.24);
+}
+
+.order-entry__primary--sell {
+  background-color: #c93d4f;
+  box-shadow: 0 0.3rem 0.9rem rgba(201, 61, 79, 0.24);
 }
 
 .order-entry__warning,

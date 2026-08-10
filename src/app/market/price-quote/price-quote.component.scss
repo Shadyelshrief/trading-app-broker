@@ -109,8 +109,8 @@
 
 .price-quote__chart {
   display: block;
-  height: 12rem;
-  min-height: 8rem;
+  height: clamp(18rem, 34vh, 32rem);
+  min-height: 16rem;
 }
 
 .price-quote__range-value {

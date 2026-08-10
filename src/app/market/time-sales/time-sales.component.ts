@@ -10,7 +10,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
-import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
 import { LinkedFilterGroupControlComponent, MarketDropdownComponent } from '../../shared/components';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import { MarketGridContextAction } from '../../shared/models/market-grid.model';
@@ -20,6 +19,7 @@ import {
   readLinkedFilterGroupFromState
 } from '../../shared/services/linked-filter-group.service';
 import { normalizeSharedSymbolOption } from '../../shared/utils/symbol-reference.util';
+import { ProductDetailsDialogService } from '../price-quote/product-details-dialog.service';
 import { TimeSalesFacade } from './time-sales.facade';
 import { SymbolOption, TimeSalesRow } from './time-sales.models';
 
@@ -49,7 +49,7 @@ export class TimeSalesComponent implements OnInit {
   readonly state = input<{ title: string; route: string; section?: string; screen?: string; context?: Record<string, unknown> }>();
 
   protected readonly facade = inject(TimeSalesFacade);
-  protected readonly workspace = inject(WorkspaceLayoutService);
+  private readonly productDetails = inject(ProductDetailsDialogService);
   private readonly linkedFilters = inject(LinkedFilterGroupService);
   private readonly linkedFilterSourceId = this.linkedFilters.createSourceId('time-sales');
   private readonly linkedFilterGroupSubject = this.linkedFilters.createGroupSubject();
@@ -73,7 +73,7 @@ export class TimeSalesComponent implements OnInit {
     { id: 'fit-window', label: 'Fit Columns To Fit Window' },
     { id: 'print', label: 'Print' },
     { id: 'selection-type', label: 'Set Selection Type' },
-    { id: 'quote', label: 'Price Quote' },
+    { id: 'quote', label: 'Product Details' },
     { id: 'chart', label: 'Charting' },
     { id: 'depth-price', label: 'Market Depth By Price' },
     { id: 'depth-order', label: 'Market Depth By Order' }
@@ -186,24 +186,7 @@ export class TimeSalesComponent implements OnInit {
   }
 
   protected openPriceQuote(row: TimeSalesRow): void {
-    this.workspace.openPanel({
-      type: 'price-quote',
-      state: {
-        title: `Price Quote - ${row.symbolId}`,
-        route: `/app/pricing/price-quote/${row.marketShortName.toLowerCase() === 'tadawul' ? 'tadawul' : row.marketShortName.toLowerCase()}/${row.symbolId.toLowerCase()}`,
-        section: 'pricing',
-        screen: 'price-quote',
-        context: {
-          quote: {
-            symbolId: row.symbolId,
-            symbolName: row.symbolName,
-            market: row.marketShortName,
-            currency: row.currency,
-            direction: row.changeDirection
-          }
-        }
-      }
-    });
+    this.productDetails.open(row);
   }
 
   captureState() {

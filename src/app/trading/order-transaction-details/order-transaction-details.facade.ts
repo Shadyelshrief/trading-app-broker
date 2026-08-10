@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
-import { Observable, catchError, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 
 import { MarketGridSettings } from '../../shared/models/market-grid.model';
-import { ExecutionTickerRow } from '../execution-ticker/execution-ticker.models';
 import { OrderService } from '../services/order.service';
+import { mapMonitoringRowToOrderDetails } from '../services/order.mapper';
+import { OrderMonitoringRow } from '../services/order.models';
 import { createOrderTransactionHistoryColumns } from './order-transaction-details.columns';
 import { mapExecutionRowToOrderTransactionDetails } from './order-transaction-details.mapper';
-import { OrderTransactionDetails } from './order-transaction-details.models';
+import { OrderTransactionDetails, OrderTransactionDetailsSourceRow } from './order-transaction-details.models';
 
 @Injectable()
 export class OrderTransactionDetailsFacade {
@@ -23,15 +24,45 @@ export class OrderTransactionDetailsFacade {
     presetId: 'order-transaction-details'
   };
 
-  buildDetails(row: ExecutionTickerRow): OrderTransactionDetails {
-    return mapExecutionRowToOrderTransactionDetails(row);
+  buildDetails(row: OrderTransactionDetailsSourceRow): OrderTransactionDetails {
+    return isMonitoringRow(row)
+      ? mapMonitoringRowToOrderDetails(row)
+      : mapExecutionRowToOrderTransactionDetails(row);
   }
 
-  loadDetails(orderNumber: string, fallbackRow?: ExecutionTickerRow): Observable<OrderTransactionDetails> {
+  loadDetails(orderNumber: string, fallbackRow?: OrderTransactionDetailsSourceRow): Observable<OrderTransactionDetails> {
+    const fallback = fallbackRow ? this.buildDetails(fallbackRow) : emptyDetails(orderNumber);
+
     return this.orderService.getOrderTransactionDetails(orderNumber).pipe(
-      catchError(() => (fallbackRow ? of(this.buildDetails(fallbackRow)) : of(emptyDetails(orderNumber))))
+      map((details) => mergeDetails(details, fallback)),
+      catchError(() => of(fallback))
     );
   }
+}
+
+function isMonitoringRow(row: OrderTransactionDetailsSourceRow): row is OrderMonitoringRow {
+  return 'executedQuantity' in row && 'status' in row;
+}
+
+function mergeDetails(primary: OrderTransactionDetails, fallback: OrderTransactionDetails): OrderTransactionDetails {
+  const hasPrimaryData =
+    primary.status !== '--' ||
+    Boolean(primary.order.portfolio || primary.order.company || primary.order.orderType) ||
+    primary.orderInfo.orderQuantity > 0 ||
+    primary.transactions.length > 0;
+
+  if (!hasPrimaryData) {
+    return fallback;
+  }
+
+  return {
+    ...fallback,
+    ...primary,
+    order: { ...fallback.order, ...primary.order },
+    orderInfo: { ...fallback.orderInfo, ...primary.orderInfo },
+    executionInfo: { ...fallback.executionInfo, ...primary.executionInfo },
+    transactions: primary.transactions.length > 0 ? primary.transactions : fallback.transactions
+  };
 }
 
 function emptyDetails(orderNumber: string): OrderTransactionDetails {

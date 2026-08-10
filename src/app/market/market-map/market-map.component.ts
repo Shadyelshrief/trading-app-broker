@@ -33,6 +33,7 @@ import {
   MarketMapSymbol
 } from './market-map.models';
 import { MarketMapFacade } from './market-map.facade';
+import { ProductDetailsDialogService } from '../price-quote/product-details-dialog.service';
 
 interface TileContextMenuState {
   x: number;
@@ -64,6 +65,7 @@ export class MarketMapComponent implements OnInit {
 
   protected readonly facade = inject(MarketMapFacade);
   protected readonly workspace = inject(WorkspaceLayoutService);
+  private readonly productDetails = inject(ProductDetailsDialogService);
   private readonly linkedFilters = inject(LinkedFilterGroupService);
   private readonly linkedFilterSourceId = this.linkedFilters.createSourceId('market-map');
   private readonly linkedFilterGroupSubject = this.linkedFilters.createGroupSubject();
@@ -82,7 +84,7 @@ export class MarketMapComponent implements OnInit {
     { id: 'news', label: 'News & Announcements' },
     { id: 'buy', label: 'Place Buy Order' },
     { id: 'sell', label: 'Place Sell Order' },
-    { id: 'quote', label: 'Price Quote' },
+    { id: 'quote', label: 'Product Details' },
     { id: 'spectrum', label: 'Price Spectrum' },
     { id: 'time-sales', label: 'Time & Sales' }
   ] as const;
@@ -165,26 +167,7 @@ export class MarketMapComponent implements OnInit {
   }
 
   protected openPriceQuote(symbol: MarketMapSymbol): void {
-    this.workspace.openPanel({
-      type: 'price-quote',
-      state: {
-        title: `Price Quote - ${symbol.symbolId}`,
-        route: `/app/pricing/price-quote/${symbol.marketShortName.toLowerCase()}/${symbol.symbolId.toLowerCase()}`,
-        section: 'pricing',
-        screen: 'price-quote',
-        context: {
-          quote: {
-            symbolId: symbol.symbolId,
-            symbolName: symbol.symbolName,
-            market: symbol.marketShortName,
-            lastPrice: symbol.lastPrice,
-            change: symbol.change,
-            changePercent: symbol.changePercent,
-            direction: symbol.direction
-          }
-        }
-      }
-    });
+    this.productDetails.open(symbol);
   }
 
   protected openContextMenu(event: MouseEvent, symbol: MarketMapSymbol): void {

@@ -44,6 +44,7 @@
       [marketType]="'full-market'"
       [stateKey]="'full-market-grid-v2-community'"
       [settings]="vm.settings"
+      [productDetailsOnSymbolClick]="true"
       (buyOrder)="openOrderTicket('buy', $event)"
       (sellOrder)="openOrderTicket('sell', $event)"
       (priceQuote)="openPriceQuote($event)"

@@ -209,6 +209,20 @@ export class OrderEntryFacade {
     this.patch({ calculation: null, lastResult: null, error: undefined, warning: undefined });
   }
 
+  resetAfterSuccessfulOrder(): void {
+    this.clientQuerySubject.next('');
+    this.symbolQuerySubject.next('');
+    this.patch({
+      selectedClient: null,
+      selectedMarket: null,
+      selectedPortfolioId: null,
+      selectedSymbol: null,
+      calculation: null,
+      warning: undefined,
+      error: undefined
+    });
+  }
+
   private patch(patch: Partial<OrderEntryState>): void {
     this.stateSubject.next({
       ...this.stateSubject.value,

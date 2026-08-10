@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { ProductDetailsDialogService } from '../../market/price-quote/product-details-dialog.service';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import { MarketGridContextAction } from '../../shared/models/market-grid.model';
 import { CreateWatchListDialogComponent } from '../create-watch-list/create-watch-list-dialog.component';
@@ -24,6 +25,7 @@ export class SavedWatchListComponent {
 
   protected readonly facade = inject(SavedWatchListFacade);
   protected readonly workspace = inject(WorkspaceLayoutService);
+  private readonly productDetails = inject(ProductDetailsDialogService);
   private readonly dialog = inject(MatDialog);
   protected readonly vm$ = this.facade.vm$;
   protected readonly columns = this.facade.columns;
@@ -47,7 +49,7 @@ export class SavedWatchListComponent {
     { id: 'news', label: 'News & Announcements' },
     { id: 'buy', label: 'Place Buy Order' },
     { id: 'sell', label: 'Place Sell Order' },
-    { id: 'quote', label: 'Price Quote' },
+    { id: 'quote', label: 'Product Details' },
     { id: 'spectrum', label: 'Price Spectrum' },
     { id: 'print', label: 'Print' },
     { id: 'selection-type', label: 'Set Selection Type' },
@@ -99,27 +101,7 @@ export class SavedWatchListComponent {
   }
 
   protected openPriceQuote(row: WatchListRow): void {
-    this.workspace.openPanel({
-      type: 'price-quote',
-      state: {
-        title: `Price Quote - ${row.symbolId}`,
-        route: `/app/pricing/price-quote/${row.marketShortName.toLowerCase()}/${row.symbolId.toLowerCase()}`,
-        section: 'pricing',
-        screen: 'price-quote',
-        context: {
-          quote: {
-            symbolId: row.symbolId,
-            symbolName: row.symbolName,
-            market: row.marketShortName,
-            currency: row.currency,
-            lastPrice: row.lastPrice,
-            change: row.change,
-            changePercent: row.changePercent,
-            direction: row.changeDirection
-          }
-        }
-      }
-    });
+    this.productDetails.open(row);
   }
 
   protected openOrder(side: 'buy' | 'sell', row: WatchListRow): void {

@@ -5,6 +5,7 @@ import {
   computed,
   effect,
   HostListener,
+  inject,
   input,
   output,
   signal
@@ -32,6 +33,8 @@ import {
 } from 'ag-grid-community';
 
 import { MarketGridContextAction, MarketGridSettings } from '../../models/market-grid.model';
+import { ProductDetailsDialogService } from '../../../market/price-quote/product-details-dialog.service';
+import { isProductDetailsField } from './market-grid-product-details.util';
 
 type MarketGridRow = any;
 
@@ -50,6 +53,8 @@ interface MarketGridContextMenuState {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MarketGridComponent {
+  private readonly productDetails = inject(ProductDetailsDialogService);
+
   readonly rowData = input<readonly any[]>([]);
   readonly columnDefs = input<ColDef[]>([]);
   readonly gridOptions = input<GridOptions>({});
@@ -58,6 +63,7 @@ export class MarketGridComponent {
   readonly loading = input(false);
   readonly marketType = input('equities');
   readonly stateKey = input('market-grid-state');
+  readonly productDetailsOnSymbolClick = input(false);
   readonly settings = input<MarketGridSettings>({
     autoScroll: false,
     bidColor: '#3ddc97',
@@ -105,7 +111,8 @@ export class MarketGridComponent {
       minWidth: 110
     },
     getRowId: (params) => this.resolveRowId(params),
-    ...this.gridOptions()
+    ...this.gridOptions(),
+    preventDefaultOnContextMenu: true
   }));
   protected readonly cssVariables = computed(() => ({
     '--market-grid-font-size': `${this.settings().fontSize}px`,
@@ -150,6 +157,10 @@ export class MarketGridComponent {
 
     const field = typeof event.colDef.field === 'string' ? event.colDef.field : event.column.getColId();
     this.cellClicked.emit({ row: event.data, field });
+
+    if (this.productDetailsOnSymbolClick() && isProductDetailsField(field)) {
+      this.productDetails.open(event.data);
+    }
   }
 
   protected onCellDoubleClicked(event: CellDoubleClickedEvent<any>): void {
@@ -169,7 +180,6 @@ export class MarketGridComponent {
       return;
     }
 
-    this.priceQuote.emit(event.data);
     this.rowDoubleClicked.emit(event.data);
   }
 
@@ -181,6 +191,7 @@ export class MarketGridComponent {
     }
 
     mouseEvent.preventDefault();
+    mouseEvent.stopPropagation();
     this.contextMenu.set({
       x: mouseEvent.clientX,
       y: mouseEvent.clientY,
@@ -245,6 +256,11 @@ export class MarketGridComponent {
   }
 
   private dispatchContextAction(actionId: string, row: MarketGridRow | null): void {
+    if (actionId === 'quote' && row) {
+      this.productDetails.open(row);
+      return;
+    }
+
     this.contextAction.emit({ actionId, row });
 
     if (!row) {
@@ -257,9 +273,6 @@ export class MarketGridComponent {
         return;
       case 'sell':
         this.sellOrder.emit(row);
-        return;
-      case 'quote':
-        this.priceQuote.emit(row);
         return;
       case 'depth-price':
       case 'depth-order':

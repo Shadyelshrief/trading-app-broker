@@ -1,0 +1,11 @@
+<section class="product-details-dialog">
+  <header class="product-details-dialog__header">
+    <div>
+      <span>Product Details</span>
+      <strong>{{ data.state.context.quote.symbolId }} - {{ data.state.context.quote.symbolName }}</strong>
+    </div>
+    <button mat-stroked-button type="button" mat-dialog-close>Close</button>
+  </header>
+
+  <app-price-quote class="product-details-dialog__content" [state]="data.state" />
+</section>

@@ -9,6 +9,7 @@ import {
   signal
 } from '@angular/core';
 import {
+  BrowserPopout,
   ComponentContainer,
   ComponentItemConfig,
   DragSource,
@@ -58,6 +59,8 @@ import {
   WorkspacePreferencesService,
   WorkspaceThemePreference
 } from './workspace-preferences.service';
+import { calculateWorkspacePopoutBounds, prepareWorkspacePopoutConfig } from './workspace-popout.util';
+import { calculateWorkspaceMinimumItemSize } from './workspace-sizing.util';
 
 type WorkspacePanelType =
   | 'dashboard'
@@ -151,8 +154,6 @@ const DEFAULT_WORKSPACE_PANELS = [
 const WORKSPACE_GRID_COLUMNS = 2;
 const VISIBLE_WORKSPACE_ROWS = 2;
 const WORKSPACE_GRID_GAP = 8;
-const WORKSPACE_MIN_PANEL_RATIO = 0.25;
-const MIN_WORKSPACE_PANEL_HEIGHT = 180;
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceLayoutService {
@@ -234,9 +235,25 @@ export class WorkspaceLayoutService {
     this.destroy();
 
     this.hostElement = hostElement;
+    const popoutPreparation = prepareWorkspacePopoutConfig(
+      window.location.href,
+      window.localStorage,
+      window.sessionStorage
+    );
+
+    if (popoutPreparation === 'missing') {
+      this.isPopoutWindow = true;
+      this.workspaceLoaded = true;
+      this.loading.set(false);
+      this.error.set('This detached screen can no longer be restored. Close this window and open the screen again from the workspace.');
+      this.setPopoutBodyClass(true);
+      return;
+    }
+
     this.layout = new GoldenLayout(hostElement, this.bindComponent, this.unbindComponent);
     this.layout.resizeWithContainerAutomatically = false;
     this.layout.on('stateChanged', this.onLayoutStateChanged);
+    this.layout.on('windowOpened', this.onPopoutOpened);
     this.resizeObserver = new ResizeObserver(() => this.syncSize());
     this.resizeObserver.observe(hostElement);
     this.isPopoutWindow = this.layout.isSubWindow;
@@ -275,6 +292,31 @@ export class WorkspaceLayoutService {
     }
 
     this.addPanelToLayout(this.routeToPanel(normalizedRoute));
+  }
+
+  openRouteInNewWindow(route: string): void {
+    if (!this.layout || this.isPopoutWindow) {
+      return;
+    }
+
+    const normalizedRoute = this.normalizeRoute(route);
+    const panel = this.routeToPanel(normalizedRoute);
+    const resolvedConfig = resolveLayoutConfig(this.createLayoutConfig(this.createPanelConfig(panel)));
+    const root = resolvedConfig.root;
+
+    if (!root) {
+      this.error.set('The selected screen could not be opened in a new window.');
+      return;
+    }
+
+    this.error.set(null);
+
+    try {
+      const popout = this.layout.createPopout(root, this.getPopoutWindowBounds(), null, null);
+      popout.getWindow().focus();
+    } catch {
+      this.error.set('The new window was blocked. Allow pop-ups for this site and try again.');
+    }
   }
 
   openPanel(panel: WorkspacePanelDescriptor): void {
@@ -446,6 +488,7 @@ export class WorkspaceLayoutService {
     this.detachDragSources();
 
     this.layout?.off('stateChanged', this.onLayoutStateChanged);
+    this.layout?.off('windowOpened', this.onPopoutOpened);
     this.layout?.destroy();
     this.resizeObserver?.disconnect();
     this.layout = undefined;
@@ -517,7 +560,7 @@ export class WorkspaceLayoutService {
     }
 
     this.openPanels.set(panel.state.route, panel);
-    this.applyQuarterSizeLimits();
+    this.applyMinimumItemSizeLimits();
 
     if (this.openPanels.size > WORKSPACE_GRID_COLUMNS * VISIBLE_WORKSPACE_ROWS) {
       const saved = this.layout.saveLayout();
@@ -558,7 +601,7 @@ export class WorkspaceLayoutService {
   }
 
   private createLayoutConfig(root: NonNullable<LayoutConfig['root']>): LayoutConfig {
-    const minSize = this.getQuarterMinSize();
+    const minSize = this.getMinimumItemSize();
 
     return {
       root,
@@ -685,6 +728,24 @@ export class WorkspaceLayoutService {
 
     this.rebuildOpenPanelsFromLayout();
     this.enforceScrollableGrid();
+  };
+
+  private readonly onPopoutOpened = (popout: BrowserPopout): void => {
+    try {
+      const childWindow = popout.getWindow();
+      const bounds = this.getPopoutWindowBounds();
+
+      childWindow.resizeTo(bounds.width ?? childWindow.outerWidth, bounds.height ?? childWindow.outerHeight);
+
+      if (bounds.left !== null && bounds.top !== null) {
+        childWindow.moveTo(bounds.left, bounds.top);
+      }
+
+      childWindow.focus();
+    } catch {
+      // Browser window-management policies can deny resize/move while still
+      // allowing the pop-out itself. In that case the window remains usable.
+    }
   };
 
   private beginProgrammaticLayoutChange(): void {
@@ -1138,7 +1199,7 @@ export class WorkspaceLayoutService {
       return {
         type: 'price-quote',
         state: {
-          title: symbolId ? `Price Quote - ${symbolId}` : 'Price Quote',
+          title: symbolId ? `Product Details - ${symbolId}` : 'Product Details',
           route: normalizedRoute,
           section: 'pricing',
           screen: 'price-quote',
@@ -1236,8 +1297,8 @@ export class WorkspaceLayoutService {
     const height = this.hostElement.clientHeight;
 
     if (width > 0 && height > 0) {
-      this.applyQuarterSizeLimits(width, height);
-      const minSize = this.getQuarterMinSize(width, height);
+      this.applyMinimumItemSizeLimits(width, height);
+      const minSize = this.getMinimumItemSize(width);
       const saved = this.layout.saveLayout();
       const rowCount = Math.max(1, getWorkspaceGridSize(saved.root).rows);
       const rowHeight = Math.max(minSize.height, Math.floor((height - WORKSPACE_GRID_GAP) / VISIBLE_WORKSPACE_ROWS));
@@ -1247,12 +1308,29 @@ export class WorkspaceLayoutService {
     }
   }
 
-  private applyQuarterSizeLimits(width = this.hostElement?.clientWidth ?? 0, height = this.hostElement?.clientHeight ?? 0): void {
+  private getPopoutWindowBounds() {
+    const browserWindow = this.hostElement?.ownerDocument.defaultView;
+
+    if (!browserWindow) {
+      return calculateWorkspacePopoutBounds({ availableWidth: 1440, availableHeight: 900 });
+    }
+
+    const screen = browserWindow.screen as Screen & { availLeft?: number; availTop?: number };
+
+    return calculateWorkspacePopoutBounds({
+      availableWidth: screen.availWidth || browserWindow.outerWidth,
+      availableHeight: screen.availHeight || browserWindow.outerHeight,
+      availableLeft: screen.availLeft,
+      availableTop: screen.availTop
+    });
+  }
+
+  private applyMinimumItemSizeLimits(width = this.hostElement?.clientWidth ?? 0, height = this.hostElement?.clientHeight ?? 0): void {
     if (!this.layout || width <= 0 || height <= 0) {
       return;
     }
 
-    const minSize = this.getQuarterMinSize(width, height);
+    const minSize = this.getMinimumItemSize(width);
 
     this.layout.layoutConfig = {
       ...this.layout.layoutConfig,
@@ -1264,11 +1342,8 @@ export class WorkspaceLayoutService {
     };
   }
 
-  private getQuarterMinSize(width = this.hostElement?.clientWidth ?? 0, height = this.hostElement?.clientHeight ?? 0): { width: number; height: number } {
-    return {
-      width: Math.max(160, Math.floor((width - WORKSPACE_GRID_GAP) * WORKSPACE_MIN_PANEL_RATIO)),
-      height: Math.max(MIN_WORKSPACE_PANEL_HEIGHT, Math.floor((height - WORKSPACE_GRID_GAP) * WORKSPACE_MIN_PANEL_RATIO))
-    };
+  private getMinimumItemSize(width = this.hostElement?.clientWidth ?? 0): { width: number; height: number } {
+    return calculateWorkspaceMinimumItemSize(width);
   }
 
   private sanitizeLayoutConfig(config: LayoutConfig): LayoutConfig {
@@ -1293,7 +1368,10 @@ export class WorkspaceLayoutService {
     const items = collectComponentConfigs(config.root);
 
     if (items.length <= WORKSPACE_GRID_COLUMNS * VISIBLE_WORKSPACE_ROWS || isScrollableWorkspaceGrid(config.root)) {
-      this.syncSize();
+      // A splitter drag emits stateChanged continuously. Calling setSize() from
+      // that event competes with Golden Layout's drag calculation and can make
+      // a vertical splitter jump in the opposite direction or become pinned.
+      // Host size changes are already handled by the ResizeObserver.
       return;
     }
 
@@ -1321,6 +1399,14 @@ export class WorkspaceLayoutService {
 
 function isWorkspacePanelType(value: string): value is WorkspacePanelType {
   return WORKSPACE_PANEL_TYPES.includes(value as WorkspacePanelType);
+}
+
+function resolveLayoutConfig(config: LayoutConfig): ResolvedLayoutConfig {
+  const resolvableLayoutConfig = LayoutConfig as typeof LayoutConfig & {
+    resolve(layoutConfig: LayoutConfig): ResolvedLayoutConfig;
+  };
+
+  return resolvableLayoutConfig.resolve(config);
 }
 
 function isLayoutConfig(value: unknown): value is LayoutConfig {

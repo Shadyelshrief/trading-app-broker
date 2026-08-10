@@ -78,7 +78,7 @@ export class IndicesPerformanceComponent {
     { id: 'fit-window', label: 'Fit Columns to Fit Window' },
     { id: 'print', label: 'Print' },
     { id: 'chart', label: 'Charting' },
-    { id: 'quote', label: 'Price Quote' },
+    { id: 'quote', label: 'Product Details' },
     { id: 'add-indicator', label: 'Add Indicator' }
   ];
 

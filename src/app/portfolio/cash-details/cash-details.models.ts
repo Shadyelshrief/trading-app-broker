@@ -12,6 +12,7 @@ export interface CashDetailsRow {
   pendingBuyAmount: number;
   ppMargin: number;
   purchasingPower: number;
+  reservedSellAmount: number;
   unsettledBuyAmount: number;
   unsettledSellAmount: number;
 }
@@ -21,6 +22,11 @@ export interface CashPositionSummary {
   totalCashAvailable: number;
   totalHoldingValue: number;
   totalPurchasingPower: number;
+  totalUnsettledBuy: number;
+  totalUnsettledSell: number;
+  totalPendingBuy: number;
+  totalReservedSell: number;
+  totalLimit: number;
 }
 
 export interface CashDetailsDialogData {

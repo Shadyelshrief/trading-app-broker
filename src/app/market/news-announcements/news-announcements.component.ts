@@ -22,6 +22,7 @@ import {
 } from './news-announcements.filters';
 import { hasSymbol } from './news-announcements.mapper';
 import { NewsAnnouncementsFacade } from './news-announcements.facade';
+import { ProductDetailsDialogService } from '../price-quote/product-details-dialog.service';
 import {
   NewsAnnouncementRow,
   NewsAnnouncementsMarketFilter,
@@ -56,6 +57,7 @@ export class NewsAnnouncementsComponent {
 
   protected readonly facade = inject(NewsAnnouncementsFacade);
   protected readonly workspace = inject(WorkspaceLayoutService);
+  private readonly productDetails = inject(ProductDetailsDialogService);
   protected readonly vm$ = this.facade.vm$;
   protected readonly columns = this.facade.columns;
   protected readonly gridOptions = {
@@ -77,7 +79,7 @@ export class NewsAnnouncementsComponent {
     { id: 'fit-window', label: 'Fit Columns To Fit Window' },
     { id: 'print', label: 'Print' },
     { id: 'selection-type', label: 'Set Selection Type' },
-    { id: 'quote', label: 'Price Quote', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
+    { id: 'quote', label: 'Product Details', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
     { id: 'chart', label: 'Charting', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
     { id: 'depth-price', label: 'Market Depth By Price', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
     { id: 'depth-order', label: 'Market Depth By Order', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
@@ -148,6 +150,10 @@ export class NewsAnnouncementsComponent {
         }
       }
     });
+  }
+
+  protected openProductDetails(row: NewsAnnouncementRow): void {
+    this.productDetails.open(row);
   }
 
   captureState() {

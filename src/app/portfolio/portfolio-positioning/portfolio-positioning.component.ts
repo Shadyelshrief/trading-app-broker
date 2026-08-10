@@ -12,6 +12,7 @@ import type { GridOptions } from 'ag-grid-community';
 import { debounceTime } from 'rxjs';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { ProductDetailsDialogService } from '../../market/price-quote/product-details-dialog.service';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import type { MarketGridContextAction } from '../../shared/models/market-grid.model';
 import { formatClientDisplay } from '../../shared/utils/client-display.util';
@@ -47,6 +48,7 @@ export class PortfolioPositioningComponent {
   protected readonly facade = inject(PortfolioPositioningFacade);
   private readonly dialog = inject(MatDialog);
   private readonly workspace = inject(WorkspaceLayoutService);
+  private readonly productDetails = inject(ProductDetailsDialogService);
   protected readonly vm$ = this.facade.vm$;
   protected readonly columns = createPortfolioPositioningColumns();
   protected readonly clientControl = new FormControl<string | ClientOption>('', { nonNullable: true });
@@ -55,7 +57,7 @@ export class PortfolioPositioningComponent {
     suppressScrollOnNewData: true
   };
   protected readonly contextActions: MarketGridContextAction<PortfolioPositionRow>[] = [
-    { id: 'quote', label: 'Price Quote' },
+    { id: 'quote', label: 'Product Details' },
     { id: 'chart', label: 'Charting' },
     { id: 'depth-price', label: 'Market Depth By Price' },
     { id: 'depth-order', label: 'Market Depth By Order' },
@@ -113,7 +115,7 @@ export class PortfolioPositioningComponent {
       data: {
         clientId: vm.selectedClient.clientId,
         portfolioId: vm.selectedPortfolio.portfolioId,
-        portfolioCurrency: vm.selectedPortfolio.currency,
+        portfolioCurrency: vm.positionCurrency,
         wallets: vm.wallets,
         summary: vm.cashSummary
       }
@@ -144,24 +146,11 @@ export class PortfolioPositioningComponent {
   }
 
   protected openPriceQuote(row: PortfolioPositionRow): void {
-    this.workspace.openPanel({
-      type: 'price-quote',
-      state: {
-        title: `Price Quote - ${row.symbolId}`,
-        route: `/app/pricing/price-quote/${row.exchange.toLowerCase()}/${row.symbolId.toLowerCase()}`,
-        section: 'pricing',
-        screen: 'price-quote',
-        context: {
-          quote: {
-            symbolId: row.symbolId,
-            symbolName: row.symbolName,
-            market: row.exchange,
-            currency: row.currency,
-            lastPrice: row.evaluationPrice,
-            direction: row.priceDirection
-          }
-        }
-      }
+    this.productDetails.open({
+      ...row,
+      market: row.exchange,
+      lastPrice: row.evaluationPrice,
+      direction: row.priceDirection
     });
   }
 

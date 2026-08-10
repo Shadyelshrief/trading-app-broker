@@ -93,7 +93,41 @@
 
     <section class="order-monitoring__meta">
       <p>Search and monitor market orders. Double-click an order for transaction details.</p>
+      <div class="order-monitoring__row-actions">
+        @if (selectedRow(); as row) {
+          <span class="order-monitoring__selected-order">Selected: {{ row.orderNumber }}</span>
+        }
+        <button mat-stroked-button type="button" [disabled]="!selectedRow() || actionBusy()" (click)="openDetails(selectedRow()!)">
+          Transaction Details
+        </button>
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="!selectedRow() || actionBusy() || !facade.permissions.canModify(selectedRow()!.status)"
+          (click)="openModify(selectedRow()!)"
+        >
+          Modify
+        </button>
+        <button
+          mat-stroked-button
+          type="button"
+          class="order-monitoring__cancel-action"
+          [disabled]="!selectedRow() || actionBusy() || !facade.permissions.canCancel(selectedRow()!.status)"
+          (click)="confirmCancel(selectedRow()!)"
+        >
+          Cancel Order
+        </button>
+      </div>
       <p>Last update: {{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</p>
+      @if (actionFeedback(); as feedback) {
+        <span
+          class="order-monitoring__feedback"
+          [class.order-monitoring__feedback--success]="feedback.success"
+          [class.order-monitoring__feedback--error]="!feedback.success"
+        >
+          {{ feedback.message }}
+        </span>
+      }
     </section>
 
     <app-market-grid
@@ -106,8 +140,10 @@
       [marketType]="'order-monitoring'"
       [stateKey]="'order-monitoring-grid-v1'"
       [settings]="vm.settings"
+      [productDetailsOnSymbolClick]="true"
       (rowClicked)="selectRow($event)"
       (rowDoubleClicked)="openDetails($event)"
+      (priceQuote)="openProductDetails($event)"
       (contextAction)="handleContextAction($event)"
     />
   </section>

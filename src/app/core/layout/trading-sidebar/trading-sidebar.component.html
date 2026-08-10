@@ -57,13 +57,16 @@
                             type="button"
                             class="trading-sidebar__link trading-sidebar__link--child"
                             [attr.data-route]="child.routerLink?.join('')"
-                            [title]="child.label"
-                            [attr.aria-label]="'Drag ' + child.label + ' into workspace'"
+                            [title]="'Click to open ' + child.label + ' in a new window, or drag it into the workspace'"
+                            [attr.aria-label]="'Open ' + child.label + ' in a new window, or drag it into the workspace'"
+                            (pointerdown)="beginMenuInteraction($event)"
+                            (click)="openMenuItemInNewWindow($event, child.routerLink?.join(''))"
                           >
                             <span class="trading-sidebar__icon" aria-hidden="true">
                               <app-trading-icon [name]="child.icon" />
                             </span>
                             <span class="trading-sidebar__text">{{ child.label }}</span>
+                            <span class="trading-sidebar__launch-icon" aria-hidden="true"></span>
                           </button>
                         </li>
                       }
@@ -75,13 +78,16 @@
                     type="button"
                     class="trading-sidebar__link"
                     [attr.data-route]="item.routerLink?.join('')"
-                    [title]="layout.sidebarCollapsed() ? item.label : ''"
-                    [attr.aria-label]="'Drag ' + item.label + ' into workspace'"
+                    [title]="'Click to open ' + item.label + ' in a new window, or drag it into the workspace'"
+                    [attr.aria-label]="'Open ' + item.label + ' in a new window, or drag it into the workspace'"
+                    (pointerdown)="beginMenuInteraction($event)"
+                    (click)="openMenuItemInNewWindow($event, item.routerLink?.join(''))"
                   >
                     <span class="trading-sidebar__icon" aria-hidden="true">
                       <app-trading-icon [name]="item.icon" />
                     </span>
                     <span class="trading-sidebar__text">{{ item.label }}</span>
+                    <span class="trading-sidebar__launch-icon" aria-hidden="true"></span>
                   </button>
                 }
               </li>

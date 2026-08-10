@@ -126,7 +126,7 @@ export class PriceQuoteFacade {
     const row = this.selectedRowSubject.value;
 
     return {
-      title: `Price Quote - ${row.symbolId}`,
+      title: `Product Details - ${row.symbolId}`,
       route: `/app/pricing/price-quote/${row.market.toLowerCase()}/${row.symbolId.toLowerCase()}`,
       section: baseState?.section ?? 'pricing',
       screen: baseState?.screen ?? 'price-quote',

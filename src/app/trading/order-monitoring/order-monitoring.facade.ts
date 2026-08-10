@@ -154,6 +154,18 @@ export class OrderMonitoringFacade {
     return this.service.cancelOrder({ orderNumber: row.orderNumber });
   }
 
+  modify(row: OrderMonitoringRow, changes: { quantity: number; orderPrice?: number }): Observable<OrderActionResult> {
+    return this.service.modifyOrder({
+      orderNumber: row.orderNumber,
+      orderType: row.orderType,
+      quantity: changes.quantity,
+      orderPrice: changes.orderPrice,
+      goodTill: 'DAY',
+      sessionId: '',
+      fillTerm: 'MARKET_DEFAULT'
+    });
+  }
+
   suspend(row: OrderMonitoringRow): Observable<OrderActionResult> {
     return this.service.suspendOrder({ orderNumber: row.orderNumber });
   }

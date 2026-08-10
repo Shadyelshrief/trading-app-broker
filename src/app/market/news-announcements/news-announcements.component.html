@@ -83,6 +83,8 @@
       [marketType]="'news-announcements'"
       [stateKey]="'news-announcements-grid-v1'"
       [settings]="vm.settings"
+      [productDetailsOnSymbolClick]="true"
+      (priceQuote)="openProductDetails($event)"
       (rowDoubleClicked)="openNewsDetail($event)"
     />
   </section>

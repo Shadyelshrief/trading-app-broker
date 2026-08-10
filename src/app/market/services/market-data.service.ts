@@ -22,21 +22,34 @@ import {
   applyFeederTickToFullMarketRow,
   parseFullMarketFeederTick
 } from '../full-market/full-market-feed.mapper';
-import { buildReferenceFullMarketRows } from '../full-market/full-market-reference.data';
+import {
+  buildFullMarketRowsFromAssets,
+  buildReferenceFullMarketRows
+} from '../full-market/full-market-reference.data';
 import { FullMarketRow } from '../models/full-market-row.model';
+import { ReferenceDataLookupsService } from '../../shared/lookups/reference-data-lookups.service';
 import { MarketCacheService } from './market-cache.service';
 
 @Injectable({ providedIn: 'root' })
 export class MarketDataService {
   private readonly marketData = inject(CoreMarketDataService);
   private readonly cache = inject(MarketCacheService);
+  private readonly referenceData = inject(ReferenceDataLookupsService);
 
   observeFullMarket(exchange: string): Observable<FullMarketRow[]> {
     const normalizedExchange = exchange.trim().toLowerCase();
-    const referenceRows = buildReferenceFullMarketRows(normalizedExchange);
-    const summary$ = this.observeConnectionState().pipe(
-      map(() => this.cache.replaceFullMarket(referenceRows)),
-      startWith(this.cache.replaceFullMarket(referenceRows)),
+    const referenceRows$ = this.referenceData.getAssetsByMarket(normalizedExchange).pipe(
+      map((assets) => {
+        const rows = buildFullMarketRowsFromAssets(normalizedExchange, assets);
+        return rows.length > 0 ? rows : buildReferenceFullMarketRows(normalizedExchange);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+    const summary$ = combineLatest([
+      referenceRows$,
+      this.observeConnectionState().pipe(startWith(null))
+    ]).pipe(
+      map(([referenceRows]) => this.cache.replaceFullMarket(referenceRows)),
       shareReplay({ bufferSize: 1, refCount: true })
     );
 

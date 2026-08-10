@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, HostListener, inject, input, signal
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { ProductDetailsDialogService } from '../../market/price-quote/product-details-dialog.service';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import { MarketGridContextAction } from '../../shared/models/market-grid.model';
 import { OrderTransactionDetailsDialogComponent } from '../order-transaction-details/order-transaction-details-dialog.component';
@@ -24,6 +25,7 @@ export class ExecutionTickerComponent {
   protected readonly facade = inject(ExecutionTickerFacade);
   private readonly dialog = inject(MatDialog);
   private readonly workspace = inject(WorkspaceLayoutService);
+  private readonly productDetails = inject(ProductDetailsDialogService);
   protected readonly vm$ = this.facade.vm$;
   protected readonly columns = this.facade.columns;
   protected readonly selectedRow = signal<ExecutionTickerRow | null>(null);
@@ -38,7 +40,7 @@ export class ExecutionTickerComponent {
     { id: 'print', label: 'Print' },
     { id: 'selection-type', label: 'Set Selection Type' },
     { id: 'transaction-details', label: 'View Order Transaction Details' },
-    { id: 'quote', label: 'Price Quote' },
+    { id: 'quote', label: 'Product Details' },
     { id: 'chart', label: 'Charting' },
     { id: 'depth-price', label: 'Market Depth By Price' },
     { id: 'depth-order', label: 'Market Depth By Order' },
@@ -118,23 +120,7 @@ export class ExecutionTickerComponent {
   }
 
   protected openPriceQuote(row: ExecutionTickerRow): void {
-    this.workspace.openPanel({
-      type: 'price-quote',
-      state: {
-        title: `Price Quote - ${row.symbolId}`,
-        route: `/app/pricing/price-quote/${row.marketName.toLowerCase()}/${row.symbolId.toLowerCase()}`,
-        section: 'pricing',
-        screen: 'price-quote',
-        context: {
-          quote: {
-            symbolId: row.symbolId,
-            symbolName: row.symbolName,
-            market: row.marketName,
-            currency: row.currency
-          }
-        }
-      }
-    });
+    this.productDetails.open(row);
   }
 
   protected openOrder(side: 'buy' | 'sell', row: ExecutionTickerRow): void {

@@ -56,7 +56,7 @@
 
       <div class="portfolio-positioning__currency">
         <span>Currency</span>
-        <strong>{{ vm.selectedPortfolio?.currency || '--' }}</strong>
+        <strong>{{ vm.positionCurrency || '--' }}</strong>
       </div>
     </section>
 
@@ -79,6 +79,20 @@
         <span>Total Unrealized Gain/Loss (CCC)</span>
         <strong>{{ vm.totals.totalUnrealizedGainLossCcc | number: '1.2-2' }}</strong>
       </article>
+      <article class="portfolio-positioning__summary--cash">
+        <span>Total Cash Available</span>
+        <strong>
+          {{ vm.positionCurrency }}
+          {{ vm.cashSummary ? (vm.cashSummary.totalCashAvailable | number: '1.2-2') : '--' }}
+        </strong>
+      </article>
+      <article class="portfolio-positioning__summary--cash">
+        <span>Total Purchasing Power</span>
+        <strong>
+          {{ vm.positionCurrency }}
+          {{ vm.cashSummary ? (vm.cashSummary.totalPurchasingPower | number: '1.2-2') : '--' }}
+        </strong>
+      </article>
       <article>
         <span>Last update</span>
         <strong>{{ vm.lastUpdated ? (vm.lastUpdated | date: 'HH:mm:ss') : '--' }}</strong>
@@ -100,6 +114,8 @@
       [marketType]="'portfolio-positioning'"
       [stateKey]="'portfolio-positioning-grid-v1'"
       [settings]="vm.settings"
+      [productDetailsOnSymbolClick]="true"
+      (priceQuote)="openPriceQuote($event)"
       (contextAction)="handleContextAction($event)"
     />
   </section>
