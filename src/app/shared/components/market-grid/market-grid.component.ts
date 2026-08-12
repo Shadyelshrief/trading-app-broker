@@ -1,14 +1,20 @@
 import { CommonModule } from '@angular/common';
+import { Overlay, OverlayRef } from '@angular/cdk/overlay';
+import { TemplatePortal } from '@angular/cdk/portal';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   HostListener,
   inject,
   input,
   output,
-  signal
+  signal,
+  TemplateRef,
+  ViewChild,
+  ViewContainerRef
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -54,6 +60,12 @@ interface MarketGridContextMenuState {
 })
 export class MarketGridComponent {
   private readonly productDetails = inject(ProductDetailsDialogService);
+  private readonly overlay = inject(Overlay);
+  private readonly viewContainerRef = inject(ViewContainerRef);
+  private overlayRef: OverlayRef | null = null;
+
+  @ViewChild('contextMenuTemplate', { static: true })
+  private readonly contextMenuTemplate!: TemplateRef<unknown>;
 
   readonly rowData = input<readonly any[]>([]);
   readonly columnDefs = input<ColDef[]>([]);
@@ -133,6 +145,8 @@ export class MarketGridComponent {
 
       api.setGridOption('rowData', [...this.rowData()]);
     });
+
+    inject(DestroyRef).onDestroy(() => this.destroyContextMenu());
   }
 
   protected onGridReady(event: GridReadyEvent<any>): void {
@@ -192,11 +206,38 @@ export class MarketGridComponent {
 
     mouseEvent.preventDefault();
     mouseEvent.stopPropagation();
-    this.contextMenu.set({
-      x: mouseEvent.clientX,
-      y: mouseEvent.clientY,
-      row: event.data ?? null
+    this.openContextMenu(mouseEvent.clientX, mouseEvent.clientY, event.data ?? null);
+  }
+
+  /**
+   * Render the context menu through the CDK overlay (body-level container) so its
+   * viewport coordinates are honoured. A plain fixed-position element would be
+   * offset by the `transform` Golden Layout applies to each docked panel.
+   */
+  private openContextMenu(x: number, y: number, row: MarketGridRow | null): void {
+    this.contextMenu.set({ x, y, row });
+
+    const positionStrategy = this.overlay
+      .position()
+      .global()
+      .left(`${x}px`)
+      .top(`${y}px`);
+
+    if (this.overlayRef) {
+      this.overlayRef.updatePositionStrategy(positionStrategy);
+
+      if (!this.overlayRef.hasAttached()) {
+        this.overlayRef.attach(new TemplatePortal(this.contextMenuTemplate, this.viewContainerRef));
+      }
+
+      return;
+    }
+
+    this.overlayRef = this.overlay.create({
+      positionStrategy,
+      scrollStrategy: this.overlay.scrollStrategies.close()
     });
+    this.overlayRef.attach(new TemplatePortal(this.contextMenuTemplate, this.viewContainerRef));
   }
 
   protected persistColumnState(): void {
@@ -245,7 +286,7 @@ export class MarketGridComponent {
       return;
     }
 
-    this.contextMenu.set(null);
+    this.closeContextMenu();
     this.dispatchContextAction(action.id, row);
   }
 
@@ -253,6 +294,12 @@ export class MarketGridComponent {
   @HostListener('document:keydown.escape')
   protected closeContextMenu(): void {
     this.contextMenu.set(null);
+    this.overlayRef?.detach();
+  }
+
+  private destroyContextMenu(): void {
+    this.overlayRef?.dispose();
+    this.overlayRef = null;
   }
 
   private dispatchContextAction(actionId: string, row: MarketGridRow | null): void {

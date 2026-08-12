@@ -16,6 +16,8 @@ import {
   LinkedFilterGroupService,
   readLinkedFilterGroupFromState
 } from '../../shared/services/linked-filter-group.service';
+import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { buildScreenActionDescriptor } from '../../shared/utils/screen-action.util';
 import { ProductDetailsDialogService } from '../price-quote/product-details-dialog.service';
 import { TopSymbolsFacade } from './top-symbols.facade';
 import { TopSymbolRow, TopSymbolsViewKey } from './top-symbols.models';
@@ -44,6 +46,7 @@ export class TopSymbolsComponent implements OnInit {
   readonly state = input<{ title: string; route: string; section?: string; screen?: string; context?: Record<string, unknown> }>();
 
   protected readonly facade = inject(TopSymbolsFacade);
+  private readonly workspace = inject(WorkspaceLayoutService);
   private readonly productDetails = inject(ProductDetailsDialogService);
   private readonly linkedFilters = inject(LinkedFilterGroupService);
   private readonly linkedFilterSourceId = this.linkedFilters.createSourceId('top-symbols');
@@ -63,19 +66,19 @@ export class TopSymbolsComponent implements OnInit {
   protected readonly menuActions: MarketGridContextAction<TopSymbolRow>[] = [
     { id: 'watchlist', label: 'Add To Watch List' },
     { id: 'watchlist-wizard', label: 'Add To Watch List Wizard' },
-    { id: 'chart', label: 'Charting' },
+    { id: 'chart', label: 'Charts' },
     { id: 'copy', label: 'Copy' },
     { id: 'export', label: 'Export To Excel' },
     { id: 'fit-ideal', label: 'Fit Columns To Ideal Size' },
     { id: 'fit-window', label: 'Fit Columns To Fit Window' },
-    { id: 'depth-order', label: 'Market Depth By Order' },
-    { id: 'depth-order-special', label: 'Market Depth By Order Special' },
-    { id: 'depth-price', label: 'Market Depth By Price' },
-    { id: 'news', label: 'News & Announcements' },
+    { id: 'depth-order', label: 'Order Book' },
+    { id: 'depth-order-special', label: 'Order Book (Special)' },
+    { id: 'depth-price', label: 'Depth by Price' },
+    { id: 'news', label: 'News & Corporate Actions' },
     { id: 'buy', label: 'Place Buy Order' },
     { id: 'sell', label: 'Place Sell Order' },
     { id: 'quote', label: 'Product Details' },
-    { id: 'spectrum', label: 'Price Spectrum' },
+    { id: 'spectrum', label: 'Spectrum' },
     { id: 'print', label: 'Print' },
     { id: 'selection-type', label: 'Set Selection Type' },
     { id: 'time-sales', label: 'Time & Sales' }
@@ -148,6 +151,14 @@ export class TopSymbolsComponent implements OnInit {
 
   protected openPriceQuote(row: TopSymbolRow): void {
     this.productDetails.open(row);
+  }
+
+  protected handleGridAction(event: { actionId: string; row: TopSymbolRow | null }): void {
+    const descriptor = buildScreenActionDescriptor(event.actionId, event.row);
+
+    if (descriptor) {
+      this.workspace.openScreen(descriptor);
+    }
   }
 
   captureState() {

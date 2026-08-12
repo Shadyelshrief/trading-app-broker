@@ -38,19 +38,19 @@ export class SavedWatchListComponent {
     { id: 'delete-selected-symbols', label: 'Delete Selected Symbols' },
     { id: 'watchlist', label: 'Add To Watch List' },
     { id: 'watchlist-wizard', label: 'Add To Watch List Wizard' },
-    { id: 'chart', label: 'Charting' },
+    { id: 'chart', label: 'Charts' },
     { id: 'copy', label: 'Copy' },
     { id: 'export', label: 'Export To Excel' },
     { id: 'fit-ideal', label: 'Fit Columns To Ideal Size' },
     { id: 'fit-window', label: 'Fit Columns To Fit Window' },
-    { id: 'depth-order', label: 'Market Depth By Order' },
-    { id: 'depth-order-special', label: 'Market Depth By Order Special' },
-    { id: 'depth-price', label: 'Market Depth By Price' },
-    { id: 'news', label: 'News & Announcements' },
+    { id: 'depth-order', label: 'Order Book' },
+    { id: 'depth-order-special', label: 'Order Book (Special)' },
+    { id: 'depth-price', label: 'Depth by Price' },
+    { id: 'news', label: 'News & Corporate Actions' },
     { id: 'buy', label: 'Place Buy Order' },
     { id: 'sell', label: 'Place Sell Order' },
     { id: 'quote', label: 'Product Details' },
-    { id: 'spectrum', label: 'Price Spectrum' },
+    { id: 'spectrum', label: 'Spectrum' },
     { id: 'print', label: 'Print' },
     { id: 'selection-type', label: 'Set Selection Type' },
     { id: 'time-sales', label: 'Time & Sales' }
@@ -108,7 +108,7 @@ export class SavedWatchListComponent {
     const price = side === 'buy' ? row.offerPrice : row.bidPrice;
     const quantity = side === 'buy' ? row.offerSize : row.bidSize;
 
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'placeholder',
       state: {
         title: `${side === 'buy' ? 'Buy' : 'Sell'} Order - ${row.symbolId}`,

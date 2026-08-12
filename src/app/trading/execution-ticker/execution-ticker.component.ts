@@ -41,9 +41,9 @@ export class ExecutionTickerComponent {
     { id: 'selection-type', label: 'Set Selection Type' },
     { id: 'transaction-details', label: 'View Order Transaction Details' },
     { id: 'quote', label: 'Product Details' },
-    { id: 'chart', label: 'Charting' },
-    { id: 'depth-price', label: 'Market Depth By Price' },
-    { id: 'depth-order', label: 'Market Depth By Order' },
+    { id: 'chart', label: 'Charts' },
+    { id: 'depth-price', label: 'Depth by Price' },
+    { id: 'depth-order', label: 'Order Book' },
     { id: 'buy', label: 'Place Buy Order' },
     { id: 'sell', label: 'Place Sell Order' }
   ];
@@ -124,7 +124,7 @@ export class ExecutionTickerComponent {
   }
 
   protected openOrder(side: 'buy' | 'sell', row: ExecutionTickerRow): void {
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'placeholder',
       state: {
         title: `${side === 'buy' ? 'Buy' : 'Sell'} Order - ${row.symbolId}`,
@@ -146,10 +146,10 @@ export class ExecutionTickerComponent {
   }
 
   private openMarketDepth(type: 'market-depth-by-price' | 'market-depth-by-order', row: ExecutionTickerRow): void {
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type,
       state: {
-        title: type === 'market-depth-by-price' ? 'Market Depth By Price' : 'Market Depth By Order',
+        title: type === 'market-depth-by-price' ? 'Depth by Price' : 'Order Book',
         route: `/app/pricing/${type}`,
         section: 'pricing',
         screen: type,

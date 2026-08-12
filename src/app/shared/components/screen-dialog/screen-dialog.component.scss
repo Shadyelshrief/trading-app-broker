@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.screen-dialog {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #08121d;
+  color: var(--text-primary);
+}
+
+.screen-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.screen-dialog__title {
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.screen-dialog__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.screen-dialog__content > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}

@@ -8,6 +8,7 @@ import {
   inject,
   signal
 } from '@angular/core';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import {
   BrowserPopout,
   ComponentContainer,
@@ -20,6 +21,8 @@ import {
   VirtualLayout
 } from 'golden-layout';
 import { catchError, EMPTY, finalize, of, switchMap, take, tap, timeout } from 'rxjs';
+
+import { ScreenDialogComponent } from '../../../shared/components/screen-dialog/screen-dialog.component';
 
 import { ClientInformationComponent } from '../../../clients/client-information/client-information.component';
 import { ClientSearchComponent } from '../../../clients/client-search/client-search.component';
@@ -144,11 +147,54 @@ interface WorkspacePanelDescriptor {
   state: WorkspacePanelState;
 }
 
+/**
+ * Maps the various `type` / `state.screen` / action-id values used across panel
+ * context menus to a canonical panel-registry key, so a screen action can be
+ * opened as a modal regardless of how the source panel labelled it.
+ */
+const SCREEN_TYPE_ALIASES: Record<string, WorkspacePanelType> = {
+  'order-entry': 'order-entry',
+  'market-depth-by-price': 'market-depth-by-price',
+  'depth-price': 'market-depth-by-price',
+  'market-depth-by-order': 'market-depth-by-order',
+  'depth-order': 'market-depth-by-order',
+  'depth-order-special': 'market-depth-by-order',
+  'price-spectrum': 'price-spectrum',
+  spectrum: 'price-spectrum',
+  'time-sales': 'time-sales',
+  'news-announcements': 'news-announcements',
+  news: 'news-announcements',
+  'price-quote': 'price-quote',
+  quote: 'price-quote',
+  'client-information': 'client-information',
+  'client-search': 'client-search',
+  'order-monitoring': 'order-monitoring',
+  'order-monitor': 'order-monitoring',
+  'portfolio-positioning': 'portfolio-positioning',
+  charts: 'charts',
+  chart: 'charts'
+};
+
+/** Screen types that should open as a modal dialog rather than a docked panel. */
+const MODAL_SCREEN_TYPES: ReadonlySet<WorkspacePanelType> = new Set<WorkspacePanelType>([
+  'price-quote',
+  'market-depth-by-price',
+  'market-depth-by-order',
+  'price-spectrum',
+  'time-sales',
+  'news-announcements',
+  'order-entry',
+  'order-monitoring',
+  'portfolio-positioning',
+  'client-information',
+  'client-search'
+]);
+
 const DEFAULT_WORKSPACE_PANELS = [
   createWorkspacePanel('full-market', 'Full Market', '/app/pricing/full-market'),
   createWorkspacePanel('market-indices', 'Market Indices', '/app/pricing/market-indices'),
-  createWorkspacePanel('price-spectrum', 'Price Spectrum', '/app/pricing/price-spectrum'),
-  createWorkspacePanel('market-depth-by-order', 'Market Depth By Order', '/app/pricing/market-depth-by-order')
+  createWorkspacePanel('price-spectrum', 'Spectrum', '/app/pricing/price-spectrum'),
+  createWorkspacePanel('market-depth-by-order', 'Order Book', '/app/pricing/market-depth-by-order')
 ] satisfies WorkspacePanelDescriptor[];
 
 const WORKSPACE_GRID_COLUMNS = 2;
@@ -161,6 +207,8 @@ export class WorkspaceLayoutService {
   private readonly environmentInjector = inject(EnvironmentInjector);
   private readonly preferences = inject(WorkspacePreferencesService);
   private readonly referenceData = inject(ReferenceDataLookupsService);
+  private readonly dialog = inject(MatDialog);
+  private activeScreenDialog: MatDialogRef<ScreenDialogComponent> | null = null;
 
   private readonly panelRegistry = {
     dashboard: DashboardWidgetComponent,
@@ -317,6 +365,61 @@ export class WorkspaceLayoutService {
     } catch {
       this.error.set('The new window was blocked. Allow pop-ups for this site and try again.');
     }
+  }
+
+  /**
+   * Open a screen from a context-menu action. Most screens open as a modal
+   * dialog; Charts (and any non-modal / unknown type) fall back to a docked panel.
+   */
+  openScreen(panel: { type: string; state: WorkspacePanelState }): void {
+    if (this.isPopoutWindow) {
+      return;
+    }
+
+    const type = this.resolveScreenType(panel);
+
+    if (type === 'charts') {
+      this.openRoute('/app/pricing/charts');
+      return;
+    }
+
+    if (!type || !MODAL_SCREEN_TYPES.has(type)) {
+      this.openPanel({ type: (type ?? 'placeholder'), state: panel.state });
+      return;
+    }
+
+    this.openScreenDialog(type, panel.state);
+  }
+
+  private resolveScreenType(panel: { type: string; state: WorkspacePanelState }): WorkspacePanelType | null {
+    if (panel.type && panel.type !== 'placeholder' && panel.type in this.panelRegistry) {
+      return panel.type as WorkspacePanelType;
+    }
+
+    const screen = panel.state.screen;
+    return screen ? SCREEN_TYPE_ALIASES[screen] ?? null : null;
+  }
+
+  private openScreenDialog(type: WorkspacePanelType, state: WorkspacePanelState): void {
+    this.activeScreenDialog?.close();
+
+    this.activeScreenDialog = this.dialog.open(ScreenDialogComponent, {
+      width: 'min(1180px, 94vw)',
+      maxWidth: '94vw',
+      height: 'min(820px, 90vh)',
+      maxHeight: '90vh',
+      autoFocus: false,
+      restoreFocus: true,
+      data: {
+        title: state.title,
+        component: this.panelRegistry[type],
+        state
+      }
+    });
+
+    this.activeScreenDialog.afterClosed().subscribe(() => {
+      this.activeScreenDialog = null;
+    });
   }
 
   openPanel(panel: WorkspacePanelDescriptor): void {
@@ -486,6 +589,8 @@ export class WorkspaceLayoutService {
 
   destroy(): void {
     this.detachDragSources();
+    this.activeScreenDialog?.close();
+    this.activeScreenDialog = null;
 
     this.layout?.off('stateChanged', this.onLayoutStateChanged);
     this.layout?.off('windowOpened', this.onPopoutOpened);
@@ -1122,7 +1227,7 @@ export class WorkspaceLayoutService {
       return {
         type: 'news-announcements',
         state: {
-          title: 'News & Announcements',
+          title: 'News & Corporate Actions',
           route: normalizedRoute
         }
       };
@@ -1162,7 +1267,7 @@ export class WorkspaceLayoutService {
       return {
         type: 'market-depth-by-price',
         state: {
-          title: 'Market Depth By Price',
+          title: 'Depth by Price',
           route: normalizedRoute
         }
       };
@@ -1172,7 +1277,7 @@ export class WorkspaceLayoutService {
       return {
         type: 'market-depth-by-order',
         state: {
-          title: 'Market Depth By Order',
+          title: 'Order Book',
           route: normalizedRoute
         }
       };
@@ -1182,7 +1287,7 @@ export class WorkspaceLayoutService {
       return {
         type: 'price-spectrum',
         state: {
-          title: 'Price Spectrum',
+          title: 'Spectrum',
           route: normalizedRoute
         }
       };

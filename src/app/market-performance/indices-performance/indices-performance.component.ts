@@ -77,7 +77,7 @@ export class IndicesPerformanceComponent {
     { id: 'fit-ideal', label: 'Fit Columns to Ideal Size' },
     { id: 'fit-window', label: 'Fit Columns to Fit Window' },
     { id: 'print', label: 'Print' },
-    { id: 'chart', label: 'Charting' },
+    { id: 'chart', label: 'Charts' },
     { id: 'quote', label: 'Product Details' },
     { id: 'add-indicator', label: 'Add Indicator' }
   ];

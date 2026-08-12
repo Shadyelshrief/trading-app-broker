@@ -14,6 +14,8 @@ import { distinctUntilChanged } from 'rxjs';
 import { MarketDropdownComponent } from '../../shared/components';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import { MarketGridContextAction } from '../../shared/models/market-grid.model';
+import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { buildScreenActionDescriptor } from '../../shared/utils/screen-action.util';
 import { ProductDetailsDialogService } from '../price-quote/product-details-dialog.service';
 import { HistoricalTopSymbolsFacade } from './historical-top-symbols.facade';
 import {
@@ -47,6 +49,7 @@ export class HistoricalTopSymbolsComponent {
   readonly state = input<{ title: string; route: string; section?: string; screen?: string; context?: Record<string, unknown> }>();
 
   protected readonly facade = inject(HistoricalTopSymbolsFacade);
+  private readonly workspace = inject(WorkspaceLayoutService);
   private readonly productDetails = inject(ProductDetailsDialogService);
   protected readonly vm$ = this.facade.vm$;
   protected readonly marketControl = new FormControl<'all' | 'tadawul' | 'dfm' | 'adx'>('adx', {
@@ -61,19 +64,19 @@ export class HistoricalTopSymbolsComponent {
   protected readonly menuActions: MarketGridContextAction<HistoricalTopSymbolRow>[] = [
     { id: 'watchlist', label: 'Add To Watch List' },
     { id: 'watchlist-wizard', label: 'Add To Watch List Wizard' },
-    { id: 'chart', label: 'Charting' },
+    { id: 'chart', label: 'Charts' },
     { id: 'copy', label: 'Copy' },
     { id: 'export', label: 'Export To Excel' },
     { id: 'fit-ideal', label: 'Fit Columns To Ideal Size' },
     { id: 'fit-window', label: 'Fit Columns To Fit Window' },
-    { id: 'depth-order', label: 'Market Depth By Order' },
-    { id: 'depth-order-special', label: 'Market Depth By Order Special' },
-    { id: 'depth-price', label: 'Market Depth By Price' },
-    { id: 'news', label: 'News & Announcements' },
+    { id: 'depth-order', label: 'Order Book' },
+    { id: 'depth-order-special', label: 'Order Book (Special)' },
+    { id: 'depth-price', label: 'Depth by Price' },
+    { id: 'news', label: 'News & Corporate Actions' },
     { id: 'buy', label: 'Place Buy Order' },
     { id: 'sell', label: 'Place Sell Order' },
     { id: 'quote', label: 'Product Details' },
-    { id: 'spectrum', label: 'Price Spectrum' },
+    { id: 'spectrum', label: 'Spectrum' },
     { id: 'print', label: 'Print' },
     { id: 'selection-type', label: 'Set Selection Type' },
     { id: 'time-sales', label: 'Time & Sales' }
@@ -107,6 +110,14 @@ export class HistoricalTopSymbolsComponent {
 
   protected openPriceQuote(row: HistoricalTopSymbolRow): void {
     this.productDetails.open(row);
+  }
+
+  protected handleGridAction(event: { actionId: string; row: HistoricalTopSymbolRow | null }): void {
+    const descriptor = buildScreenActionDescriptor(event.actionId, event.row);
+
+    if (descriptor) {
+      this.workspace.openScreen(descriptor);
+    }
   }
 
   captureState() {

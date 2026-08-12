@@ -45,11 +45,8 @@
       [stateKey]="'full-market-grid-v2-community'"
       [settings]="vm.settings"
       [productDetailsOnSymbolClick]="true"
-      (buyOrder)="openOrderTicket('buy', $event)"
-      (sellOrder)="openOrderTicket('sell', $event)"
       (priceQuote)="openPriceQuote($event)"
-      (depthRequest)="0"
-      (chartRequest)="0"
+      (contextAction)="handleGridAction($event)"
     />
   </section>
 }

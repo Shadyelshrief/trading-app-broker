@@ -51,10 +51,10 @@ export class ClientSearchComponent {
     suppressScrollOnNewData: true
   };
   protected readonly contextActions: MarketGridContextAction<ClientSearchResult>[] = [
-    { id: 'client-information', label: 'Client Information' },
+    { id: 'client-information', label: 'Client Profile' },
     { id: 'buy', label: 'Place Order' },
-    { id: 'order-monitor', label: 'View Order' },
-    { id: 'portfolio-positioning', label: 'View Portfolio' },
+    { id: 'order-monitor', label: 'Order Blotter' },
+    { id: 'portfolio-positioning', label: 'Positions' },
     { id: 'copy', label: 'Copy' },
     { id: 'export', label: 'Export To Excel' },
     { id: 'print', label: 'Print' },
@@ -93,7 +93,7 @@ export class ClientSearchComponent {
   protected openClientInformation(row: ClientSearchResult): void {
     const clientLabel = formatClientDisplay(row);
 
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'client-information',
       state: {
         title: `Client Information - ${clientLabel}`,
@@ -130,7 +130,7 @@ export class ClientSearchComponent {
   private openOrderEntry(row: ClientSearchResult): void {
     const clientLabel = formatClientDisplay(row);
 
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'order-entry',
       state: {
         title: `Order Entry - ${clientLabel}`,
@@ -145,7 +145,7 @@ export class ClientSearchComponent {
   private openOrderMonitor(row: ClientSearchResult): void {
     const clientLabel = formatClientDisplay(row);
 
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'order-monitoring',
       state: {
         title: `Order Monitor - ${clientLabel}`,
@@ -160,7 +160,7 @@ export class ClientSearchComponent {
   private openPortfolioPositioning(row: ClientSearchResult): void {
     const clientLabel = formatClientDisplay(row);
 
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'portfolio-positioning',
       state: {
         title: `Portfolio Positioning - ${clientLabel}`,

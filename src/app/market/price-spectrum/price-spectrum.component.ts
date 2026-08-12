@@ -108,7 +108,7 @@ export class PriceSpectrumComponent implements OnInit {
     const price = side === 'sell' ? row.price : row.price;
     const quantity = side === 'sell' ? row.bidQuantity ?? 0 : row.offerQuantity ?? 0;
 
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'placeholder',
       state: {
         title: `${side === 'buy' ? 'Buy' : 'Sell'} Order - ${vm.symbolId}`,

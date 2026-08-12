@@ -106,7 +106,7 @@ export class MarketDepthByOrderComponent implements OnInit {
   }
 
   protected openOrder(side: 'buy' | 'sell', vm: { market: string; symbolId: string; symbolName: string; currency: string }, level: MarketDepthLevel): void {
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'placeholder',
       state: {
         title: `${side === 'buy' ? 'Buy' : 'Sell'} Order - ${vm.symbolId}`,

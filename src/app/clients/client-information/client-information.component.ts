@@ -112,7 +112,7 @@ export class ClientInformationComponent {
   }
 
   protected openClientSearch(): void {
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'client-search',
       state: {
         title: 'Client Search',

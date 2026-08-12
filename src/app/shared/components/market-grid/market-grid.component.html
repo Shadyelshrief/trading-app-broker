@@ -28,17 +28,19 @@
     />
   </div>
 
-  @if (contextMenu(); as menu) {
-    <div class="market-grid-shell__context-menu" [style.left.px]="menu.x" [style.top.px]="menu.y">
-      @for (action of contextMenuActions(); track action.id) {
-        <button
-          type="button"
-          [disabled]="isActionDisabled(action, menu.row)"
-          (click)="runContextAction(action, menu.row)"
-        >
-          {{ action.label }}
-        </button>
-      }
-    </div>
-  }
+  <ng-template #contextMenuTemplate>
+    @if (contextMenu(); as menu) {
+      <div class="market-grid-shell__context-menu">
+        @for (action of contextMenuActions(); track action.id) {
+          <button
+            type="button"
+            [disabled]="isActionDisabled(action, menu.row)"
+            (click)="runContextAction(action, menu.row)"
+          >
+            {{ action.label }}
+          </button>
+        }
+      </div>
+    }
+  </ng-template>
 </section>

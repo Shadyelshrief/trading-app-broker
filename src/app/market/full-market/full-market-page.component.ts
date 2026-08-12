@@ -11,6 +11,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { buildScreenActionDescriptor } from '../../shared/utils/screen-action.util';
 import { MarketGridComponent } from '../../shared/components/market-grid/market-grid.component';
 import { LinkedFilterGroupControlComponent, MarketDropdownComponent, SectorDropdownComponent } from '../../shared/components';
 import { MarketGridContextAction } from '../../shared/models/market-grid.model';
@@ -67,15 +68,15 @@ export class FullMarketPageComponent implements OnInit {
   protected readonly menuActions: MarketGridContextAction<FullMarketRow>[] = [
     { id: 'watchlist', label: 'Add To Watch List' },
     { id: 'watchlist-wizard', label: 'Add To Watch List Wizard' },
-    { id: 'chart', label: 'Charting' },
-    { id: 'depth-order', label: 'Market Depth By Order' },
-    { id: 'depth-order-special', label: 'Market Depth By Order Special' },
-    { id: 'depth-price', label: 'Market Depth By Price' },
-    { id: 'news', label: 'News & Announcements' },
+    { id: 'chart', label: 'Charts' },
+    { id: 'depth-order', label: 'Order Book' },
+    { id: 'depth-order-special', label: 'Order Book (Special)' },
+    { id: 'depth-price', label: 'Depth by Price' },
+    { id: 'news', label: 'News & Corporate Actions' },
     { id: 'buy', label: 'Place Buy Order' },
     { id: 'sell', label: 'Place Sell Order' },
     { id: 'quote', label: 'Product Details' },
-    { id: 'spectrum', label: 'Price Spectrum' },
+    { id: 'spectrum', label: 'Spectrum' },
     { id: 'selection-type', label: 'Set Selection Type' },
     { id: 'time-sales', label: 'Time & Sales' }
   ];
@@ -167,20 +168,12 @@ export class FullMarketPageComponent implements OnInit {
     this.productDetails.open(row);
   }
 
-  protected openOrderTicket(side: 'buy' | 'sell', row: FullMarketRow): void {
-    this.workspace.openPanel({
-      type: 'placeholder',
-      state: {
-        title: `${side === 'buy' ? 'Buy' : 'Sell'} Order - ${row.symbolId}`,
-        route: `/app/trading/order-entry/${side}/${row.market.toLowerCase()}/${row.symbolId.toLowerCase()}`,
-        section: 'trading',
-        screen: 'order-entry',
-        context: {
-          side,
-          order: row
-        }
-      }
-    });
+  protected handleGridAction(event: { actionId: string; row: FullMarketRow | null }): void {
+    const descriptor = buildScreenActionDescriptor(event.actionId, event.row);
+
+    if (descriptor) {
+      this.workspace.openScreen(descriptor);
+    }
   }
 
   captureState() {

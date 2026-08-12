@@ -80,9 +80,9 @@ export class NewsAnnouncementsComponent {
     { id: 'print', label: 'Print' },
     { id: 'selection-type', label: 'Set Selection Type' },
     { id: 'quote', label: 'Product Details', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
-    { id: 'chart', label: 'Charting', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
-    { id: 'depth-price', label: 'Market Depth By Price', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
-    { id: 'depth-order', label: 'Market Depth By Order', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
+    { id: 'chart', label: 'Charts', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
+    { id: 'depth-price', label: 'Depth by Price', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
+    { id: 'depth-order', label: 'Order Book', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) },
     { id: 'time-sales', label: 'Time & Sales', disabled: (row) => !hasSymbol(row as NewsAnnouncementRow) }
   ];
   protected readonly normalizeNewsMarket = normalizeNewsMarket;
@@ -138,7 +138,7 @@ export class NewsAnnouncementsComponent {
   protected readonly displaySymbol = displayNewsSymbol;
 
   protected openNewsDetail(row: NewsAnnouncementRow): void {
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'placeholder',
       state: {
         title: row.symbolId ? `News Detail - ${row.symbolId}` : 'News Detail',

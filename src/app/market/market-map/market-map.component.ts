@@ -78,14 +78,14 @@ export class MarketMapComponent implements OnInit {
   protected readonly contextActions = [
     { id: 'watchlist', label: 'Add To Watch List' },
     { id: 'watchlist-wizard', label: 'Add To Watch List Wizard' },
-    { id: 'chart', label: 'Charting' },
-    { id: 'depth-order', label: 'Market Depth By Order' },
-    { id: 'depth-price', label: 'Market Depth By Price' },
-    { id: 'news', label: 'News & Announcements' },
+    { id: 'chart', label: 'Charts' },
+    { id: 'depth-order', label: 'Order Book' },
+    { id: 'depth-price', label: 'Depth by Price' },
+    { id: 'news', label: 'News & Corporate Actions' },
     { id: 'buy', label: 'Place Buy Order' },
     { id: 'sell', label: 'Place Sell Order' },
     { id: 'quote', label: 'Product Details' },
-    { id: 'spectrum', label: 'Price Spectrum' },
+    { id: 'spectrum', label: 'Spectrum' },
     { id: 'time-sales', label: 'Time & Sales' }
   ] as const;
 
@@ -190,10 +190,10 @@ export class MarketMapComponent implements OnInit {
     }
 
     if (actionId === 'depth-price') {
-      this.workspace.openPanel({
+      this.workspace.openScreen({
         type: 'market-depth-by-price',
         state: {
-          title: 'Market Depth By Price',
+          title: 'Depth by Price',
           route: '/app/pricing/market-depth-by-price',
           section: 'pricing',
           screen: 'market-depth-by-price',
@@ -204,10 +204,10 @@ export class MarketMapComponent implements OnInit {
     }
 
     if (actionId === 'depth-order') {
-      this.workspace.openPanel({
+      this.workspace.openScreen({
         type: 'market-depth-by-order',
         state: {
-          title: 'Market Depth By Order',
+          title: 'Order Book',
           route: '/app/pricing/market-depth-by-order',
           section: 'pricing',
           screen: 'market-depth-by-order',
@@ -218,10 +218,10 @@ export class MarketMapComponent implements OnInit {
     }
 
     if (actionId === 'spectrum') {
-      this.workspace.openPanel({
+      this.workspace.openScreen({
         type: 'price-spectrum',
         state: {
-          title: 'Price Spectrum',
+          title: 'Spectrum',
           route: '/app/pricing/price-spectrum',
           section: 'pricing',
           screen: 'price-spectrum',
@@ -232,7 +232,7 @@ export class MarketMapComponent implements OnInit {
     }
 
     if (actionId === 'time-sales') {
-      this.workspace.openPanel({
+      this.workspace.openScreen({
         type: 'time-sales',
         state: {
           title: 'Time & Sales',
@@ -246,7 +246,7 @@ export class MarketMapComponent implements OnInit {
     }
 
     if (actionId === 'buy' || actionId === 'sell') {
-      this.workspace.openPanel({
+      this.workspace.openScreen({
         type: 'placeholder',
         state: {
           title: `${actionId === 'buy' ? 'Buy' : 'Sell'} Order - ${symbol.symbolId}`,
@@ -262,12 +262,21 @@ export class MarketMapComponent implements OnInit {
       return;
     }
 
-    const route =
-      actionId === 'chart'
-        ? '/app/pricing/charts'
-        : actionId === 'news'
-          ? '/app/pricing/news-announcements'
-          : '/app/pricing/watch-lists';
+    if (actionId === 'news') {
+      this.workspace.openScreen({
+        type: 'news-announcements',
+        state: {
+          title: 'News & Corporate Actions',
+          route: '/app/pricing/news-announcements',
+          section: 'pricing',
+          screen: 'news-announcements',
+          context: { symbol }
+        }
+      });
+      return;
+    }
+
+    const route = actionId === 'chart' ? '/app/pricing/charts' : '/app/pricing/watch-lists';
 
     this.workspace.openRoute(route);
   }

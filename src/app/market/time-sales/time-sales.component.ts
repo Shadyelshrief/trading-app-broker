@@ -19,6 +19,8 @@ import {
   readLinkedFilterGroupFromState
 } from '../../shared/services/linked-filter-group.service';
 import { normalizeSharedSymbolOption } from '../../shared/utils/symbol-reference.util';
+import { WorkspaceLayoutService } from '../../core/layout/workspace/workspace-layout.service';
+import { buildScreenActionDescriptor } from '../../shared/utils/screen-action.util';
 import { ProductDetailsDialogService } from '../price-quote/product-details-dialog.service';
 import { TimeSalesFacade } from './time-sales.facade';
 import { SymbolOption, TimeSalesRow } from './time-sales.models';
@@ -49,6 +51,7 @@ export class TimeSalesComponent implements OnInit {
   readonly state = input<{ title: string; route: string; section?: string; screen?: string; context?: Record<string, unknown> }>();
 
   protected readonly facade = inject(TimeSalesFacade);
+  private readonly workspace = inject(WorkspaceLayoutService);
   private readonly productDetails = inject(ProductDetailsDialogService);
   private readonly linkedFilters = inject(LinkedFilterGroupService);
   private readonly linkedFilterSourceId = this.linkedFilters.createSourceId('time-sales');
@@ -74,9 +77,9 @@ export class TimeSalesComponent implements OnInit {
     { id: 'print', label: 'Print' },
     { id: 'selection-type', label: 'Set Selection Type' },
     { id: 'quote', label: 'Product Details' },
-    { id: 'chart', label: 'Charting' },
-    { id: 'depth-price', label: 'Market Depth By Price' },
-    { id: 'depth-order', label: 'Market Depth By Order' }
+    { id: 'chart', label: 'Charts' },
+    { id: 'depth-price', label: 'Depth by Price' },
+    { id: 'depth-order', label: 'Order Book' }
   ];
 
   constructor() {
@@ -187,6 +190,14 @@ export class TimeSalesComponent implements OnInit {
 
   protected openPriceQuote(row: TimeSalesRow): void {
     this.productDetails.open(row);
+  }
+
+  protected handleGridAction(event: { actionId: string; row: TimeSalesRow | null }): void {
+    const descriptor = buildScreenActionDescriptor(event.actionId, event.row);
+
+    if (descriptor) {
+      this.workspace.openScreen(descriptor);
+    }
   }
 
   captureState() {

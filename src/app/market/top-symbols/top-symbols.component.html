@@ -65,10 +65,7 @@
       [productDetailsOnSymbolClick]="true"
       (priceQuote)="openPriceQuote($event)"
       (rowDoubleClicked)="openPriceQuote($event)"
-      (depthRequest)="0"
-      (chartRequest)="0"
-      (buyOrder)="0"
-      (sellOrder)="0"
+      (contextAction)="handleGridAction($event)"
     />
   </section>
 }

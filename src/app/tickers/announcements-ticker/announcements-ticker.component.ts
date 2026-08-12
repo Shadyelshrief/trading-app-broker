@@ -42,7 +42,7 @@ export class AnnouncementsTickerComponent {
     this.workspace.openPanel({
       type: 'news-announcements',
       state: {
-        title: 'News & Announcements',
+        title: 'News & Corporate Actions',
         route: '/app/pricing/news-announcements',
         section: 'pricing',
         screen: 'news-announcements',

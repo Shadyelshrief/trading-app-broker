@@ -58,10 +58,10 @@ export class PortfolioPositioningComponent {
   };
   protected readonly contextActions: MarketGridContextAction<PortfolioPositionRow>[] = [
     { id: 'quote', label: 'Product Details' },
-    { id: 'chart', label: 'Charting' },
-    { id: 'depth-price', label: 'Market Depth By Price' },
-    { id: 'depth-order', label: 'Market Depth By Order' },
-    { id: 'news', label: 'News & Announcements' },
+    { id: 'chart', label: 'Charts' },
+    { id: 'depth-price', label: 'Depth by Price' },
+    { id: 'depth-order', label: 'Order Book' },
+    { id: 'news', label: 'News & Corporate Actions' },
     { id: 'time-sales', label: 'Time & Sales' },
     { id: 'buy', label: 'Place Buy Order' },
     { id: 'sell', label: 'Place Sell Order' },
@@ -93,7 +93,7 @@ export class PortfolioPositioningComponent {
   }
 
   protected openClientSearch(): void {
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'client-search',
       state: {
         title: 'Client Search',
@@ -155,7 +155,7 @@ export class PortfolioPositioningComponent {
   }
 
   private openOrderTicket(side: 'buy' | 'sell', row: PortfolioPositionRow): void {
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'placeholder',
       state: {
         title: `${side === 'buy' ? 'Buy' : 'Sell'} Order - ${row.symbolId}`,
@@ -168,7 +168,7 @@ export class PortfolioPositioningComponent {
   }
 
   private openRelatedPlaceholder(actionId: string, row: PortfolioPositionRow): void {
-    this.workspace.openPanel({
+    this.workspace.openScreen({
       type: 'placeholder',
       state: {
         title: `${this.titleForAction(actionId)} - ${row.symbolId}`,
@@ -183,15 +183,15 @@ export class PortfolioPositioningComponent {
   private titleForAction(actionId: string): string {
     switch (actionId) {
       case 'depth-price':
-        return 'Market Depth By Price';
+        return 'Depth by Price';
       case 'depth-order':
-        return 'Market Depth By Order';
+        return 'Order Book';
       case 'time-sales':
         return 'Time & Sales';
       case 'news':
-        return 'News & Announcements';
+        return 'News & Corporate Actions';
       default:
-        return 'Charting';
+        return 'Charts';
     }
   }
 
