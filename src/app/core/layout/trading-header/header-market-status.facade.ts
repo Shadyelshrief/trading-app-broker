@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, combineLatest, distinctUntilChanged, map, shareReplay, startWith, switchMap, timer } from 'rxjs';
 
 import { MarketDataService, WebSocketState, normalizeTopic } from '../../market-data';
+import { CrossWindowWorkspaceService } from '../workspace/cross-window-workspace.service';
 
 import {
   HeaderMarketOption,
@@ -38,15 +39,32 @@ const HEADER_MARKETS: readonly HeaderMarketOption[] = [
   }
 ] as const;
 
-@Injectable()
+const WORKSPACE_MARKET_KEY = 'broker-workspace-market-v1';
+const WORKSPACE_INDEX_KEY = 'broker-workspace-index-v1';
+
+@Injectable({ providedIn: 'root' })
 export class HeaderMarketStatusFacade {
   private readonly marketData = inject(MarketDataService);
+  private readonly crossWindow = inject(CrossWindowWorkspaceService);
 
-  private readonly selectedMarketSubject = new BehaviorSubject<string>(HEADER_MARKETS[0].id);
-  private readonly selectedIndexSubject = new BehaviorSubject<string>(HEADER_MARKETS[0].indexes[0].id);
+  private readonly selectedMarketSubject = new BehaviorSubject<string>(readStoredMarket());
+  private readonly selectedIndexSubject = new BehaviorSubject<string>(readStoredIndex(this.selectedMarketSubject.value));
 
   readonly selectedMarket$ = this.selectedMarketSubject.asObservable();
   readonly selectedIndex$ = this.selectedIndexSubject.asObservable();
+
+  constructor() {
+    this.crossWindow.observe<string>('MARKET_CHANGED').subscribe((message) => {
+      if (typeof message.payload === 'string') {
+        this.selectMarket(message.payload, false);
+      }
+    });
+    this.crossWindow.observe<string>('INDEX_CHANGED').subscribe((message) => {
+      if (typeof message.payload === 'string') {
+        this.selectIndex(message.payload, false);
+      }
+    });
+  }
 
   readonly vm$ = combineLatest([
     this.selectedMarket$,
@@ -109,7 +127,7 @@ export class HeaderMarketStatusFacade {
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
-  selectMarket(marketId: string): void {
+  selectMarket(marketId: string, broadcast = true): void {
     const market = HEADER_MARKETS.find((option) => option.id === marketId);
 
     if (!market) {
@@ -124,13 +142,76 @@ export class HeaderMarketStatusFacade {
     if (!indexStillValid) {
       this.selectedIndexSubject.next(market.indexes[0]?.id ?? '');
     }
+
+    writeStoredContext(market.id, this.selectedIndexSubject.value);
+
+    if (broadcast) {
+      this.crossWindow.publish('MARKET_CHANGED', market.id);
+      this.crossWindow.publish('INDEX_CHANGED', this.selectedIndexSubject.value);
+    }
   }
 
-  selectIndex(indexId: string): void {
+  selectIndex(indexId: string, broadcast = true): void {
     if (!indexId) {
       return;
     }
 
     this.selectedIndexSubject.next(indexId);
+    writeStoredContext(this.selectedMarketSubject.value, indexId);
+    if (broadcast) {
+      this.crossWindow.publish('INDEX_CHANGED', indexId);
+    }
+  }
+
+  getCurrentContext(): { market: string; index: string } {
+    return {
+      market: this.selectedMarketSubject.value,
+      index: this.selectedIndexSubject.value
+    };
+  }
+
+  restoreContext(market?: string, index?: string): void {
+    if (market) {
+      this.selectMarket(market, false);
+    }
+    if (index) {
+      this.selectIndex(index, false);
+    }
+  }
+}
+
+function readStoredMarket(): string {
+  const value = readStorage(WORKSPACE_MARKET_KEY);
+  return HEADER_MARKETS.some((market) => market.id === value) ? value! : HEADER_MARKETS[0].id;
+}
+
+function readStoredIndex(marketId: string): string {
+  const market = HEADER_MARKETS.find((option) => option.id === marketId) ?? HEADER_MARKETS[0];
+  const value = readStorage(WORKSPACE_INDEX_KEY);
+  return market.indexes.some((index) => index.id === value) ? value! : market.indexes[0]?.id ?? '';
+}
+
+function writeStoredContext(market: string, index: string): void {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
+
+  try {
+    localStorage.setItem(WORKSPACE_MARKET_KEY, market);
+    localStorage.setItem(WORKSPACE_INDEX_KEY, index);
+  } catch {
+    // Cross-window BroadcastChannel still synchronizes when storage is unavailable.
+  }
+}
+
+function readStorage(key: string): string | null {
+  if (typeof localStorage === 'undefined') {
+    return null;
+  }
+
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
   }
 }

@@ -1,0 +1,47 @@
+<div class="header-command-search">
+  <app-trading-icon class="header-command-search__icon" name="search" />
+  <input
+    type="search"
+    autocomplete="off"
+    role="combobox"
+    aria-label="Search symbols, screens, and commands"
+    aria-controls="header-command-search-results"
+    [attr.aria-expanded]="open()"
+    placeholder="Search symbols or screens"
+    [ngModel]="query()"
+    (ngModelChange)="updateQuery($event)"
+    (focus)="showResults()"
+    (keydown.arrowdown)="$event.preventDefault(); moveActive(1)"
+    (keydown.arrowup)="$event.preventDefault(); moveActive(-1)"
+    (keydown.enter)="$event.preventDefault(); submit()"
+  />
+
+  @if (open()) {
+    <div id="header-command-search-results" class="header-command-search__results" role="listbox">
+      @if (results().length === 0) {
+        <p class="header-command-search__empty">No matching symbols or screens</p>
+      } @else {
+        @for (result of results(); track result.kind + ':' + result.label; let i = $index) {
+          <button
+            type="button"
+            role="option"
+            class="header-command-search__result"
+            [class.header-command-search__result--active]="i === activeIndex()"
+            [attr.aria-selected]="i === activeIndex()"
+            (mouseenter)="activeIndex.set(i)"
+            (click)="activate(result)"
+          >
+            <app-trading-icon [name]="result.icon" />
+            <span class="header-command-search__result-copy">
+              <span class="header-command-search__result-label">{{ result.label }}</span>
+              @if (result.sublabel) {
+                <span class="header-command-search__result-sub">{{ result.sublabel }}</span>
+              }
+            </span>
+            <span class="header-command-search__result-kind">{{ result.kind === 'symbol' ? 'Symbol' : 'Screen' }}</span>
+          </button>
+        }
+      }
+    </div>
+  }
+</div>

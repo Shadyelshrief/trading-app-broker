@@ -1,128 +1,51 @@
 :host {
   display: block;
+  width: 100%;
   height: 100dvh;
-  min-height: 100dvh;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
 }
 
 :host-context(body.gl-popout-window) {
   height: 100vh;
-  min-height: 100vh;
 }
 
 .app-shell {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   height: 100%;
+  min-width: 0;
   min-height: 0;
-  background: transparent;
-}
-
-:host-context(body.gl-popout-window) .app-shell {
-  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--app-bg);
 }
 
 :host-context(body.gl-popout-window) app-trading-header,
-:host-context(body.gl-popout-window) app-trading-sidebar {
+:host-context(body.gl-popout-window) app-top-navigation {
   display: none;
 }
 
-.app-shell__body {
-  position: relative;
-  display: grid;
-  grid-template-columns: 17.5rem minmax(0, 1fr);
-  gap: 0.65rem;
-  height: 100%;
-  min-height: 0;
-  align-items: stretch;
-  overflow: hidden;
-  padding: 0 0.75rem 0.75rem;
-  transition: grid-template-columns 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-:host-context(body.gl-popout-window) .app-shell__body {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0;
-  padding: 0;
-}
-
-.app-shell__body > app-trading-sidebar,
-.app-shell__body > .app-shell__workspace {
-  height: 100%;
-  min-height: 0;
-}
-
-.app-shell__body--sidebar-collapsed {
-  grid-template-columns: 4.25rem minmax(0, 1fr);
-}
-
 .app-shell__workspace {
-  min-height: 0;
-  border: 1px solid var(--border-subtle);
-  border-radius: 1rem;
-  background: var(--surface-1);
-  box-shadow: var(--shadow-xl);
-  backdrop-filter: blur(20px);
-  overflow: hidden;
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
-}
-
-:host-context(body.gl-popout-window) .app-shell__workspace {
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  backdrop-filter: none;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--surface-1);
 }
 
 .app-shell__workspace > router-outlet + * {
   display: flex;
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
 }
 
-.app-shell__scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 5;
-  border: none;
-  margin: 0;
-  padding: 0;
-  background: rgba(0, 0, 0, 0.45);
-  cursor: pointer;
-  animation: app-shell-scrim-in 0.22s ease both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .app-shell__scrim {
-    animation: none;
-  }
-}
-
-@keyframes app-shell-scrim-in {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@media (max-width: 960px) {
-  .app-shell__body {
-    grid-template-columns: 1fr;
-    padding-inline: 0.5rem;
-  }
-
-  .app-shell__body--sidebar-collapsed {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .app-shell__body {
-    padding: 0 0.5rem 0.5rem;
-  }
+:host-context(body.gl-popout-window) .app-shell__workspace {
+  height: 100%;
 }

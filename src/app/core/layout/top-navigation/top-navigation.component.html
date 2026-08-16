@@ -1,0 +1,149 @@
+<nav class="top-navigation" aria-label="Primary navigation">
+  <span class="top-navigation__product-mark" aria-label="Trading App Broker" title="Trading App Broker"></span>
+
+  @for (group of groups; track group.id; let groupIndex = $index) {
+    @if (groupHasRoutableItems(group)) {
+      <div
+        class="top-navigation__group"
+        [class.top-navigation__group--overflow-candidate]="groupIndex >= 3"
+        [class.top-navigation__group--active]="isGroupActive(group.id)"
+        (mouseenter)="switchOpenMenu(group.id)"
+      >
+        <button
+          #menuTrigger
+          type="button"
+          class="top-navigation__trigger"
+          [attr.data-menu-id]="group.id"
+          [attr.aria-expanded]="openMenuId() === group.id"
+          aria-haspopup="menu"
+          (click)="toggleMenu(group.id)"
+          (keydown)="onTriggerKeydown($event, group.id)"
+        >
+          <span>{{ group.label }}</span>
+          @if (group.items.length > 1 || group.items[0].children?.length) {
+            <span class="top-navigation__chevron" aria-hidden="true"></span>
+          }
+        </button>
+
+        @if (openMenuId() === group.id) {
+          <div class="top-navigation__menu" role="menu" [attr.aria-label]="group.label">
+            @for (item of group.items; track trackByItemId($index, item)) {
+              @if (item.children?.length) {
+                <section class="top-navigation__menu-section">
+                  <div class="top-navigation__section-title">
+                    <app-trading-icon [name]="item.icon" />
+                    <span>{{ item.label }}</span>
+                  </div>
+                  @for (child of item.children; track trackByItemId($index, child)) {
+                    <button
+                      #menuItem
+                      type="button"
+                      role="menuitem"
+                      class="top-navigation__item top-navigation__item--child"
+                      [class.top-navigation__item--active]="isItemActive(child.id)"
+                      [attr.data-route]="child.routerLink?.join('')"
+                      [title]="'Open ' + child.label + ' in a window, or drag it into the workspace'"
+                      (pointerdown)="beginMenuInteraction($event)"
+                      (click)="openMenuItem($event, child.routerLink?.join(''), child.id, group.id)"
+                      (keydown)="onItemKeydown($event)"
+                    >
+                      <span>{{ child.label }}</span>
+                      <span class="top-navigation__launch-icon" aria-hidden="true"></span>
+                    </button>
+                  }
+                </section>
+              } @else if (item.routerLink?.length) {
+                <button
+                  #menuItem
+                  type="button"
+                  role="menuitem"
+                  class="top-navigation__item"
+                  [class.top-navigation__item--active]="isItemActive(item.id)"
+                  [attr.data-route]="item.routerLink?.join('')"
+                  [title]="'Open ' + item.label + ' in a window, or drag it into the workspace'"
+                  (pointerdown)="beginMenuInteraction($event)"
+                  (click)="openMenuItem($event, item.routerLink?.join(''), item.id, group.id)"
+                  (keydown)="onItemKeydown($event)"
+                >
+                  <app-trading-icon [name]="item.icon" />
+                  <span>{{ item.label }}</span>
+                  <span class="top-navigation__launch-icon" aria-hidden="true"></span>
+                </button>
+              }
+            }
+          </div>
+        }
+      </div>
+    }
+  }
+
+  @if (overflowGroups.length) {
+    <div
+      class="top-navigation__group top-navigation__group--more"
+      [class.top-navigation__group--active]="isMoreActive()"
+      (mouseenter)="switchOpenMenu('more')"
+    >
+      <button
+        #menuTrigger
+        type="button"
+        class="top-navigation__trigger"
+        data-menu-id="more"
+        [attr.aria-expanded]="openMenuId() === 'more'"
+        aria-haspopup="menu"
+        (click)="toggleMenu('more')"
+        (keydown)="onTriggerKeydown($event, 'more')"
+      >
+        <span>More</span>
+        <span class="top-navigation__chevron" aria-hidden="true"></span>
+      </button>
+
+      @if (openMenuId() === 'more') {
+        <div class="top-navigation__menu top-navigation__menu--right" role="menu" aria-label="More navigation">
+          @for (group of overflowGroups; track trackByGroupId($index, group)) {
+            <section class="top-navigation__menu-section">
+              <div class="top-navigation__section-title top-navigation__section-title--group">{{ group.label }}</div>
+              @for (item of group.items; track trackByItemId($index, item)) {
+                @if (item.children?.length) {
+                  @for (child of item.children; track trackByItemId($index, child)) {
+                    <button
+                      #menuItem
+                      type="button"
+                      role="menuitem"
+                      class="top-navigation__item top-navigation__item--child"
+                      [class.top-navigation__item--active]="isItemActive(child.id)"
+                      [attr.data-route]="child.routerLink?.join('')"
+                      (pointerdown)="beginMenuInteraction($event)"
+                      (click)="openMenuItem($event, child.routerLink?.join(''), child.id, group.id)"
+                      (keydown)="onItemKeydown($event)"
+                    >
+                      <span>{{ child.label }}</span>
+                      <span class="top-navigation__launch-icon" aria-hidden="true"></span>
+                    </button>
+                  }
+                } @else if (item.routerLink?.length) {
+                  <button
+                    #menuItem
+                    type="button"
+                    role="menuitem"
+                    class="top-navigation__item"
+                    [class.top-navigation__item--active]="isItemActive(item.id)"
+                    [attr.data-route]="item.routerLink?.join('')"
+                    (pointerdown)="beginMenuInteraction($event)"
+                    (click)="openMenuItem($event, item.routerLink?.join(''), item.id, group.id)"
+                    (keydown)="onItemKeydown($event)"
+                  >
+                    <app-trading-icon [name]="item.icon" />
+                    <span>{{ item.label }}</span>
+                    <span class="top-navigation__launch-icon" aria-hidden="true"></span>
+                  </button>
+                }
+              }
+            </section>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <span class="top-navigation__spacer"></span>
+</nav>

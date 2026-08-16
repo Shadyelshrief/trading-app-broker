@@ -7,6 +7,20 @@ export interface WorkspacePopoutScreen {
   availableTop?: number;
 }
 
+export interface WorkspaceVisibleScreen {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export interface WorkspaceStoredGeometry {
+  left?: number;
+  top?: number;
+  width: number;
+  height: number;
+}
+
 export type WorkspacePopoutConfigPreparation = 'not-popout' | 'ready' | 'restored' | 'missing';
 
 export interface WorkspacePopoutStorage {
@@ -32,6 +46,41 @@ export function calculateWorkspacePopoutBounds(screen: WorkspacePopoutScreen): R
     left: Math.round(availableLeft + (availableWidth - width) / 2),
     top: Math.round(availableTop + (availableHeight - height) / 2)
   };
+}
+
+export function clampWorkspacePopoutGeometry<TGeometry extends WorkspaceStoredGeometry>(
+  geometry: TGeometry,
+  screens: readonly WorkspaceVisibleScreen[]
+): TGeometry {
+  if (screens.length === 0 || geometry.left === undefined || geometry.top === undefined) {
+    return { ...geometry };
+  }
+
+  const visible = screens.some((screen) => rectanglesIntersect(geometry, screen));
+  if (visible) {
+    return { ...geometry };
+  }
+
+  const screen = screens[0];
+  const width = Math.min(Math.max(320, geometry.width), screen.width);
+  const height = Math.min(Math.max(240, geometry.height), screen.height);
+
+  return {
+    ...geometry,
+    left: Math.max(screen.left, Math.min(geometry.left, screen.left + screen.width - width)),
+    top: Math.max(screen.top, Math.min(geometry.top, screen.top + screen.height - height)),
+    width,
+    height
+  };
+}
+
+function rectanglesIntersect(geometry: WorkspaceStoredGeometry, screen: WorkspaceVisibleScreen): boolean {
+  const left = geometry.left ?? screen.left;
+  const top = geometry.top ?? screen.top;
+  return left < screen.left + screen.width &&
+    left + geometry.width > screen.left &&
+    top < screen.top + screen.height &&
+    top + geometry.height > screen.top;
 }
 
 export function getWorkspacePopoutConfigKey(href: string): string | null {

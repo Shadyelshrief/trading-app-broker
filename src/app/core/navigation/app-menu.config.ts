@@ -19,7 +19,7 @@ export const APP_MENU_GROUPS: readonly NavMenuGroup[] = [
   },
   {
     id: 'pricing',
-    label: 'Pricing',
+    label: 'Markets',
     items: [
       {
         id: 'pricing-full-market',

@@ -1,6 +1,7 @@
 import {
   WorkspacePopoutStorage,
   calculateWorkspacePopoutBounds,
+  clampWorkspacePopoutGeometry,
   getWorkspacePopoutConfigKey,
   prepareWorkspacePopoutConfig
 } from './workspace-popout.util';
@@ -27,6 +28,13 @@ describe('calculateWorkspacePopoutBounds', () => {
       left: 225,
       top: 163
     });
+  });
+
+  it('clamps a saved window back onto a visible screen', () => {
+    expect(clampWorkspacePopoutGeometry(
+      { left: 5000, top: 4000, width: 900, height: 700 },
+      [{ left: 0, top: 0, width: 1920, height: 1040 }]
+    )).toEqual({ left: 1020, top: 340, width: 900, height: 700 });
   });
 
   it('backs up the one-time Golden Layout configuration before it is consumed', () => {

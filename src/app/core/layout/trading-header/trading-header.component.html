@@ -1,151 +1,82 @@
 <header class="trading-header" role="banner">
-  <div class="trading-header__bar">
-    <div class="trading-header__left">
-      <button
-        type="button"
-        class="trading-header__icon-btn trading-header__menu-btn"
-        aria-label="Open navigation"
-        (click)="toggleMobileNav()"
-      >
-        <app-trading-icon name="grid" />
-      </button>
+  <app-header-market-status class="trading-header__market-status" />
 
-      <div class="trading-header__brand" aria-label="Trading App Broker">
-        <span class="trading-header__logo-mark"></span>
-        <div class="trading-header__titles">
-          <span class="trading-header__product">BrokerOS</span>
-          <span class="trading-header__route">{{ routePath() }}</span>
-        </div>
-      </div>
-    </div>
+  <app-header-command-search class="trading-header__search" />
 
-    <div class="trading-header__center">
-      <div class="trading-header__search">
-        <mat-form-field appearance="outline" class="trading-header__search-field">
-          <mat-label>Command search</mat-label>
-          <app-trading-icon matPrefix name="search" />
-          <input
-            matInput
-            type="search"
-            autocomplete="off"
-            role="combobox"
-            aria-controls="trading-header-search-results"
-            [attr.aria-expanded]="searchOpen()"
-            placeholder="Search symbols, screens, commands..."
-            [ngModel]="commandSearch()"
-            (ngModelChange)="onSearchInput($event)"
-            (focus)="onSearchFocus()"
-            (keydown.arrowdown)="$event.preventDefault(); moveActive(1)"
-            (keydown.arrowup)="$event.preventDefault(); moveActive(-1)"
-            (keydown.enter)="$event.preventDefault(); submitSearch()"
-          />
-        </mat-form-field>
-
-        @if (searchOpen()) {
-          <div
-            id="trading-header-search-results"
-            class="trading-header__search-results"
-            role="listbox"
-          >
-            @if (results().length === 0) {
-              <p class="trading-header__search-empty">No matching symbols or screens</p>
-            } @else {
-              @for (result of results(); track result.kind + ':' + result.label; let i = $index) {
-                <button
-                  type="button"
-                  role="option"
-                  class="trading-header__search-result"
-                  [class.is-active]="i === activeIndex()"
-                  [attr.aria-selected]="i === activeIndex()"
-                  (mouseenter)="activeIndex.set(i)"
-                  (click)="activateResult(result)"
-                >
-                  <app-trading-icon class="trading-header__search-result-icon" [name]="result.icon" />
-                  <span class="trading-header__search-result-text">
-                    <span class="trading-header__search-result-label">{{ result.label }}</span>
-                    @if (result.sublabel) {
-                      <span class="trading-header__search-result-sub">{{ result.sublabel }}</span>
-                    }
-                  </span>
-                  <span class="trading-header__search-result-kind">{{ result.kind === 'symbol' ? 'Symbol' : 'Screen' }}</span>
-                </button>
+  <div class="trading-header__actions">
+    <div class="trading-header__workspace-control">
+      <mat-form-field appearance="outline" class="trading-header__workspace-field">
+        <mat-label>Workspace{{ workspace.dirty() ? ' *' : '' }}</mat-label>
+        <mat-select [value]="selectedWorkspaceValue()" (valueChange)="selectWorkspace($event)">
+          @if (workspace.workspaces().length === 0) {
+            <mat-option disabled>No saved workspaces</mat-option>
+          } @else {
+            @for (item of workspace.workspaces(); track trackWorkspace(item)) {
+              @if (workspaceOptionValue(item); as value) {
+                <mat-option [value]="value">{{ item.name || 'Workspace' }}</mat-option>
               }
             }
-          </div>
-        }
-      </div>
-    </div>
+          }
+        </mat-select>
+      </mat-form-field>
 
-    <div class="trading-header__right">
-      <div class="trading-header__workspace-control">
-        <mat-form-field appearance="outline" class="trading-header__workspace-field">
-          <mat-label>Workspace</mat-label>
-          <mat-select [value]="selectedWorkspaceValue()" (valueChange)="selectWorkspace($event)">
-            @if (workspace.workspaces().length === 0) {
-              <mat-option disabled>No saved workspaces</mat-option>
-            } @else {
-              @for (item of workspace.workspaces(); track trackWorkspace(item)) {
-                @if (workspaceOptionValue(item); as value) {
-                  <mat-option [value]="value">{{ item.name || 'Workspace' }}</mat-option>
-                }
-              }
-            }
-          </mat-select>
-        </mat-form-field>
-
-        <button type="button" class="trading-header__workspace-action" (click)="saveWorkspace()">Save</button>
-        <button type="button" class="trading-header__workspace-action" (click)="resetWorkspace()">Reset</button>
-
-        @if (workspace.selectedWorkspaceId()) {
-          <button
-            type="button"
-            class="trading-header__workspace-delete"
-            title="Delete selected workspace"
-            aria-label="Delete selected workspace"
-            (click)="deleteSelectedWorkspace($event)"
-          >
-            x
-          </button>
-        }
-      </div>
-
+      <button type="button" class="trading-header__workspace-action" (click)="saveWorkspace()">Save</button>
       <button
         type="button"
-        class="trading-header__icon-btn"
-        [attr.aria-pressed]="layout.theme() === 'light'"
-        [attr.title]="layout.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
-        (click)="toggleTheme()"
+        class="trading-header__workspace-action trading-header__workspace-action--secondary"
+        (click)="resetWorkspace()"
       >
-        <span class="trading-header__theme-glyph" aria-hidden="true">{{ layout.theme() === 'dark' ? 'D' : 'L' }}</span>
+        Reset
       </button>
 
-      <button type="button" class="trading-header__icon-btn" aria-label="Notifications" title="Notifications">
-        <app-trading-icon name="bell" />
-        <span class="trading-header__badge" aria-hidden="true">0</span>
-      </button>
-
-      <div class="trading-header__profile">
+      @if (workspace.selectedWorkspaceId()) {
         <button
           type="button"
-          class="trading-header__profile-trigger"
-          [attr.aria-expanded]="profileOpen()"
-          aria-haspopup="menu"
-          (click)="toggleProfile()"
+          class="trading-header__workspace-delete"
+          title="Delete selected workspace"
+          aria-label="Delete selected workspace"
+          (click)="deleteSelectedWorkspace($event)"
         >
-          <app-trading-icon name="user" />
-          <span class="trading-header__chevron" aria-hidden="true">v</span>
+          &times;
         </button>
-
-        @if (profileOpen()) {
-          <div class="trading-header__menu" role="menu">
-            <button type="button" role="menuitem" (click)="signOut()">Sign out</button>
-          </div>
-        }
-      </div>
+      }
     </div>
-  </div>
 
-  <div class="trading-header__status-row">
-    <app-header-market-status class="trading-header__status-widget" />
+    <span class="trading-header__separator" aria-hidden="true"></span>
+
+    <button
+      type="button"
+      class="trading-header__icon-btn trading-header__theme"
+      [attr.aria-pressed]="layout.theme() === 'light'"
+      [attr.title]="layout.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
+      (click)="toggleTheme()"
+    >
+      <span class="trading-header__theme-glyph" aria-hidden="true">{{ layout.theme() === 'dark' ? 'D' : 'L' }}</span>
+    </button>
+
+    <button type="button" class="trading-header__icon-btn" aria-label="Notifications" title="Notifications">
+      <app-trading-icon name="bell" />
+      <span class="trading-header__badge" aria-hidden="true">0</span>
+    </button>
+
+    <div class="trading-header__profile">
+      <button
+        type="button"
+        class="trading-header__profile-trigger"
+        [attr.aria-expanded]="profileOpen()"
+        aria-haspopup="menu"
+        aria-label="User menu"
+        (click)="toggleProfile()"
+      >
+        <app-trading-icon name="user" />
+        <span class="trading-header__chevron" aria-hidden="true"></span>
+      </button>
+
+      @if (profileOpen()) {
+        <div class="trading-header__menu" role="menu">
+          <button type="button" role="menuitem" (click)="signOut()">Sign out</button>
+        </div>
+      }
+    </div>
   </div>
 </header>

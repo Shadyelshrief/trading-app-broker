@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 
 import { DropdownTabSelectionService } from './shared/services/dropdown-tab-selection.service';
 import { isWorkspacePopoutUrl } from './core/layout/workspace/workspace-popout.util';
+import { applyWorkspaceLanguage, readWorkspaceLanguage } from './core/layout/workspace/workspace-language.util';
 
 @Component({
   selector: 'app-root',
@@ -24,6 +25,10 @@ export class AppComponent {
   private readonly dropdownTabSelection = inject(DropdownTabSelectionService);
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      applyWorkspaceLanguage(readWorkspaceLanguage(window.localStorage), document, window.localStorage);
+    }
+
     if (typeof window !== 'undefined' && isWorkspacePopoutUrl(window.location.href)) {
       document.body.classList.add('gl-popout-window');
     }

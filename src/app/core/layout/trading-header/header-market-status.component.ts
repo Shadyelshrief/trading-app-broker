@@ -11,8 +11,7 @@ import { HeaderMarketStatusFacade } from './header-market-status.facade';
   imports: [AsyncPipe, DecimalPipe, NgClass, MatFormFieldModule, MatSelectModule],
   templateUrl: './header-market-status.component.html',
   styleUrl: './header-market-status.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [HeaderMarketStatusFacade]
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HeaderMarketStatusComponent {
   readonly state = input<unknown>();

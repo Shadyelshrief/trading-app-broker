@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
+import { Observable, catchError, map, of, shareReplay, tap, throwError } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 
@@ -42,7 +42,7 @@ export class WorkspacePreferencesService {
 
     this.preferences$ ??= this.http.get<WorkspacePreferencesResponse | WorkspacePreferences | WorkspacePreferences[]>(this.url).pipe(
       map((response) => mergeWorkspacePreferences(normalizeWorkspacePreferences(extractWorkspaceBody(response)), readLocalPreferences())),
-      catchError(() => of(readLocalPreferences())),
+      catchError((error) => environment.production ? throwError(() => error) : of(readLocalPreferences())),
       shareReplay({ bufferSize: 1, refCount: false })
     );
 
@@ -50,7 +50,7 @@ export class WorkspacePreferencesService {
   }
 
   savePreferences(body: SaveWorkspacePreferences): Observable<WorkspacePreferences[]> {
-    if (!body.id || isLocalWorkspaceId(body.id)) {
+    if (body.id && isLocalWorkspaceId(body.id)) {
       const preferences = upsertLocalPreference(body);
       this.preferences$ = undefined;
       return of(preferences);
@@ -60,6 +60,15 @@ export class WorkspacePreferencesService {
       map((response) => mergeWorkspacePreferences(normalizeWorkspacePreferences(extractWorkspaceBody(response) ?? body), readLocalPreferences())),
       tap(() => {
         this.preferences$ = undefined;
+      }),
+      catchError((error) => {
+        if (environment.production) {
+          return throwError(() => error);
+        }
+
+        const preferences = upsertLocalPreference(body);
+        this.preferences$ = undefined;
+        return of(preferences);
       })
     );
   }

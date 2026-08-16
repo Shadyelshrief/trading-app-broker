@@ -1,7 +1,8 @@
 import { Injectable, effect, inject, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 
-const STORAGE_SIDEBAR = 'broker_shell_sidebar_collapsed';
+import { CrossWindowWorkspaceService } from './workspace/cross-window-workspace.service';
+
 const STORAGE_THEME = 'broker_shell_theme';
 const STORAGE_WORKSPACE = 'broker_shell_workspace_id';
 
@@ -10,12 +11,7 @@ export type ShellTheme = 'dark' | 'light';
 @Injectable({ providedIn: 'root' })
 export class ShellLayoutService {
   private readonly document = inject(DOCUMENT);
-
-  /** Desktop / tablet: narrow rail vs full labels. */
-  readonly sidebarCollapsed = signal(false);
-
-  /** Mobile overlay drawer. */
-  readonly mobileNavOpen = signal(false);
+  private readonly crossWindow = inject(CrossWindowWorkspaceService);
 
   readonly theme = signal<ShellTheme>('dark');
 
@@ -24,12 +20,9 @@ export class ShellLayoutService {
 
   constructor() {
     this.hydrateFromStorage();
-
-    effect(() => {
-      const collapsed = this.sidebarCollapsed();
-
-      if (this.document.defaultView) {
-        this.document.defaultView.localStorage.setItem(STORAGE_SIDEBAR, collapsed ? '1' : '0');
+    this.crossWindow.observe<ShellTheme>('THEME_CHANGED').subscribe((message) => {
+      if (message.payload === 'dark' || message.payload === 'light') {
+        this.setTheme(message.payload, false);
       }
     });
 
@@ -51,24 +44,15 @@ export class ShellLayoutService {
     });
   }
 
-  toggleSidebarCollapsed(): void {
-    this.sidebarCollapsed.update((v) => !v);
-  }
-
-  setSidebarCollapsed(collapsed: boolean): void {
-    this.sidebarCollapsed.set(collapsed);
-  }
-
-  toggleMobileNav(): void {
-    this.mobileNavOpen.update((v) => !v);
-  }
-
-  closeMobileNav(): void {
-    this.mobileNavOpen.set(false);
-  }
-
   toggleTheme(): void {
-    this.theme.update((t) => (t === 'dark' ? 'light' : 'dark'));
+    this.setTheme(this.theme() === 'dark' ? 'light' : 'dark');
+  }
+
+  setTheme(theme: ShellTheme, broadcast = true): void {
+    this.theme.set(theme);
+    if (broadcast) {
+      this.crossWindow.publish('THEME_CHANGED', theme);
+    }
   }
 
   setWorkspaceId(id: string): void {
@@ -81,8 +65,6 @@ export class ShellLayoutService {
     if (!win) {
       return;
     }
-
-    this.sidebarCollapsed.set(win.localStorage.getItem(STORAGE_SIDEBAR) === '1');
 
     const storedTheme = win.localStorage.getItem(STORAGE_THEME);
 

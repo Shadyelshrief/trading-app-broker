@@ -55,15 +55,21 @@ import { WatchlistsPageComponent } from '../../../watchlists/pages/watchlists-pa
 import { ReferenceDataLookupsService } from '../../../shared/lookups/reference-data-lookups.service';
 import { DashboardWidgetComponent } from '../widgets/dashboard-widget.component';
 import { HeaderMarketStatusComponent } from '../trading-header/header-market-status.component';
+import { HeaderMarketStatusFacade } from '../trading-header/header-market-status.facade';
 import { PlaceholderWidgetComponent } from '../widgets/placeholder-widget.component';
+import { ShellLayoutService } from '../shell-layout.service';
 import {
-  SaveWorkspacePreferences,
   WorkspacePreferences,
-  WorkspacePreferencesService,
   WorkspaceThemePreference
 } from './workspace-preferences.service';
+import { CrossWindowWorkspaceService } from './cross-window-workspace.service';
+import { applyWorkspaceLanguage } from './workspace-language.util';
+import { WorkspaceManagerService } from './workspace-manager.service';
+import { SavedWorkspacePopout } from './workspace.models';
+import { WorkspacePopoutService } from './workspace-popout.service';
 import { calculateWorkspacePopoutBounds, prepareWorkspacePopoutConfig } from './workspace-popout.util';
 import { calculateWorkspaceMinimumItemSize } from './workspace-sizing.util';
+import { WorkspaceSaveDialogComponent } from './workspace-save-dialog.component';
 
 type WorkspacePanelType =
   | 'dashboard'
@@ -205,10 +211,15 @@ const WORKSPACE_GRID_GAP = 8;
 export class WorkspaceLayoutService {
   private readonly applicationRef = inject(ApplicationRef);
   private readonly environmentInjector = inject(EnvironmentInjector);
-  private readonly preferences = inject(WorkspacePreferencesService);
+  private readonly manager = inject(WorkspaceManagerService);
+  private readonly popouts = inject(WorkspacePopoutService);
+  private readonly crossWindow = inject(CrossWindowWorkspaceService);
+  private readonly shellLayout = inject(ShellLayoutService);
+  private readonly marketContext = inject(HeaderMarketStatusFacade);
   private readonly referenceData = inject(ReferenceDataLookupsService);
   private readonly dialog = inject(MatDialog);
   private activeScreenDialog: MatDialogRef<ScreenDialogComponent> | null = null;
+  private activeWorkspaceSaveDialog: MatDialogRef<WorkspaceSaveDialogComponent, string | undefined> | null = null;
 
   private readonly panelRegistry = {
     dashboard: DashboardWidgetComponent,
@@ -265,7 +276,18 @@ export class WorkspaceLayoutService {
   readonly error = signal<string | null>(null);
   readonly workspaces = signal<WorkspacePreferences[]>([]);
   readonly selectedWorkspaceId = signal<string | null>(null);
+  readonly dirty = this.manager.dirty;
+  readonly restoreState = this.manager.restoreState;
+  readonly pendingPopoutCount = this.manager.pendingPopoutCount;
+  readonly blockedPopoutCount = this.manager.blockedPopoutCount;
+  readonly status = signal<string | null>(null);
   readonly launcherPanels = DEFAULT_WORKSPACE_PANELS;
+
+  constructor() {
+    this.crossWindow.observe<string>('LANGUAGE_CHANGED').subscribe((message) => {
+      this.applyLanguage(message.payload);
+    });
+  }
 
   init(hostElement: HTMLElement): void {
     if (typeof window === 'undefined') {
@@ -302,6 +324,7 @@ export class WorkspaceLayoutService {
     this.layout.resizeWithContainerAutomatically = false;
     this.layout.on('stateChanged', this.onLayoutStateChanged);
     this.layout.on('windowOpened', this.onPopoutOpened);
+    this.layout.on('windowClosed', this.onPopoutClosed);
     this.resizeObserver = new ResizeObserver(() => this.syncSize());
     this.resizeObserver.observe(hostElement);
     this.isPopoutWindow = this.layout.isSubWindow;
@@ -361,7 +384,10 @@ export class WorkspaceLayoutService {
 
     try {
       const popout = this.layout.createPopout(root, this.getPopoutWindowBounds(), null, null);
-      popout.getWindow().focus();
+      const childWindow = popout.getWindow();
+      this.popouts.register(popout);
+      this.manager.markDirty();
+      childWindow.focus();
     } catch {
       this.error.set('The new window was blocked. Allow pop-ups for this site and try again.');
     }
@@ -516,7 +542,15 @@ export class WorkspaceLayoutService {
   }
 
   resetLayout(): void {
+    if (this.dirty() && typeof window !== 'undefined' && !window.confirm('Reset workspace and discard unsaved changes?')) {
+      return;
+    }
+
     this.error.set(null);
+    this.status.set(null);
+    this.closeAllPopouts();
+    this.manager.resetWorkspace();
+    this.crossWindow.publish('WORKSPACE_RESET');
     this.selectedWorkspaceId.set(null);
     this.openPanels.clear();
     this.loadDefaultWorkspaceLayout();
@@ -524,17 +558,80 @@ export class WorkspaceLayoutService {
   }
 
   saveCurrentWorkspace(): void {
-    const workspaceName = this.promptWorkspaceName(this.currentWorkspaceName());
-
-    if (!workspaceName) {
+    if (this.activeWorkspaceSaveDialog) {
       return;
     }
 
-    this.saveWorkspace(workspaceName).pipe(take(1)).subscribe();
+    this.activeWorkspaceSaveDialog = this.dialog.open(WorkspaceSaveDialogComponent, {
+      width: 'min(29rem, calc(100vw - 2rem))',
+      maxWidth: 'calc(100vw - 2rem)',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+      panelClass: 'workspace-save-dialog-panel',
+      ariaLabelledBy: 'workspace-save-title',
+      ariaDescribedBy: 'workspace-save-description',
+      data: { defaultName: this.currentWorkspaceName() }
+    });
+
+    this.activeWorkspaceSaveDialog
+      .afterClosed()
+      .pipe(take(1))
+      .subscribe((workspaceName) => {
+        this.activeWorkspaceSaveDialog = null;
+
+        if (workspaceName) {
+          this.saveWorkspace(workspaceName).pipe(take(1)).subscribe();
+        }
+      });
   }
 
   restoreSavedWorkspace(): void {
     this.restoreWorkspace(this.selectedWorkspaceId());
+  }
+
+  restoreTradingWorkspace(): void {
+    if (!this.layout || this.isPopoutWindow || this.restoreState() === 'RESTORING') {
+      return;
+    }
+
+    this.error.set(null);
+    this.status.set(null);
+    const result = this.manager.restorePopouts((popout) => this.createSavedPopout(popout));
+
+    if (result.blocked > 0) {
+      this.error.set(
+        `${result.blocked} of ${result.requested} workspace windows could not be opened. ` +
+        'Some workspace windows were blocked by your browser. Please allow popups for this application and retry.'
+      );
+      return;
+    }
+
+    this.status.set(
+      result.requested === 0
+        ? 'This workspace has no external windows.'
+        : `Trading workspace restored with ${result.opened} external window${result.opened === 1 ? '' : 's'}.`
+    );
+  }
+
+  continueWithMainWindow(): void {
+    this.manager.continueWithMainWindow();
+    this.error.set(null);
+    this.status.set('Continuing with the main workspace window.');
+  }
+
+  markDirty(): void {
+    if (!this.loadingRemoteLayout && this.workspaceLoaded) {
+      this.manager.markDirty();
+    }
+  }
+
+  closeAllPopouts(): void {
+    this.ignoreLayoutChangesUntil = Date.now() + 750;
+    try {
+      this.layout?.closeAllOpenPopouts();
+    } finally {
+      this.popouts.closeAll();
+    }
   }
 
   restoreWorkspace(workspaceId?: string | null): void {
@@ -545,8 +642,8 @@ export class WorkspaceLayoutService {
     this.loading.set(true);
     this.error.set(null);
 
-    this.preferences
-      .getPreferences(true)
+    this.manager
+      .loadWorkspace(true)
       .pipe(
         take(1),
         tap((preferences) => {
@@ -555,7 +652,7 @@ export class WorkspaceLayoutService {
             ? preferences.find((preference) => this.workspaceKey(preference) === workspaceId)
             : this.pickDefaultWorkspace(preferences) ?? preferences[0];
 
-          if (selected && isLayoutConfig(selected.layoutJson)) {
+          if (selected) {
             this.applyWorkspacePreference(selected);
             this.selectedWorkspaceId.set(this.workspaceKey(selected));
           } else {
@@ -591,9 +688,12 @@ export class WorkspaceLayoutService {
     this.detachDragSources();
     this.activeScreenDialog?.close();
     this.activeScreenDialog = null;
+    this.activeWorkspaceSaveDialog?.close();
+    this.activeWorkspaceSaveDialog = null;
 
     this.layout?.off('stateChanged', this.onLayoutStateChanged);
     this.layout?.off('windowOpened', this.onPopoutOpened);
+    this.layout?.off('windowClosed', this.onPopoutClosed);
     this.layout?.destroy();
     this.resizeObserver?.disconnect();
     this.layout = undefined;
@@ -778,7 +878,7 @@ export class WorkspaceLayoutService {
     this.loadCurrentLayout();
     this.syncSize();
 
-    const preferences$ = this.preferences.getPreferences();
+    const preferences$ = this.manager.loadWorkspace();
 
     preferences$
       .pipe(
@@ -796,8 +896,8 @@ export class WorkspaceLayoutService {
           this.languageId = selected?.languageId || this.languageId;
           this.theme = selected?.theme || this.theme;
 
-          if (selected && isLayoutConfig(selected.layoutJson)) {
-            this.loadSavedLayout(selected.layoutJson);
+          if (selected) {
+            this.applyWorkspacePreference(selected);
           }
 
           this.syncSize();
@@ -833,23 +933,41 @@ export class WorkspaceLayoutService {
 
     this.rebuildOpenPanelsFromLayout();
     this.enforceScrollableGrid();
+    this.manager.markDirty();
   };
 
   private readonly onPopoutOpened = (popout: BrowserPopout): void => {
+    const wasRegistered = this.popouts.isRegistered(popout);
+    const isSavedRestore = this.popouts.isRestored(popout);
+    this.popouts.register(popout);
+
+    if (!wasRegistered && !isSavedRestore) {
+      this.manager.markDirty();
+    }
+
     try {
       const childWindow = popout.getWindow();
-      const bounds = this.getPopoutWindowBounds();
+      const bounds = isSavedRestore ? null : this.getPopoutWindowBounds();
 
-      childWindow.resizeTo(bounds.width ?? childWindow.outerWidth, bounds.height ?? childWindow.outerHeight);
+      if (bounds) {
+        childWindow.resizeTo(bounds.width ?? childWindow.outerWidth, bounds.height ?? childWindow.outerHeight);
 
-      if (bounds.left !== null && bounds.top !== null) {
-        childWindow.moveTo(bounds.left, bounds.top);
+        if (bounds.left !== null && bounds.top !== null) {
+          childWindow.moveTo(bounds.left, bounds.top);
+        }
       }
 
       childWindow.focus();
     } catch {
       // Browser window-management policies can deny resize/move while still
       // allowing the pop-out itself. In that case the window remains usable.
+    }
+  };
+
+  private readonly onPopoutClosed = (popout: BrowserPopout): void => {
+    this.popouts.unregister(popout);
+    if (!this.loadingRemoteLayout && Date.now() >= this.ignoreLayoutChangesUntil) {
+      this.manager.markDirty();
     }
   };
 
@@ -880,17 +998,32 @@ export class WorkspaceLayoutService {
           const existingWorkspace = this.workspaces().find(
             (workspace) => workspace.name?.trim().toLowerCase() === workspaceName.toLowerCase()
           );
-          const savedWorkspace: SaveWorkspacePreferences = {
+          const mainLayout = this.layout ? LayoutConfig.fromResolved(this.layout.saveLayout()) : null;
+          const popouts = this.popouts.capture();
+
+          if (this.layout && popouts.length < this.layout.openPopouts.length) {
+            this.error.set('One or more external windows are still starting. Wait a moment and save again.');
+            return EMPTY;
+          }
+
+          this.theme = this.shellLayout.theme() === 'light' ? 'LIGHT' : 'DARK';
+
+          const marketContext = this.marketContext.getCurrentContext();
+
+          return this.manager.saveWorkspace({
             id: existingWorkspace?.id,
             name: workspaceName,
             theme: this.theme,
             languageId,
-            layoutJson: this.layout ? LayoutConfig.fromResolved(this.layout.saveLayout()) : null
-          };
-
-          return this.preferences.savePreferences(savedWorkspace).pipe(
-            switchMap(() => this.preferences.getPreferences(true))
-          );
+            mainLayout,
+            popouts,
+            globalState: {
+              market: marketContext.market,
+              index: marketContext.index,
+              theme: this.shellLayout.theme(),
+              language: typeof document === 'undefined' ? languageId : document.documentElement.lang || languageId
+            }
+          }).pipe(switchMap(() => this.manager.loadWorkspace(true)));
         }),
         tap((preferences) => {
           this.workspaces.set(preferences);
@@ -903,6 +1036,7 @@ export class WorkspaceLayoutService {
           this.languageId = selectedWorkspace?.languageId || this.languageId;
           this.theme = selectedWorkspace?.theme || this.theme;
           this.error.set(null);
+          this.status.set('Workspace saved.');
         }),
         catchError(() => {
           this.error.set('Workspace preferences could not be saved.');
@@ -930,22 +1064,6 @@ export class WorkspaceLayoutService {
     );
   }
 
-  private promptWorkspaceName(defaultName: string): string | null {
-    const name = typeof window === 'undefined' ? defaultName : window.prompt('Workspace name', defaultName);
-    const trimmed = name?.trim();
-
-    if (name === null) {
-      return null;
-    }
-
-    if (!trimmed) {
-      this.error.set('Workspace name is required.');
-      return null;
-    }
-
-    return trimmed.slice(0, 80);
-  }
-
   private workspaceKey(workspace: WorkspacePreferences): string | null {
     return workspace.id ?? workspace.name ?? null;
   }
@@ -954,9 +1072,75 @@ export class WorkspaceLayoutService {
     this.languageId = preference.languageId || this.languageId;
     this.theme = preference.theme || this.theme;
 
-    if (isLayoutConfig(preference.layoutJson)) {
-      this.loadSavedLayout(preference.layoutJson);
+    const savedWorkspace = this.manager.deserializePreference(preference);
+
+    if (savedWorkspace) {
+      const savedTheme = savedWorkspace.globalState.theme ?? preference.theme;
+      if (savedTheme === 'light' || savedTheme === 'LIGHT') {
+        this.shellLayout.setTheme('light');
+      } else if (savedTheme === 'dark' || savedTheme === 'DARK') {
+        this.shellLayout.setTheme('dark');
+      }
+
+      this.applyLanguage(savedWorkspace.globalState.language ?? preference.languageId);
+      this.marketContext.restoreContext(savedWorkspace.globalState.market, savedWorkspace.globalState.index);
+      this.crossWindow.publish('LANGUAGE_CHANGED', savedWorkspace.globalState.language ?? preference.languageId);
+      this.manager.restoreMainLayout(savedWorkspace, (layout) => {
+        if (isLayoutConfig(layout)) {
+          this.loadSavedLayout(layout);
+        }
+      });
     }
+  }
+
+  private createSavedPopout(popout: SavedWorkspacePopout): BrowserPopout {
+    if (!this.layout || !isLayoutConfig(popout.layout)) {
+      throw new Error('Invalid saved popout layout.');
+    }
+
+    const resolved = LayoutConfig.isResolved(popout.layout)
+      ? (popout.layout as ResolvedLayoutConfig)
+      : resolveLayoutConfig(popout.layout);
+    const root = resolved.root;
+
+    if (!root) {
+      throw new Error('Saved popout has no root item.');
+    }
+
+    const previousSettings = this.layout.layoutConfig.settings;
+    this.layout.layoutConfig = {
+      ...this.layout.layoutConfig,
+      settings: {
+        ...previousSettings,
+        blockedPopoutsThrowError: true
+      }
+    };
+
+    try {
+      return this.layout.createPopout(root, {
+        left: popout.geometry.left ?? null,
+        top: popout.geometry.top ?? null,
+        width: popout.geometry.width,
+        height: popout.geometry.height
+      }, null, null);
+    } finally {
+      this.layout.layoutConfig = {
+        ...this.layout.layoutConfig,
+        settings: previousSettings
+      };
+    }
+  }
+
+  private applyLanguage(language: string | undefined): void {
+    if (!language || typeof document === 'undefined') {
+      return;
+    }
+
+    applyWorkspaceLanguage(
+      language,
+      document,
+      typeof window === 'undefined' ? undefined : window.localStorage
+    );
   }
 
   private confirmDeleteWorkspace(name: string): boolean {
@@ -1453,13 +1637,9 @@ export class WorkspaceLayoutService {
 
   private sanitizeLayoutConfig(config: LayoutConfig): LayoutConfig {
     const next = structuredClone(config) as LayoutConfig;
-    const items = collectComponentConfigs(next.root);
 
     stripItemMinSize(next.root);
-
-    if (items.length > 0) {
-      next.root = buildWorkspaceGridRoot(items);
-    }
+    next.openPopouts = [];
 
     return next;
   }

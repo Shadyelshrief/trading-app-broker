@@ -1,0 +1,55 @@
+<form class="workspace-save-dialog" (ngSubmit)="save()">
+  <div class="workspace-save-dialog__glow" aria-hidden="true"></div>
+
+  <header class="workspace-save-dialog__header">
+    <span class="workspace-save-dialog__icon" aria-hidden="true">
+      <app-trading-icon name="layout" />
+    </span>
+    <div class="workspace-save-dialog__heading">
+      <p class="workspace-save-dialog__eyebrow">Workspace</p>
+      <h2 id="workspace-save-title">Save your layout</h2>
+      <p id="workspace-save-description">Keep this panel arrangement ready for your next session.</p>
+    </div>
+    <button
+      type="button"
+      class="workspace-save-dialog__close"
+      aria-label="Close save workspace dialog"
+      (click)="cancel()"
+    >
+      &times;
+    </button>
+  </header>
+
+  <div class="workspace-save-dialog__body">
+    <label for="workspace-save-name">Workspace name</label>
+    <div class="workspace-save-dialog__input-shell" [class.workspace-save-dialog__input-shell--error]="submitted() && !valid()">
+      <input
+        id="workspace-save-name"
+        name="workspaceName"
+        type="text"
+        autocomplete="off"
+        maxlength="80"
+        [ngModel]="name()"
+        (ngModelChange)="updateName($event)"
+        aria-describedby="workspace-save-description workspace-save-hint"
+      />
+      <span>{{ name().length }}/80</span>
+    </div>
+    <div id="workspace-save-hint" class="workspace-save-dialog__hint" aria-live="polite">
+      @if (submitted() && !valid()) {
+        <span class="workspace-save-dialog__error">Enter a name before saving.</span>
+      } @else {
+        <span>You can update this workspace again at any time.</span>
+      }
+    </div>
+  </div>
+
+  <footer class="workspace-save-dialog__actions">
+    <button type="button" class="workspace-save-dialog__button workspace-save-dialog__button--secondary" (click)="cancel()">
+      Cancel
+    </button>
+    <button type="submit" class="workspace-save-dialog__button workspace-save-dialog__button--primary">
+      Save workspace
+    </button>
+  </footer>
+</form>

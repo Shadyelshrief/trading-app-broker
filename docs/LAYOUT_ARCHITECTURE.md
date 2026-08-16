@@ -17,18 +17,15 @@ When the official PDF is added to the repo, treat it as authoritative: reconcile
 
 ## Menu hierarchy (current config)
 
-Navigation is **data-driven** from `APP_MENU_GROUPS` in `app-menu.config.ts`. Each group maps to an accordion section in the sidebar.
+Navigation is **data-driven** from `APP_MENU_GROUPS` in `app-menu.config.ts`. Each group maps to a top-level button and an overlay menu in the horizontal navigation bar.
 
 | Group ID | Label (UI) | Representative leaves |
 |----------|--------------|------------------------|
-| `introduction` | Introduction | Overview (`/`), Getting started |
-| `settings` | Managing Settings | Preferences, Workspaces, Themes, Language, Password |
-| `market-activity` | Market Activity | Watch lists, Tickers, Market performance |
-| `pricing` | Pricing | Market summary, full market, indices, T&S, depth, map, news, … |
-| `trading` | Trading | Place/monitor orders, statistics, portfolio, watch lists, tickers |
-| `clients` | Clients & Portfolios | Search, information, portfolios |
-| `charts` | Charts | Indicators, symbol charting, comparison |
-| `management` | Management | Orders, clients, workspaces, settings |
+| `dashboard` | Dashboard | Overview (`/app`) |
+| `pricing` | Markets | Market watch, summary, indices, T&S, depth, map, news, charts, watch lists |
+| `trading` | Trading | Order ticket, blotter, positions, trade feed, execution analytics |
+| `management` | Management | Client directory and profile |
+| `reports` | Reports | Trade, portfolio, and audit reports |
 
 Each leaf exposes:
 
@@ -45,21 +42,19 @@ Each leaf exposes:
 ### High-level structure
 
 ```
-AppShellComponent (route: '' + authGuard)
-├── TradingHeaderComponent (global chrome)
-└── div.app-shell__body
-    ├── optional scrim (mobile drawer)
-    ├── TradingSidebarComponent (primary nav)
-    └── main.app-shell__workspace
-        └── <router-outlet /> → WorkspacePageComponent (default)
-            └── WorkspaceComponent (Golden Layout host)
+AppShellComponent (route: '/app' + authGuard)
+├── TradingHeaderComponent (56px market context + workspace actions)
+├── TopNavigationComponent (40px grouped horizontal navigation)
+└── main.app-shell__workspace (100% width, remaining height)
+    └── <router-outlet /> → WorkspacePageComponent (default)
+        └── WorkspaceComponent (Golden Layout host)
 ```
 
 **Golden Layout pop-out windows** (`?gl-window`) still render **only** `WorkspaceComponent` with `[subWindow]="true"` to avoid nested chrome.
 
 ### Routing
 
-- Authenticated root remains **`''` → `AppShellComponent`**.
+- Authenticated application root remains **`/app` → `AppShellComponent`**.
 - **Child routes** under the shell:
   - `''` (full) → `WorkspacePageComponent` (Golden Layout).
   - `**` → same host so deep links (e.g. `/pricing/market-summary`) resolve without 404s until feature modules ship.
@@ -70,7 +65,7 @@ Auth routes (`/login`, etc.) are unchanged siblings.
 
 | Concern | Mechanism |
 |---------|-----------|
-| Sidebar collapse / mobile drawer / theme / workspace id | `ShellLayoutService` (`providedIn: 'root'`) with **signals** + `localStorage` via `effect()` |
+| Theme / workspace id | `ShellLayoutService` (`providedIn: 'root'`) with **signals** + `localStorage` via `effect()` |
 | Navigation labels & tree | **Static config** `APP_MENU_GROUPS` (future: CMS or API) |
 | Golden Layout / panels | Existing `LayoutService` + `WorkspaceComponent` (unchanged) |
 
@@ -85,11 +80,11 @@ No NgRx added; patterns match the rest of the app (signals + injectable services
 | `core/navigation/app-menu.types.ts` | `NavMenuGroup`, `NavMenuItem`, `TradingIconName`, permission placeholder |
 | `core/navigation/app-menu.config.ts` | `APP_MENU_GROUPS` export |
 | `core/layout/shell-layout.service.ts` | Persisted chrome state, theme attribute on `documentElement` |
-| `core/layout/trading-header/` | Logo strip, ribbon, market status, command search, clock, workspace selector, theme toggle, notifications stub, profile menu |
-| `core/layout/trading-sidebar/` | Collapsible rail, accordion groups, `routerLink` + `RouterLinkActive` |
+| `core/layout/trading-header/` | Market/index selectors, live metrics, clock/feeder state, workspace selector, save/reset, theme, notifications, profile |
+| `core/layout/top-navigation/` | Grouped overlay menus, keyboard navigation, active screen state, command/symbol search, workspace drag/open integration |
 | `core/layout/trading-icon/` | Lightweight SVG icon set (no icon font dependency) |
 | `core/layout/workspace-page.component.ts` | Routed host for `<app-workspace />` inside `router-outlet` |
-| `core/layout/app-shell.component.*` | Composes header + body + sidebar + outlet |
+| `core/layout/app-shell.component.*` | Composes the fixed header/navigation rows and full-width workspace outlet |
 
 ---
 
@@ -97,17 +92,16 @@ No NgRx added; patterns match the rest of the app (signals + injectable services
 
 | Breakpoint | Behaviour |
 |------------|-----------|
-| **> 960px** | Fixed two-column body: sidebar width **17.5rem** (collapsed **4.25rem**) + fluid workspace |
-| **≤ 960px** | Single-column body; sidebar becomes a **fixed drawer** off-canvas; `ShellLayoutService.mobileNavOpen` + scrim; collapse rail control hidden |
-| **≤ 640px** | Tighter padding; header hides non-critical clusters (workspace select, clock) |
+| **> 900px** | All configured top-level menu groups are visible; workspace remains full width |
+| **≤ 900px** | Secondary top-level groups move under `More`; no side drawer is introduced |
+| **≤ 620px** | Market metrics progressively condense while market/index and workspace actions remain in the header |
 
 ---
 
 ## Animation & motion strategy
 
-- **Sidebar width / drawer slide**: CSS `transition` on `transform` + `width` (reduced-motion disables long transitions in sidebar SCSS where declared).
-- **Header ribbon**: lightweight marquee (`transform: translateX`) with reduced-motion fallback (static wrap).
-- **Scrim**: short opacity keyframe.
+- **Top navigation**: short color/background/chevron transitions with reduced-motion fallbacks.
+- Dropdowns are absolutely positioned overlays and never change shell or workspace height.
 - **Existing** auth view transitions remain global (`auth-view-transitions.scss`).
 
 Avoid layout thrashing: decorative layers use `pointer-events: none`; intervals limited to header clock with cleanup on destroy.
@@ -125,9 +119,9 @@ Avoid layout thrashing: decorative layers use `pointer-events: none`; intervals 
 ## Accessibility
 
 - Primary `<nav>` has `aria-label="Primary navigation"`.
-- Sidebar links expose `title` tooltips when the rail is collapsed (labels hidden).
-- Mobile drawer uses **scrim** + **Escape** (handled in `TradingHeaderComponent`) to close.
-- Command search uses visually hidden `<span>` label.
+- Top-level menu buttons expose `aria-expanded` and `aria-haspopup`.
+- Arrow keys, Home/End, Enter/Space, and Escape are supported across menu triggers and menu items.
+- Command search is a labelled combobox with active-option keyboard navigation.
 - Profile menu uses `aria-expanded` / `role="menu"`.
 
 ---
@@ -136,9 +130,8 @@ Avoid layout thrashing: decorative layers use `pointer-events: none`; intervals 
 
 1. **RBAC**: Filter `APP_MENU_GROUPS` in a pipe or resolver using `permissions` before render.
 2. **Lazy feature routes**: Replace catch-all child with real `loadChildren` modules per section while keeping shell parent.
-3. **Command palette**: Wire header search to a `CommandPaletteService`.
-4. **Live market status**: Replace static header chip with exchange calendar service.
-5. **Workspace persistence**: Connect workspace selector to Golden Layout saved layouts API.
+3. **Command palette service**: Extract top-navigation search orchestration if it grows beyond the current screen/symbol catalog.
+4. **Live market status**: Continue extending the existing realtime facade as new exchange fields become available.
 
 ---
 
@@ -147,7 +140,7 @@ Avoid layout thrashing: decorative layers use `pointer-events: none`; intervals 
 - `src/app/core/navigation/*`
 - `src/app/core/layout/shell-layout.service.ts`
 - `src/app/core/layout/trading-header/*`
-- `src/app/core/layout/trading-sidebar/*`
+- `src/app/core/layout/top-navigation/*`
 - `src/app/core/layout/trading-icon/*`
 - `src/app/core/layout/workspace-page.component.*`
 - `src/app/core/layout/app-shell.component.*`

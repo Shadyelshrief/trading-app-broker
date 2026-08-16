@@ -10,13 +10,13 @@
 .workspace-shell {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.125rem;
   min-width: 0;
   min-height: 0;
   height: 100%;
   max-width: 100%;
   overflow: hidden;
-  padding: 0.25rem;
+  padding: 0.125rem 0.25rem 0.25rem;
 }
 
 :host-context(body.gl-popout-window) .workspace-shell {
@@ -38,6 +38,64 @@ p {
   font-size: 0.85rem;
 }
 
+.workspace-shell__restore {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent);
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+  color: var(--text-primary);
+  font-size: 0.82rem;
+}
+
+.workspace-shell__restore-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.45rem;
+}
+
+.workspace-shell__restore button {
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.35rem;
+  background: var(--accent);
+  color: var(--surface-1);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.workspace-shell__restore button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.workspace-shell__restore .workspace-shell__secondary {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.workspace-shell__status {
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(73, 209, 125, 0.24);
+  border-radius: 0.4rem;
+  background: rgba(73, 209, 125, 0.08);
+  color: var(--success, #49d17d);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 720px) {
+  .workspace-shell__restore {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 .workspace-shell__host {
   flex: 1 1 auto;
   min-width: 0;
@@ -45,8 +103,8 @@ p {
   height: 100%;
   width: 100%;
   max-width: 100%;
-  border-radius: 0.7rem;
-  border: 1px solid var(--border-subtle);
+  border: 0;
+  border-radius: 0.35rem;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-gutter: stable;

@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { EMPTY, Observable, catchError, map, shareReplay, switchMap, tap, throwError } from 'rxjs';
 
+import { WorkspaceSessionEndReason, WorkspaceSessionService } from '../layout/workspace/workspace-session.service';
 import { AuthApiService } from './auth-api.service';
 import {
   ForgotPasswordRequest,
@@ -26,6 +27,7 @@ const TOKEN_EXPIRY_SKEW_MS = 10_000;
 export class AuthService {
   private readonly api = inject(AuthApiService);
   private readonly router = inject(Router);
+  private readonly workspaceSession = inject(WorkspaceSessionService);
 
   private readonly accessToken = signal<string | null>(this.readStoredToken());
   private readonly expiresAt = signal<number | null>(this.readStoredExpiresAt());
@@ -36,6 +38,10 @@ export class AuthService {
 
     return typeof token === 'string' && token.length > 0 && !this.isExpired(this.expiresAt());
   });
+
+  constructor() {
+    this.workspaceSession.registerSessionTerminator((reason) => this.terminateSession(reason, true));
+  }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
     return this.encryptPassword(credentials.password).pipe(
@@ -64,27 +70,13 @@ export class AuthService {
   }
 
   logout(navigate: boolean = true): void {
-    this.clearSessionStorage();
-    this.accessToken.set(null);
-    this.expiresAt.set(null);
-
-    if (navigate) {
-      void this.router.navigateByUrl('/login');
-    }
+    this.workspaceSession.endSession('LOGOUT');
+    this.terminateSession('LOGOUT', navigate);
   }
 
   handleSessionExpired(): void {
-    const returnUrl = this.router.url;
-
-    this.clearSessionStorage();
-    this.accessToken.set(null);
-    this.expiresAt.set(null);
-
-    if (!returnUrl.startsWith('/login')) {
-      void this.router.navigate(['/login'], {
-        queryParams: returnUrl.startsWith('/app') ? { returnUrl } : undefined
-      });
-    }
+    this.workspaceSession.endSession('SESSION_EXPIRED');
+    this.terminateSession('SESSION_EXPIRED', true);
   }
 
   getBearerToken(): string | null {
@@ -147,6 +139,27 @@ export class AuthService {
     window.localStorage.removeItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
     window.localStorage.removeItem(AUTH_LOGIN_TIME_STORAGE_KEY);
     window.localStorage.removeItem(AUTH_TOKEN_EXPIRES_AT_STORAGE_KEY);
+  }
+
+  private terminateSession(reason: WorkspaceSessionEndReason, navigate: boolean): void {
+    const returnUrl = this.router.url;
+
+    this.clearSessionStorage();
+    this.accessToken.set(null);
+    this.expiresAt.set(null);
+
+    if (!navigate) {
+      return;
+    }
+
+    if (reason === 'SESSION_EXPIRED' && !returnUrl.startsWith('/login')) {
+      void this.router.navigate(['/login'], {
+        queryParams: returnUrl.startsWith('/app') ? { returnUrl } : undefined
+      });
+      return;
+    }
+
+    void this.router.navigateByUrl('/login');
   }
 
   private resolveExpiresAt(token: string, expiresInSeconds?: number): number | null {

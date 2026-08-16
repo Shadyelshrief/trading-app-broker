@@ -40,3 +40,18 @@
   margin: 0.2rem 0 0;
   font-weight: 800;
 }
+
+.order-confirmation__confirm {
+  color: #fff;
+  font-weight: 800;
+}
+
+.order-confirmation__confirm--buy {
+  --mdc-filled-button-container-color: #168a52;
+  background-color: #168a52 !important;
+}
+
+.order-confirmation__confirm--sell {
+  --mdc-filled-button-container-color: #c93d4f;
+  background-color: #c93d4f !important;
+}
